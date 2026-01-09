@@ -1,9 +1,3 @@
----
-title: "Herramientas tradicionales para la Planificación de Medios Publicitarios"
-author: "Manuel J. Sánchez Franco"
-output: pdf_document
----
-
 # mediaPlanR: descripción general
 
 > **mediaPlanR** proporciona un conjunto completo de herramientas para la planificación de medios publicitarios -preferentemente en prensa-, implementando diversos modelos para estimar la cobertura, distribución de contactos y acumulación de audiencia.
@@ -1041,6 +1035,7 @@ El paquete incluye validación de entrada y manejo de errores:
 - **ORCID**: [0000-0002-8042-3550](https://orcid.org/0000-0002-8042-3550)
 - **Email**: [majesus\@us.es](mailto:majesus@us.es){.email}
 - **Issues**: Para reportar problemas o sugerencias, usa la sección de [Issues](https://github.com/majesus/mediaPlanR/issues)
+
 
 
 
