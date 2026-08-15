@@ -1,5 +1,7 @@
 # mediaPlanR
 
+[![R-CMD-check](https://github.com/majesus/mediaPlanR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/majesus/mediaPlanR/actions/workflows/R-CMD-check.yaml)
+
 Herramientas en R para la planificación de medios publicitarios: modelos
 clásicos de cobertura y distribución de contactos, indicadores de eficiencia
 de un plan y aplicaciones Shiny para explorarlos de forma interactiva.
