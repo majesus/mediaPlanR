@@ -3,33 +3,27 @@
 \encoding{UTF-8}
 \name{calculate_metrics}
 \alias{calculate_metrics}
-\title{Calculate CANEX Metrics}
+\title{Calcular metricas de alcance y frecuencia CANEX}
 \usage{
 calculate_metrics(distribution, poblacion = 1e+06)
 }
 \arguments{
-\item{distribution}{Data frame. Contact distribution}
+\item{distribution}{Data frame con columnas \code{exposures} (numero de
+contactos) y \code{probability} (probabilidad asociada, no necesariamente
+normalizada a 1)}
 
-\item{poblacion}{Integer. Target population size}
+\item{poblacion}{Entero. Tamano de la poblacion objetivo (por defecto 1.000.000)}
 }
 \value{
-List with components:
-\itemize{
-\item total_reach: Total reach proportion
-\item total_reach_people: People reached
-\item distribution: Detailed distribution
-\item cumulative: Cumulative distribution
-\item stats: Additional statistics
-}
+Un objeto de clase \code{"reach_canex"} (ver \code{\link{calc_canex}}).
 }
 \description{
-Calculates detailed metrics from contact distribution.
+A partir de una distribucion de probabilidad por numero total
+de contactos, calcula el alcance, la distribucion de contactos (y
+acumulada) y las metricas resumen del modelo CANEX.
 }
 \examples{
-dist <- data.frame(
-  exposures = 0:2,
-  probability = c(0.3, 0.5, 0.2)
-)
+dist <- data.frame(exposures = 0:2, probability = c(0.3, 0.5, 0.2))
 metrics <- calculate_metrics(dist, 1000000)
 
 }

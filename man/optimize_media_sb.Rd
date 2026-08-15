@@ -10,12 +10,16 @@ optimize_media_sb(
   FEM,
   objetivo_cobertura,
   presupuesto_max,
-  tolerancia_presupuesto = 0.1,
   poblacion_total = 4.7e+07,
   tam_batch = 5,
   soportes_vetados = NULL,
   modelo = c("sainsbury", "binomial"),
-  usar_audiencia_util = FALSE
+  usar_audiencia_util = FALSE,
+  tol = 1e-10,
+  tolerancia_presupuesto_tipo = "porcentaje",
+  tolerancia_cobertura_tipo = "porcentaje",
+  tolerancia_presupuesto = 0.1,
+  tolerancia_cobertura = 0.05
 )
 }
 \arguments{
@@ -28,8 +32,6 @@ Si se usa audiencia útil, debe incluir también indices_utilidad (numeric)}
 
 \item{presupuesto_max}{Presupuesto máximo disponible}
 
-\item{tolerancia_presupuesto}{Desviación permitida sobre el presupuesto máximo (por defecto 0.10 = 10\%)}
-
 \item{poblacion_total}{Tamaño de la población objetivo (por defecto 47000000)}
 
 \item{tam_batch}{Tamaño de los lotes para procesamiento (por defecto 5)}
@@ -39,6 +41,16 @@ Si se usa audiencia útil, debe incluir también indices_utilidad (numeric)}
 \item{modelo}{Modelo a utilizar para el cálculo de cobertura: "sainsbury" o "binomial" (por defecto "sainsbury")}
 
 \item{usar_audiencia_util}{Logical indicando si usar audiencia útil (TRUE) o bruta (FALSE, por defecto)}
+
+\item{tol}{Tolerancia para comparación de números flotantes.}
+
+\item{tolerancia_presupuesto_tipo}{Tipo de tolerancia para el presupuesto: "porcentaje" o "absoluto" (por defecto "porcentaje").}
+
+\item{tolerancia_cobertura_tipo}{Tipo de tolerancia para la cobertura: "porcentaje", "absoluto" o "personas" (por defecto "porcentaje").}
+
+\item{tolerancia_presupuesto}{Valor de la tolerancia para el presupuesto (por defecto 0.10 = 10\% si tolerancia_presupuesto_tipo es "porcentaje").}
+
+\item{tolerancia_cobertura}{Valor de la tolerancia para la cobertura (por defecto 0.05 = 5\% si tolerancia_cobertura_tipo es "porcentaje").}
 }
 \value{
 Una lista conteniendo:
@@ -95,8 +107,9 @@ Los modelos disponibles son:
 }
 }
 \examples{
-# Ejemplo con audiencia bruta y modelo Sainsbury
-
+# Ejemplo con audiencia bruta y modelo Sainsbury, tolerancia de presupuesto
+# absoluta y de cobertura en personas, a partir de un CSV externo
+\dontrun{
 datos <- readr::read_csv(file = "data.csv", show_col_types = FALSE)
 
 resultado_bruto <- optimize_media_sb(
@@ -105,10 +118,16 @@ resultado_bruto <- optimize_media_sb(
   objetivo_cobertura = 50,
   presupuesto_max = 100000,
   modelo = "sainsbury",
-  usar_audiencia_util = FALSE
+  usar_audiencia_util = FALSE,
+  tolerancia_presupuesto_tipo = "absoluto",
+  tolerancia_presupuesto = 5000,  # 5000€ de tolerancia
+  tolerancia_cobertura_tipo = "personas",
+  tolerancia_cobertura = 10000, # 10000 personas de tolerancia
+  poblacion_total = 47000000
 )
+}
 
-# Ejemplo con audiencia útil y modelo Binomial
+# Ejemplo con audiencia útil y modelo Binomial, tolerancia de presupuesto y cobertura en porcentajes
 datos_util <- data.frame(
   soportes = c("Medio1", "Medio2", "Medio3"),
   audiencias = c(1000000, 800000, 600000),
@@ -122,7 +141,11 @@ resultado_util <- optimize_media_sb(
   objetivo_cobertura = 50,
   presupuesto_max = 100000,
   modelo = "binomial",
-  usar_audiencia_util = TRUE
+  usar_audiencia_util = TRUE,
+  tolerancia_presupuesto_tipo = "porcentaje",
+  tolerancia_presupuesto = 0.15, # 15\%
+  tolerancia_cobertura_tipo = "porcentaje",
+  tolerancia_cobertura = 0.1 # 10\%
 )
 
 }

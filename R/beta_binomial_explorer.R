@@ -1,41 +1,30 @@
-# Function to calculate beta-binomial probability mass function
-
+# Función de masa de probabilidad Beta-Binomial: P(X = k) = choose(n,k) *
+# B(k+alpha, n-k+beta) / B(alpha, beta). Función interna, solo para uso de
+# run_beta_binomial_explorer(); ver calc_beta_binomial() para la versión
+# exportada y documentada del modelo.
+#' @noRd
 dbetabinom <- function(x, n, alpha, beta) {
   choose(n, x) * beta(x + alpha, n - x + beta) / beta(alpha, beta)
 }
 
 #' @encoding UTF-8
-#' @title Función de Masa de Probabilidad Beta-Binomial
-#' @description Calcula la función de masa de probabilidad de la distribución
-#' beta-binomial para un conjunto dado de parámetros.
+#' @title Explorador de la Distribución Beta-Binomial
+#' @description Aplicación Shiny para visualizar la función de masa de
+#' probabilidad de la distribución beta-binomial y sus estadísticos
+#' (media, varianza, moda) a partir de los parámetros P, A1, A2 y n.
 #'
-#' @details
-#' La función implementa la fórmula:
-#' \deqn{P(X = k) = \binom{n}{k} \frac{B(k+\alpha, n-k+\beta)}{B(\alpha, \beta)}}
+#' @return Lanza una aplicacion Shiny interactiva (efecto secundario); no
+#' devuelve ningun valor util para el flujo de un script.
 #'
-#' @param x Número de éxitos
-#' @param n Número de ensayos
-#' @param alpha Parámetro de forma alpha de la distribución beta
-#' @param beta Parámetro de forma beta de la distribución beta
+#' @examples
+#' if (interactive()) {
+#'   run_beta_binomial_explorer()
+#' }
 #'
+#' @import shiny
+#' @import bslib
 #' @export
-
 run_beta_binomial_explorer <- function() {
-
-  # Verificar y cargar las dependencias necesarias
-  if (!requireNamespace("bslib", quietly = TRUE)) {
-    message("Instalando bslib...")
-    install.packages("bslib", type = "binary", dependencies = TRUE)
-  }
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    message("Instalando ggplot2...")
-    install.packages("ggplot2", type = "binary", dependencies = TRUE)
-  }
-
-  # Cargar los paquetes
-  library(shiny)
-  library(bslib)
-  library(ggplot2)
 
   ui <- bslib::page_fluid(
     theme = bslib::bs_theme(version = 5, bootswatch = "flatly"),
@@ -194,6 +183,3 @@ run_beta_binomial_explorer <- function() {
   }
   shinyApp(ui = ui, server = server)
 }
-
-
-run_beta_binomial_explorer()

@@ -1,0 +1,28 @@
+#' @encoding UTF-8
+#' @title Datos ilustrativos de soportes de prensa
+#' @description Conjunto de datos ficticio con audiencias, tarifas e índices
+#' de utilidad de 60 soportes de prensa española, empleado en los ejemplos
+#' de \code{\link{calc_sainsbury}}, \code{\link{calc_binomial}},
+#' \code{\link{optimize_media_sb}} y \code{\link{calcular_metricas_medios}}.
+#'
+#' @format Un data frame con 60 filas y 7 variables:
+#' \describe{
+#'   \item{soportes}{Carácter. Nombre del soporte}
+#'   \item{soportes_.}{Numérico. Coeficiente de soporte (uso interno docente)}
+#'   \item{audiencias}{Entero. Audiencia del soporte (personas)}
+#'   \item{tarifas}{Numérico. Tarifa de una inserción en el soporte}
+#'   \item{indices_utilidad}{Numérico. Índice de utilidad de la audiencia (0-1 aprox.)}
+#'   \item{inserciones}{Entero. Número de inserciones consideradas}
+#'   \item{duplicacion}{Entero. Audiencia duplicada estimada frente al resto de soportes (personas)}
+#' }
+#'
+#' @note Los datos son ficticios y se emplean únicamente con fines docentes e
+#' ilustrativos; no representan cifras reales de audiencia o tarifas.
+#'
+#' @source Elaboración propia con fines docentes.
+#'
+#' @examples
+#' data(datos_medios)
+#' head(datos_medios)
+#'
+"datos_medios"

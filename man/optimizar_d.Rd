@@ -32,9 +32,9 @@ optimizar_d(
 
 \item{tolerancia}{Margen de error permitido en las soluciones (default: 0.05)}
 
-\item{step_A}{Incremento para búsqueda del parámetro alpha (default: 0.025)}
+\item{step_A}{Incremento para búsqueda del parámetro alpha (default: 0.1)}
 
-\item{step_B}{Incremento para búsqueda del parámetro beta (default: 0.025)}
+\item{step_B}{Incremento para búsqueda del parámetro beta (default: 0.1)}
 
 \item{batch_size}{Tamaño del lote para procesamiento (default: 1000000)}
 

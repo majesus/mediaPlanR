@@ -62,26 +62,21 @@ calculate_contact_distribution <- function(alpha, beta, n, max_contacts) {
 #'   \item Umbral de convergencia
 #' }
 #'
+#' @return Lanza una aplicacion Shiny interactiva (efecto secundario); no
+#' devuelve ningun valor util para el flujo de un script.
+#'
+#' @examples
+#' if (interactive()) {
+#'   run_reach_converg_explorer()
+#' }
+#'
+#' @import shiny
+#' @import bslib
+#' @import dplyr
+#' @importFrom graphics plot.new text
+#' @importFrom utils tail
 #' @export
-
 run_reach_converg_explorer <- function() {
-
-  # Verificar y cargar las dependencias necesarias
-  if (!requireNamespace("bslib", quietly = TRUE)) {
-    message("Instalando bslib...")
-    install.packages("bslib", type = "binary", dependencies = TRUE)
-  }
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    message("Instalando ggplot2...")
-    install.packages("ggplot2", type = "binary", dependencies = TRUE)
-  }
-
-  # Cargar los paquetes
-  library(shiny)
-  library(bslib)
-  library(dplyr)
-  library(ggplot2)
-  library(scales)
 
   ui <- bslib::page_sidebar(
     title = "Análisis de Convergencia - Modelo Beta Binomial",
@@ -142,7 +137,7 @@ run_reach_converg_explorer <- function() {
         absolutos = datos_calculados()$coverage * input$poblacion
       )
 
-      p <- ggplot(datos, aes(x = insercion, y = cobertura)) +
+      p <- ggplot(datos, aes(x = .data$insercion, y = .data$cobertura)) +
         geom_line(color = "blue") +
         geom_point() +
         labs(x = "Número de inserciones", y = "Cobertura acumulada",
@@ -180,7 +175,7 @@ run_reach_converg_explorer <- function() {
         absolutos = datos_calculados()$incremental * input$poblacion
       )
 
-      p <- ggplot(datos, aes(x = insercion, y = incremental)) +
+      p <- ggplot(datos, aes(x = .data$insercion, y = .data$incremental)) +
         geom_bar(stat = "identity", fill = "skyblue") +
         geom_hline(yintercept = input$threshold, color = "red", linetype = "dashed") +
         labs(x = "Número de inserciones",
@@ -228,7 +223,7 @@ run_reach_converg_explorer <- function() {
         text(0.5, 0.5, "Por favor, introduce un número válido\nde contactos a mostrar",
              cex = 1.2, col = "red", adj = 0.5)
       } else {
-        ggplot(datos, aes(x = contactos, y = probabilidad)) +
+        ggplot(datos, aes(x = .data$contactos, y = .data$probabilidad)) +
           geom_bar(stat = "identity", fill = "lightgreen") +
           labs(x = "Número de contactos", y = "Probabilidad", title = "Distribución de contactos") +
           theme_minimal() +
@@ -256,7 +251,7 @@ run_reach_converg_explorer <- function() {
         text(0.5, 0.5, "Por favor, introduce un número válido\nde contactos a mostrar",
              cex = 1.2, col = "red", adj = 0.5)
       } else {
-        ggplot(datos, aes(x = contactos, y = probabilidad)) +
+        ggplot(datos, aes(x = .data$contactos, y = .data$probabilidad)) +
           geom_bar(stat = "identity", fill = "orange") +
           labs(x = "Número de contactos", y = "Probabilidad acumulada",
                title = "Distribución acumulada (al menos X contactos)") +
@@ -302,5 +297,3 @@ run_reach_converg_explorer <- function() {
   # Lanzamos la aplicación Shiny
   shinyApp(ui = ui, server = server)
 }
-
-run_reach_converg_explorer()

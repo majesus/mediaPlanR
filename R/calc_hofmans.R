@@ -77,16 +77,20 @@
 #' \code{\link{calc_sainsbury}} para estimaciones el modelo de Sainsbury
 #' \code{\link{calc_binomial}} para estimaciones con el modelo Binomial
 #' \code{\link{calc_metheringham}} para estimaciones con el modelo de Metheringham
+#' @importFrom ggplot2 .data
 calc_hofmans <- function(R1, R2, N, show_steps=TRUE) {
   # Validación de inputs
-  if(any(c(R1, R2) > 1 | c(R1, R2) < 0)) {
-    stop("R1 y R2 deben estar entre 0 y 1")
+  if(any(c(R1, R2) > 1) || R1 <= 0 || R2 <= 0) {
+    stop("R1 y R2 deben ser mayores que 0 y como maximo 1")
   }
-  if(N < 3) {
-    stop("N debe ser al menos 3")
+  if(N < 3 || N != round(N)) {
+    stop("N debe ser un entero mayor o igual que 3")
   }
   if(R2 <= R1) {
     stop("La cobertura debe ser creciente: R1 < R2")
+  }
+  if(abs(2 * R1 - R2) < 1e-9) {
+    stop("2*R1 - R2 es practicamente 0: el modelo de Hofmans no esta definido para estos valores de R1 y R2 (division por cero)")
   }
 
   # Cálculos iniciales
@@ -139,19 +143,22 @@ calc_hofmans <- function(R1, R2, N, show_steps=TRUE) {
     }
   }
 
-  # Crear gráfico
-  plot <- {
-    plot(results$N, results$RN * 100, type="b",
-         xlab="Número de Inserciones (N)",
-         ylab="Cobertura (%)",
-         main="Evolución de la Audiencia Acumulada\nModelo de Hofmans",
-         ylim=c(0, max(results$RN * 100) * 1.1),
-         pch=19)
-    grid()
-    text(results$N, results$RN * 100,
-         labels=paste0(round(results$RN * 100, 1), "%"),
-         pos=3, cex=0.8)
-  }
+  # Crear gráfico (objeto ggplot2 reutilizable, no un efecto secundario de graficado base)
+  plot_hofmans <- ggplot2::ggplot(results, ggplot2::aes(x = .data$N, y = .data$RN * 100)) +
+    ggplot2::geom_line(color = "steelblue") +
+    ggplot2::geom_point(size = 2, color = "steelblue") +
+    ggplot2::geom_text(
+      ggplot2::aes(label = paste0(round(.data$RN * 100, 1), "%")),
+      vjust = -0.8, size = 3
+    ) +
+    ggplot2::scale_y_continuous(limits = c(0, max(results$RN * 100) * 1.15)) +
+    ggplot2::labs(
+      x = "Número de Inserciones (N)",
+      y = "Cobertura (%)",
+      title = "Evolución de la Audiencia Acumulada",
+      subtitle = "Modelo de Hofmans"
+    ) +
+    ggplot2::theme_minimal()
 
   if(show_steps) {
     cat("\n\nRESULTADOS:\n")
@@ -170,6 +177,6 @@ calc_hofmans <- function(R1, R2, N, show_steps=TRUE) {
   # Devolver resultados y gráfico
   invisible(list(
     results = results,
-    plot = plot
+    plot = plot_hofmans
   ))
 }

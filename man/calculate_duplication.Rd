@@ -3,23 +3,25 @@
 \encoding{UTF-8}
 \name{calculate_duplication}
 \alias{calculate_duplication}
-\title{Calculate Vehicle Duplication}
+\title{Calcular la duplicacion (correlacion) entre dos vehiculos}
 \usage{
 calculate_duplication(pij, pi, pj)
 }
 \arguments{
-\item{pij}{Numeric. Joint exposure probability}
+\item{pij}{Numerico. Probabilidad de exposicion conjunta a ambos vehiculos}
 
-\item{pi}{Numeric. First vehicle marginal probability}
+\item{pi}{Numerico. Probabilidad marginal de exposicion al primer vehiculo}
 
-\item{pj}{Numeric. Second vehicle marginal probability}
+\item{pj}{Numerico. Probabilidad marginal de exposicion al segundo vehiculo}
 }
 \value{
-Numeric. Correlation coefficient (-1 to 1)
+Numerico. Coeficiente de correlacion (entre -1 y 1); 0 si la
+varianza de alguno de los dos vehiculos es nula.
 }
 \description{
-Calculates correlation coefficient between two vehicles
-based on their reach probabilities.
+Calcula el coeficiente de correlacion entre las exposiciones
+a dos vehiculos a partir de su probabilidad de exposicion conjunta y sus
+probabilidades marginales de exposicion.
 }
 \examples{
 corr <- calculate_duplication(0.15, 0.3, 0.4)

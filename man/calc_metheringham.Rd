@@ -58,8 +58,8 @@ La función realiza los siguientes cálculos principales:
 La matriz de duplicación debe ser simétrica donde:
 \itemize{
 \item La diagonal contiene la duplicación de cada soporte consigo mismo
-\item El elemento \link{i,j} contiene la duplicación entre los soportes i y j
-\item Se debe cumplir que matriz\link{i,j} = matriz\link{j,i}
+\item El elemento \verb{[i,j]} contiene la duplicación entre los soportes i y j
+\item Se debe cumplir que \code{matriz[i,j] = matriz[j,i]}
 \item Para n soportes, la matriz debe ser de dimensiones n x n
 }
 }

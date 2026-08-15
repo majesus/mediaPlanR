@@ -13,8 +13,8 @@
 #' @param A1 Audiencia tras la primera inserción
 #' @param max_inserciones Número de inserciones máximo a considerar (default: 5)
 #' @param tolerancia Margen de error permitido en las soluciones (default: 0.05)
-#' @param step_A Incremento para búsqueda del parámetro alpha (default: 0.025)
-#' @param step_B Incremento para búsqueda del parámetro beta (default: 0.025)
+#' @param step_A Incremento para búsqueda del parámetro alpha (default: 0.1)
+#' @param step_B Incremento para búsqueda del parámetro beta (default: 0.1)
 #' @param batch_size Tamaño del lote para procesamiento (default: 1000000)
 #' @param min_soluciones Número mínimo de soluciones para parar (default: 10)
 #' @param error_aceptable Error aceptable como proporción (default: 0.01)
@@ -103,6 +103,7 @@
 #' Leckenby, J. D., & Boyd, M. M. (1984). An improved beta binomial reach/frequency model for magazines.
 #' Current Issues and Research in Advertising, 7(1), 1-24.
 #'
+#' @importFrom utils head
 #' @export
 
 optimizar_d <- function(Pob,
@@ -116,27 +117,6 @@ optimizar_d <- function(Pob,
                         batch_size = 1000000,
                         min_soluciones = 10,     # Número mínimo de soluciones para parar
                         error_aceptable = 0.01) { # Error aceptable como proporción (0.01 = 1%)
-
-  #___________________________________#
-  options(lazyLoad = FALSE)
-  if (!requireNamespace("extraDistr", quietly = TRUE)) {
-    install.packages("extraDistr")
-  }
-  library(extraDistr)
-  library(ggplot2)
-
-  calc_R1_R2 <- function(A, B) {
-    if (!is.numeric(A) || !is.numeric(B) || A <= 0 || B <= 0) {
-      stop("A y B deben ser numéricos y positivos.")
-    }
-    R1 <- A / (A + B)
-    objetivo_R2 <- function(R2) {
-      (A - (R1 * (R2 - R1)) / (2 * R1 - R1^2 - R2))^2
-    }
-    resultado <- stats::optimize(objetivo_R2, c(0, 1))
-    R2 <- resultado$minimum
-    return(list(R1 = R1, R2 = R2))
-  }
 
   #___________________________________#
 
@@ -209,24 +189,22 @@ optimizar_d <- function(Pob,
           beta = betas_batch
         )
 
-        # Procesar lote
-        probs <- mapply(function(n, x, alpha, beta) {
-          contador <<- contador + 1
+        # Procesar lote: llamada unica y vectorizada a dbbinom en vez de una
+        # llamada por combinacion (evaluar miles de combinaciones con un
+        # mapply que reevalua dbbinom() una a una es innecesariamente lento).
+        probs <- extraDistr::dbbinom(x = batch$x, size = batch$n, alpha = batch$alpha, beta = batch$beta)
 
-          if (difftime(Sys.time(), ultima_actualizacion, units="secs") > 0.1 &&
-              !isTRUE(getOption('knitr.in.progress'))) {
-            prob <- extraDistr::dbbinom(x = x, size = n, alpha = alpha, beta = beta)
-            mejor_prob <<- min(mejor_prob, abs(cob_efectiva_norm - prob))
+        contador <- contador + nrow(batch)
+        if (difftime(Sys.time(), ultima_actualizacion, units = "secs") > 0.1 &&
+            !isTRUE(getOption('knitr.in.progress'))) {
+          mejor_prob <- min(mejor_prob, min(abs(cob_efectiva_norm - probs)))
 
-            cat(sprintf("\rProgreso: %.2f%% | n=%d, α=%.3f, β=%.3f, prob=%.6f, mejor_diff=%.6f",
-                        contador/total_combinaciones*100,
-                        n, alpha, beta, prob, mejor_prob))
+          cat(sprintf("\rProgreso: %.2f%% | n=%d, lote de %d combinaciones, mejor_diff=%.6f",
+                      contador/total_combinaciones*100,
+                      n, nrow(batch), mejor_prob))
 
-            ultima_actualizacion <<- Sys.time()
-          }
-
-          extraDistr::dbbinom(x = x, size = n, alpha = alpha, beta = beta)
-        }, batch$n, batch$x, batch$alpha, batch$beta)
+          ultima_actualizacion <- Sys.time()
+        }
 
         # Filtrar resultados del lote
         indices <- which(abs(cob_efectiva_norm - probs) <= tolerancia)
@@ -458,27 +436,6 @@ optimizar_dc <- function(Pob,
                          error_aceptable = 0.01) { # Error aceptable como proporción (0.01 = 1%)
 
   #___________________________________#
-  options(lazyLoad = FALSE)
-  if (!requireNamespace("extraDistr", quietly = TRUE)) {
-    install.packages("extraDistr")
-  }
-  library(extraDistr)
-  library(ggplot2)
-
-  calc_R1_R2 <- function(A, B) {
-    if (!is.numeric(A) || !is.numeric(B) || A <= 0 || B <= 0) {
-      stop("A y B deben ser numéricos y positivos.")
-    }
-    R1 <- A / (A + B)
-    objetivo_R2 <- function(R2) {
-      (A - (R1 * (R2 - R1)) / (2 * R1 - R1^2 - R2))^2
-    }
-    resultado <- stats::optimize(objetivo_R2, c(0, 1))
-    R2 <- resultado$minimum
-    return(list(R1 = R1, R2 = R2))
-  }
-
-  #___________________________________#
 
   # [Validaciones iniciales...]
   if (!is.numeric(Pob) || !is.numeric(FEM) || !is.numeric(cob_efectiva) || !is.numeric(max_inserciones)) {
@@ -549,25 +506,31 @@ optimizar_dc <- function(Pob,
           beta = betas_batch
         )
 
-        # Procesar lote
-        probs <- mapply(function(n, x, alpha, beta) {
-          contador <<- contador + 1
+        # Procesar lote: para cada combinacion (alpha, beta) del lote se
+        # necesita la probabilidad acumulada P(X >= FEM); se calcula con una
+        # unica llamada vectorizada a dbbinom en vez de una llamada (y una
+        # suma) por cada combinacion.
+        x_vals <- FEM:n
+        n_rows <- nrow(batch)
+        probs_all <- extraDistr::dbbinom(
+          x = rep(x_vals, times = n_rows),
+          size = n,
+          alpha = rep(batch$alpha, each = length(x_vals)),
+          beta = rep(batch$beta, each = length(x_vals))
+        )
+        probs <- colSums(matrix(probs_all, nrow = length(x_vals), ncol = n_rows))
 
-          if (difftime(Sys.time(), ultima_actualizacion, units="secs") > 0.1 &&
-              !isTRUE(getOption('knitr.in.progress'))) {
-            prob <- extraDistr::dbbinom(x = x, size = n, alpha = alpha, beta = beta)
-            mejor_prob <<- min(mejor_prob, abs(cob_efectiva_norm - prob))
+        contador <- contador + n_rows
+        if (difftime(Sys.time(), ultima_actualizacion, units = "secs") > 0.1 &&
+            !isTRUE(getOption('knitr.in.progress'))) {
+          mejor_prob <- min(mejor_prob, min(abs(cob_efectiva_norm - probs)))
 
-            cat(sprintf("\rProgreso: %.2f%% | n=%d, α=%.3f, β=%.3f, prob=%.6f, mejor_diff=%.6f",
-                        contador/total_combinaciones*100,
-                        n, alpha, beta, prob, mejor_prob))
+          cat(sprintf("\rProgreso: %.2f%% | n=%d, lote de %d combinaciones, mejor_diff=%.6f",
+                      contador/total_combinaciones*100,
+                      n, n_rows, mejor_prob))
 
-            ultima_actualizacion <<- Sys.time()
-          }
-
-          prob_vector <- extraDistr::dbbinom(x = 0:n, size = n, alpha = alpha, beta = beta)
-          sum(prob_vector[(FEM + 1):(n + 1)])
-        }, batch$n, batch$x, batch$alpha, batch$beta)
+          ultima_actualizacion <- Sys.time()
+        }
 
         # Filtrar resultados del lote
         indices <- which(abs(cob_efectiva_norm - probs) <= tolerancia)

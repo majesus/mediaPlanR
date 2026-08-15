@@ -83,12 +83,12 @@ El modelo asume:
 }
 }
 \examples{
-Ejemplo básico
+# Ejemplo básico
 insertions <- c(5, 7, 4)
 audiences <- c(500000, 550000, 600000)
 RM <- 550000
-universe <- 1000000  # Añadimos el parámetro universe que faltaba
-resultado <- calc_MBBD(m, insertions, audiences, RM, universe, A0=0.1)
+universe <- 1000000
+resultado <- calc_MBBD(insertions, audiences, RM, universe, A0 = 0.1)
 
 # Examinar resultados
 print(resultado)

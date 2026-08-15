@@ -28,24 +28,11 @@
 #'
 #' @import ggplot2
 #' @import ggrepel
-#' @importFrom viridis scale_fill_viridis_d
+#' @importFrom scales comma
 #' @export
 
 plot_grp_metricas <- function(audiencias, inserciones, precios, nombres,
                              pob_total, titulo = "Comparación de Soportes Publicitarios") {
-
-  # Lista de paquetes necesarios
-  paquetes_requeridos <- c("ggrepel")
-
-  # Función para verificar e instalar paquetes
-  instalar_si_falta <- function(paquete) {
-    if (!requireNamespace(paquete, quietly = TRUE)) {
-      install.packages(paquete)
-    }
-  }
-
-  # Aplicar la función a cada paquete
-  invisible(sapply(paquetes_requeridos, instalar_si_falta))
 
   if (!all(sapply(list(audiencias, inserciones, precios), is.numeric))) {
     stop("audiencias, inserciones y precios deben ser vectores numéricos")
@@ -62,14 +49,14 @@ plot_grp_metricas <- function(audiencias, inserciones, precios, nombres,
     coste = inserciones * precios
   )
 
-  ggplot(df, aes(x = cgrp, y = contactos,
-                 color = nombre, label = nombre)) +
-    geom_point(alpha = 0.7, stroke = 1, color = "black", shape = 21, aes(fill = nombre)) +
-    ggrepel::geom_text_repel(aes(size = coste * .1), box.padding = 1, max.overlaps = Inf) +
+  ggplot(df, aes(x = .data$cgrp, y = .data$contactos,
+                 color = .data$nombre, label = .data$nombre)) +
+    geom_point(alpha = 0.7, stroke = 1, color = "black", shape = 21, aes(fill = .data$nombre)) +
+    ggrepel::geom_text_repel(aes(size = .data$coste * .1), box.padding = 1, max.overlaps = Inf) +
     scale_size_continuous(range = c(5, 20)) +
     scale_y_continuous(labels = scales::comma) +
     scale_x_continuous(labels = scales::comma) +
-    scale_fill_viridis_d(option = "turbo") +
+    scale_fill_viridis_d(option = "turbo") + # re-exportada por ggplot2 (viridisLite)
     labs(
       title = titulo,
       x = "C/GRP",

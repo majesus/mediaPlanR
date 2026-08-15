@@ -16,12 +16,16 @@
 #' @param FEM Frecuencia Efectiva Mínima requerida (número entero positivo)
 #' @param objetivo_cobertura Cobertura objetivo a alcanzar (porcentaje)
 #' @param presupuesto_max Presupuesto máximo disponible
-#' @param tolerancia_presupuesto Desviación permitida sobre el presupuesto máximo (por defecto 0.10 = 10%)
 #' @param poblacion_total Tamaño de la población objetivo (por defecto 47000000)
 #' @param tam_batch Tamaño de los lotes para procesamiento (por defecto 5)
 #' @param soportes_vetados Vector de caracteres con nombres de soportes a excluir (opcional)
 #' @param modelo Modelo a utilizar para el cálculo de cobertura: "sainsbury" o "binomial" (por defecto "sainsbury")
 #' @param usar_audiencia_util Logical indicando si usar audiencia útil (TRUE) o bruta (FALSE, por defecto)
+#' @param tol Tolerancia para comparación de números flotantes.
+#' @param tolerancia_presupuesto_tipo Tipo de tolerancia para el presupuesto: "porcentaje" o "absoluto" (por defecto "porcentaje").
+#' @param tolerancia_cobertura_tipo Tipo de tolerancia para la cobertura: "porcentaje", "absoluto" o "personas" (por defecto "porcentaje").
+#' @param tolerancia_presupuesto Valor de la tolerancia para el presupuesto (por defecto 0.10 = 10% si tolerancia_presupuesto_tipo es "porcentaje").
+#' @param tolerancia_cobertura Valor de la tolerancia para la cobertura (por defecto 0.05 = 5% si tolerancia_cobertura_tipo es "porcentaje").
 #'
 #' @details
 #' El algoritmo de optimización sigue los siguientes pasos:
@@ -69,8 +73,9 @@
 #' }
 #'
 #' @examples
-#' # Ejemplo con audiencia bruta y modelo Sainsbury
-#'
+#' # Ejemplo con audiencia bruta y modelo Sainsbury, tolerancia de presupuesto
+#' # absoluta y de cobertura en personas, a partir de un CSV externo
+#' \dontrun{
 #' datos <- readr::read_csv(file = "data.csv", show_col_types = FALSE)
 #'
 #' resultado_bruto <- optimize_media_sb(
@@ -79,10 +84,16 @@
 #'   objetivo_cobertura = 50,
 #'   presupuesto_max = 100000,
 #'   modelo = "sainsbury",
-#'   usar_audiencia_util = FALSE
+#'   usar_audiencia_util = FALSE,
+#'   tolerancia_presupuesto_tipo = "absoluto",
+#'   tolerancia_presupuesto = 5000,  # 5000€ de tolerancia
+#'   tolerancia_cobertura_tipo = "personas",
+#'   tolerancia_cobertura = 10000, # 10000 personas de tolerancia
+#'   poblacion_total = 47000000
 #' )
+#' }
 #'
-#' # Ejemplo con audiencia útil y modelo Binomial
+#' # Ejemplo con audiencia útil y modelo Binomial, tolerancia de presupuesto y cobertura en porcentajes
 #' datos_util <- data.frame(
 #'   soportes = c("Medio1", "Medio2", "Medio3"),
 #'   audiencias = c(1000000, 800000, 600000),
@@ -96,31 +107,46 @@
 #'   objetivo_cobertura = 50,
 #'   presupuesto_max = 100000,
 #'   modelo = "binomial",
-#'   usar_audiencia_util = TRUE
+#'   usar_audiencia_util = TRUE,
+#'   tolerancia_presupuesto_tipo = "porcentaje",
+#'   tolerancia_presupuesto = 0.15, # 15%
+#'   tolerancia_cobertura_tipo = "porcentaje",
+#'   tolerancia_cobertura = 0.1 # 10%
 #' )
 #'
 #' @export
 #' @seealso
 #' \code{\link{calc_sainsbury}} para el modelo de Sainsbury
 #' \code{\link{calc_binomial}} para el modelo Binomial
-optimize_media_sb <- function(
-    soportes_df,
-    FEM,
-    objetivo_cobertura,
-    presupuesto_max,
-    tolerancia_presupuesto = 0.10,
-    poblacion_total = 47000000,
-    tam_batch = 5,
-    soportes_vetados = NULL,
-    modelo = c("sainsbury", "binomial"),
-    usar_audiencia_util = FALSE) {
+#' @importFrom utils txtProgressBar setTxtProgressBar
+optimize_media_sb <- function(soportes_df,
+                              FEM,
+                              objetivo_cobertura,
+                              presupuesto_max,
+                              poblacion_total = 47000000,
+                              tam_batch = 5,
+                              soportes_vetados = NULL,
+                              modelo = c("sainsbury", "binomial"),
+                              usar_audiencia_util = FALSE,
+                              tol = 1e-10,
+                              tolerancia_presupuesto_tipo = "porcentaje",
+                              tolerancia_cobertura_tipo = "porcentaje",
+                              tolerancia_presupuesto = 0.10,
+                              tolerancia_cobertura = 0.05) {
   # Validar modelo
   modelo <- match.arg(modelo)
+
+  # Validar tipos de tolerancia
+  tolerancia_presupuesto_tipo <-
+    match.arg(tolerancia_presupuesto_tipo, c("porcentaje", "absoluto"))
+  tolerancia_cobertura_tipo <-
+    match.arg(tolerancia_cobertura_tipo, c("porcentaje", "absoluto", "personas"))
 
   cat("\nIniciando optimización...\n")
 
   # Validación para audiencia útil
-  if(usar_audiencia_util && !"indices_utilidad" %in% colnames(soportes_df)) {
+  if (usar_audiencia_util &&
+      !"indices_utilidad" %in% colnames(soportes_df)) {
     stop("Se solicitó usar audiencia útil pero no se encuentra la columna 'indices_utilidad'")
   }
 
@@ -140,7 +166,8 @@ optimize_media_sb <- function(
       cat("\n")
     }
     # Filtrar soportes vetados
-    soportes_df <- soportes_df[!soportes_df$soportes %in% soportes_vetados, ]
+    soportes_df <-
+      soportes_df[!soportes_df$soportes %in% soportes_vetados, ]
   }
 
   # Verificar que quedan suficientes soportes
@@ -149,13 +176,15 @@ optimize_media_sb <- function(
   }
 
   # Preparar datos
-  if(usar_audiencia_util) {
-    soportes_df$audiencias_calculo <- soportes_df$audiencias * soportes_df$indices_utilidad
+  if (usar_audiencia_util) {
+    soportes_df$audiencias_calculo <-
+      soportes_df$audiencias * soportes_df$indices_utilidad
   } else {
     soportes_df$audiencias_calculo <- soportes_df$audiencias
   }
 
-  soportes_df$eficiencia <- soportes_df$audiencias_calculo / soportes_df$tarifas
+  soportes_df$eficiencia <-
+    soportes_df$audiencias_calculo / soportes_df$tarifas
   soportes_ordenados <- soportes_df[order(-soportes_df$eficiencia), ]
   n_soportes <- nrow(soportes_ordenados)
 
@@ -166,22 +195,30 @@ optimize_media_sb <- function(
   evaluar_batch <- function(batch_combinaciones) {
     resultados <- list()
     costes <- sapply(1:nrow(batch_combinaciones), function(i) {
-      sum(soportes_ordenados$tarifas[batch_combinaciones[i,] == 1])
+      sum(soportes_ordenados$tarifas[batch_combinaciones[i, ] == 1])
     })
 
-    # Filtrar primero por presupuesto
-    combinaciones_validas <- which(costes <= presupuesto_max * (1 + tolerancia_presupuesto))
+    # Calcular la tolerancia de presupuesto en valor absoluto
+    if (tolerancia_presupuesto_tipo == "porcentaje") {
+      tolerancia_presupuesto_abs <- presupuesto_max * tolerancia_presupuesto
+    } else {
+      tolerancia_presupuesto_abs <- tolerancia_presupuesto
+    }
 
-    if(length(combinaciones_validas) == 0) {
+    # Filtrar primero por presupuesto
+    combinaciones_validas <-
+      which(costes <= presupuesto_max + tolerancia_presupuesto_abs)
+
+    if (length(combinaciones_validas) == 0) {
       return(NULL)
     }
 
     # Evaluar solo las combinaciones que cumplen presupuesto
-    for(i in combinaciones_validas) {
-      comb <- batch_combinaciones[i,]
-      if(sum(comb) >= FEM) {
+    for (i in combinaciones_validas) {
+      comb <- batch_combinaciones[i, ]
+      if (sum(comb) >= FEM) {
         audiencias_sel <- soportes_ordenados$audiencias_calculo[comb == 1]
-        resultado <- if(modelo == "sainsbury") {
+        resultado <- if (modelo == "sainsbury") {
           calc_sainsbury(audiencias_sel, poblacion_total)
         } else {
           calc_binomial(audiencias_sel, poblacion_total)
@@ -207,7 +244,7 @@ optimize_media_sb <- function(
   pb <- txtProgressBar(min = 0, max = n_batches, style = 3)
 
   # Generar y evaluar batches de combinaciones
-  for(batch_idx in 1:n_batches) {
+  for (batch_idx in 1:n_batches) {
     setTxtProgressBar(pb, batch_idx)
 
     # Calcular índices para este batch
@@ -219,30 +256,37 @@ optimize_media_sb <- function(
     batch_base[1:FEM] <- 1  # Asegurar FEM mínimo
 
     # Generar variaciones para este batch
-    combinaciones_batch <- matrix(0, nrow = 2^(fin-inicio+1), ncol = n_soportes)
-    combinaciones_batch[,1:FEM] <- 1  # Asegurar FEM mínimo
+    combinaciones_batch <-
+      matrix(0, nrow = 2 ^ (fin - inicio + 1), ncol = n_soportes)
+    combinaciones_batch[, 1:FEM] <- 1  # Asegurar FEM mínimo
 
-    for(i in 1:(2^(fin-inicio+1))) {
-      bits <- as.integer(intToBits(i-1)[1:(fin-inicio+1)])
+    for (i in 1:(2 ^ (fin - inicio + 1))) {
+      bits <- as.integer(intToBits(i - 1)[1:(fin - inicio + 1)])
       combinaciones_batch[i, inicio:fin] <- bits
     }
 
     # Evaluar batch
     resultados_batch <- evaluar_batch(combinaciones_batch)
 
-    if(!is.null(resultados_batch)) {
-      for(resultado in resultados_batch) {
-        if(resultado$cobertura > mejor_cobertura) {
+    if (!is.null(resultados_batch)) {
+      for (resultado in resultados_batch) {
+        if (resultado$cobertura > mejor_cobertura) {
           mejor_combinacion <- resultado$combinacion
           mejor_cobertura <- resultado$cobertura
           mejor_coste <- resultado$coste
 
-          cat(sprintf("\nBatch %d/%d - ¡Nueva mejor solución!\n",
-                      batch_idx, n_batches))
-          cat(sprintf("Cobertura: %.2f%%, Coste: %.2f€\n",
-                      mejor_cobertura, mejor_coste))
+          cat(sprintf(
+            "\nBatch %d/%d - ¡Nueva mejor solución!\n",
+            batch_idx,
+            n_batches
+          ))
+          cat(sprintf(
+            "Cobertura: %.2f%%, Coste: %.2f€\n",
+            mejor_cobertura,
+            mejor_coste
+          ))
 
-          if(mejor_cobertura >= objetivo_cobertura) {
+          if (mejor_cobertura >= objetivo_cobertura) {
             cat("\n¡Objetivo alcanzado! Finalizando búsqueda...\n")
             break
           }
@@ -250,13 +294,14 @@ optimize_media_sb <- function(
       }
     }
 
-    if(mejor_cobertura >= objetivo_cobertura) break
+    if (mejor_cobertura >= objetivo_cobertura)
+      break
   }
 
   close(pb)
 
   # Verificar si encontramos una solución
-  if(is.null(mejor_combinacion)) {
+  if (is.null(mejor_combinacion)) {
     cat("\nNO SE HA ENCONTRADO SOLUCIÓN FACTIBLE\n")
     cat("===================================\n")
     cat(sprintf("- Presupuesto máximo: %.2f€\n", presupuesto_max))
@@ -264,30 +309,37 @@ optimize_media_sb <- function(
     cat(sprintf("- Objetivo de cobertura: %.2f%%\n", objetivo_cobertura))
 
     # Mostrar el soporte más barato como referencia
-    soporte_min <- soportes_ordenados[which.min(soportes_ordenados$tarifas), ]
-    cat(sprintf("\nNota: El soporte más económico cuesta %.2f€ (%s)\n",
-                soporte_min$tarifas, soporte_min$soportes))
-
-    return(list(
-      exito = FALSE,
-      mensaje = "No se encontró solución factible con las restricciones dadas",
-      presupuesto_max = presupuesto_max,
-      FEM_requerida = FEM,
-      objetivo_cobertura = objetivo_cobertura,
-      soportes_vetados = soportes_vetados,
-      soportes_no_encontrados = soportes_no_encontrados,
-      soporte_mas_economico = list(
-        nombre = soporte_min$soportes,
-        tarifa = soporte_min$tarifas
-      )
+    soporte_min <-
+      soportes_ordenados[which.min(soportes_ordenados$tarifas), ]
+    cat(sprintf(
+      "\nNota: El soporte más económico cuesta %.2f€ (%s)\n",
+      soporte_min$tarifas,
+      soporte_min$soportes
     ))
+
+    return(
+      list(
+        exito = FALSE,
+        mensaje = "No se encontró solución factible con las restricciones dadas",
+        presupuesto_max = presupuesto_max,
+        FEM_requerida = FEM,
+        objetivo_cobertura = objetivo_cobertura,
+        soportes_vetados = soportes_vetados,
+        soportes_no_encontrados = soportes_no_encontrados,
+        soporte_mas_economico = list(
+          nombre = soporte_min$soportes,
+          tarifa = soporte_min$tarifas
+        )
+      )
+    )
   }
 
   # Preparar resultado
-  soportes_seleccionados <- soportes_ordenados[mejor_combinacion == 1, ]
+  soportes_seleccionados <-
+    soportes_ordenados[mejor_combinacion == 1, ]
 
   # Calcular distribución final usando el modelo seleccionado
-  distribucion_final <- if(modelo == "sainsbury") {
+  distribucion_final <- if (modelo == "sainsbury") {
     calc_sainsbury(soportes_seleccionados$audiencias_calculo, poblacion_total)
   } else {
     calc_binomial(soportes_seleccionados$audiencias_calculo, poblacion_total)
@@ -298,11 +350,15 @@ optimize_media_sb <- function(
   cat("\nPLAN DE MEDIOS OPTIMIZADO\n")
   cat("========================\n")
   cat(sprintf("Modelo utilizado: %s\n", modelo))
-  cat(sprintf("Tipo de audiencia: %s\n",
-              ifelse(usar_audiencia_util, "Audiencia útil", "Audiencia bruta")))
+  cat(sprintf(
+    "Tipo de audiencia: %s\n",
+    ifelse(usar_audiencia_util, "Audiencia útil", "Audiencia bruta")
+  ))
 
   if (!is.null(soportes_vetados) &&
-      (length(soportes_vetados) > 0 || length(soportes_no_encontrados) > 0)) {
+      (
+        length(soportes_vetados) > 0 || length(soportes_no_encontrados) > 0
+      )) {
     cat("\nSoportes excluidos del análisis:\n")
     if (length(soportes_vetados) > 0) {
       cat("- Excluidos encontrados en la base:\n")
@@ -318,42 +374,62 @@ optimize_media_sb <- function(
   cat("\nDISTRIBUCIÓN DE CONTACTOS:\n")
   cat("------------------------\n")
   cat("\nDistribución normal:\n")
-  for(i in 1:length(distribucion_final$distribucion$personas)) {
-    cat(sprintf("%d contactos: %.2f%% (%.0f personas)\n",
-                i-1,  # i-1 porque empezamos desde 0 contactos
-                distribucion_final$distribucion$porcentaje[i],
-                distribucion_final$distribucion$personas[i]))
+  for (i in 1:length(distribucion_final$distribucion$personas)) {
+    cat(
+      sprintf(
+        "%d contactos: %.2f%% (%.0f personas)\n",
+        i - 1,
+        # i-1 porque empezamos desde 0 contactos
+        distribucion_final$distribucion$porcentaje[i],
+        distribucion_final$distribucion$personas[i]
+      )
+    )
   }
 
   cat("\nDistribución acumulada:\n")
-  for(i in 1:length(distribucion_final$acumulada$personas)) {
-    cat(sprintf("%d+ contactos: %.2f%% (%.0f personas)\n",
-                i,
-                distribucion_final$acumulada$porcentaje[i],
-                distribucion_final$acumulada$personas[i]))
+  for (i in 1:length(distribucion_final$acumulada$personas)) {
+    cat(
+      sprintf(
+        "%d+ contactos: %.2f%% (%.0f personas)\n",
+        i,
+        distribucion_final$acumulada$porcentaje[i],
+        distribucion_final$acumulada$personas[i]
+      )
+    )
   }
 
   cat("\nRESUMEN ECONÓMICO:\n")
   cat("----------------\n")
   cat(sprintf("Coste total: %.2f€\n", mejor_coste))
-  cat(sprintf("Coste por impacto: %.2f€\n",
-              mejor_coste/sum(distribucion_final$distribucion$personas)))
+  cat(sprintf(
+    "Coste por impacto: %.2f€\n",
+    mejor_coste / sum(distribucion_final$distribucion$personas)
+  ))
 
   cat("\nSOPORTES SELECCIONADOS:\n")
   cat("--------------------\n")
 
   # Preparar tabla de resultados según tipo de audiencia
-  if(usar_audiencia_util) {
+  if (usar_audiencia_util) {
     tabla_plan <- soportes_seleccionados[
       order(-soportes_seleccionados$eficiencia),
-      c("soportes", "audiencias", "audiencias_calculo", "indices_utilidad",
-        "tarifas", "eficiencia")]
-    names(tabla_plan)[names(tabla_plan) == "audiencias_calculo"] <- "audiencia_util"
+      c("soportes",
+        "audiencias",
+        "audiencias_calculo",
+        "indices_utilidad",
+        "tarifas",
+        "eficiencia")
+    ]
+    names(tabla_plan)[names(tabla_plan) == "audiencias_calculo"] <-
+      "audiencia_util"
   } else {
     tabla_plan <- soportes_seleccionados[
       order(-soportes_seleccionados$eficiencia),
-      c("soportes", "audiencias", "tarifas", "eficiencia")]
+      c("soportes", "audiencias", "tarifas", "eficiencia")
+    ]
   }
+
+  # ... (Código anterior, hasta la impresión de la tabla de soportes seleccionados)
 
   print(tabla_plan)
 
@@ -361,50 +437,125 @@ optimize_media_sb <- function(
   cat("=====================\n")
 
   # Evaluación del presupuesto
-  presupuesto_usado_pct <- (mejor_coste / presupuesto_max) * 100
+  # Calcular la tolerancia de presupuesto en valor absoluto
+  if (tolerancia_presupuesto_tipo == "porcentaje") {
+    tolerancia_presupuesto_abs <- presupuesto_max * tolerancia_presupuesto
+  } else {
+    tolerancia_presupuesto_abs <- tolerancia_presupuesto
+  }
+
+  presupuesto_usado_pct <-
+    (mejor_coste / presupuesto_max) * 100
   cat(sprintf("\n1. PRESUPUESTO:\n"))
   cat(sprintf("   - Disponible: %.2f€\n", presupuesto_max))
-  cat(sprintf("   - Utilizado: %.2f€ (%.1f%%)\n", mejor_coste, presupuesto_usado_pct))
-  if(mejor_coste <= presupuesto_max) {
+  cat(sprintf(
+    "   - Utilizado: %.2f€ (%.1f%%)\n",
+    mejor_coste,
+    presupuesto_usado_pct
+  ))
+  # Usar tolerancia absoluta en la comparación
+  if (abs(mejor_coste - presupuesto_max) <= tolerancia_presupuesto_abs) {
     cat("   ✓ Se ha cumplido la restricción presupuestaria\n")
   } else {
-    cat(sprintf("   ⚠ Se ha excedido el presupuesto en %.2f€\n",
-                mejor_coste - presupuesto_max))
+    cat(
+      sprintf(
+        "   ⚠ Se ha excedido el presupuesto en %.2f€\n",
+        presupuesto_max - mejor_coste
+      )
+    )
   }
 
   # Evaluación de la cobertura
   cat(sprintf("\n2. COBERTURA:\n"))
-  cat(sprintf("   - Objetivo: %.2f%%\n", objetivo_cobertura))
-  cat(sprintf("   - Alcanzada: %.2f%%\n", mejor_cobertura))
-  if(mejor_cobertura >= objetivo_cobertura) {
-    cat("   ✓ Se ha alcanzado el objetivo de cobertura\n")
+
+  # Imprimir el objetivo de cobertura en el formato correcto
+  if (tolerancia_cobertura_tipo == "personas") {
+    cat(sprintf("   - Objetivo: %.0f personas\n", objetivo_cobertura))
   } else {
-    diferencia_cobertura <- objetivo_cobertura - mejor_cobertura
-    cat(sprintf("   ⚠ No se ha alcanzado el objetivo. Diferencia: %.2f%%\n",
-                diferencia_cobertura))
+    cat(sprintf("   - Objetivo: %.2f%%\n", objetivo_cobertura))
+  }
+  cat(sprintf("   - Alcanzada: %.2f%%\n", mejor_cobertura))
+
+  # Calcular la diferencia en personas o porcentaje según el tipo de tolerancia
+  if (tolerancia_cobertura_tipo == "personas") {
+    diferencia_cobertura <- round(objetivo_cobertura - (mejor_cobertura / 100 * poblacion_total), 0)
+
+    # Usar la diferencia y la tolerancia para evaluar el cumplimiento
+    if (objetivo_cobertura - tolerancia_cobertura <= round(mejor_cobertura / 100 * poblacion_total, 0) &&
+        round(mejor_cobertura / 100 * poblacion_total, 0) <= objetivo_cobertura + tolerancia_cobertura) {
+      cat("   ✓ Se ha alcanzado el objetivo de cobertura\n")
+    } else {
+      cat(
+        sprintf(
+          "   ⚠ No se ha alcanzado el objetivo. Diferencia: %.0f personas\n",
+          diferencia_cobertura
+        )
+      )
+    }
+  }
+  else
+  {
+    diferencia_cobertura <- round(objetivo_cobertura - mejor_cobertura, 8) # Diferencia en porcentaje
+
+    # Usar la diferencia y la tolerancia para evaluar el cumplimiento
+    if (abs(diferencia_cobertura) <= tolerancia_cobertura * if (tolerancia_cobertura_tipo == "porcentaje") objetivo_cobertura else 1) {
+      cat("   ✓ Se ha alcanzado el objetivo de cobertura\n")
+    } else {
+      cat(
+        sprintf(
+          "   ⚠ No se ha alcanzado el objetivo. Diferencia: %.8f%%\n",
+          diferencia_cobertura
+        )
+      )
+    }
   }
 
   # Evaluación de la FEM
   contactos_FEM <- distribucion_final$acumulada$porcentaje[FEM]
   cat(sprintf("\n3. FRECUENCIA EFECTIVA MÍNIMA (FEM):\n"))
   cat(sprintf("   - FEM requerida: %d contactos\n", FEM))
-  cat(sprintf("   - Población con %d+ contactos: %.2f%%\n", FEM, contactos_FEM))
+  cat(sprintf(
+    "   - Población con %d+ contactos: %.2f%%\n",
+    FEM,
+    contactos_FEM
+  ))
 
+  # Resumen general del plan
   # Resumen general del plan
   cat("\nRESUMEN GENERAL:\n")
   cat("---------------\n")
 
-  if(mejor_coste <= presupuesto_max && mejor_cobertura >= objetivo_cobertura) {
+  # Calcular la tolerancia de presupuesto en valor absoluto
+  if (tolerancia_presupuesto_tipo == "porcentaje") {
+    tolerancia_presupuesto_abs <- presupuesto_max * tolerancia_presupuesto
+  } else {
+    tolerancia_presupuesto_abs <- tolerancia_presupuesto
+  }
+
+  # Evaluar si se ha alcanzado el objetivo de cobertura según el tipo de tolerancia
+  if (tolerancia_cobertura_tipo == "personas") {
+    cobertura_cumplida <- (objetivo_cobertura - tolerancia_cobertura <= round(mejor_cobertura / 100 * poblacion_total, 0) &&
+                             round(mejor_cobertura / 100 * poblacion_total, 0) <= objetivo_cobertura + tolerancia_cobertura)
+  } else {
+    cobertura_cumplida <- (abs(diferencia_cobertura) <= tolerancia_cobertura * if (tolerancia_cobertura_tipo == "porcentaje") objetivo_cobertura else 1)
+  }
+
+  # Evaluar el cumplimiento de los objetivos
+  if (mejor_coste <= presupuesto_max + tolerancia_presupuesto_abs && cobertura_cumplida) {
     cat("✓ PLAN ÓPTIMO: Se han cumplido todos los objetivos\n")
   } else {
-    if(mejor_coste <= presupuesto_max) {
-      cat("⚠ PLAN SUBÓPTIMO: Se ajusta al presupuesto pero no alcanza la cobertura deseada\n")
+    if (mejor_coste <= presupuesto_max + tolerancia_presupuesto_abs) {
+      cat(
+        "⚠ PLAN SUBÓPTIMO: Se ajusta al presupuesto pero no alcanza la cobertura deseada\n"
+      )
       cat("   Recomendaciones:\n")
       cat("   - Considerar aumentar el presupuesto\n")
       cat("   - Revisar soportes vetados\n")
       cat("   - Evaluar otros soportes alternativos\n")
-    } else if(mejor_cobertura >= objetivo_cobertura) {
-      cat("⚠ PLAN SUBÓPTIMO: Alcanza la cobertura pero excede el presupuesto\n")
+    } else if (cobertura_cumplida) {
+      cat(
+        "⚠ PLAN SUBÓPTIMO: Alcanza la cobertura pero excede el presupuesto\n"
+      )
       cat("   Recomendaciones:\n")
       cat("   - Aumentar el presupuesto disponible\n")
       cat("   - Buscar soportes más eficientes\n")
@@ -418,36 +569,43 @@ optimize_media_sb <- function(
   }
 
   # Modificar el return para incluir la nueva información
-  return(list(
-    exito = TRUE,
-    cobertura_alcanzada = mejor_cobertura,
-    coste_total = mejor_coste,
-    soportes_seleccionados = tabla_plan,
-    plan_completo = mejor_combinacion,
-    objetivo_alcanzado = mejor_cobertura >= objetivo_cobertura,
-    presupuesto_cumplido = mejor_coste <= presupuesto_max,
-    evaluacion = list(
-      presupuesto = list(
-        disponible = presupuesto_max,
-        utilizado = mejor_coste,
-        porcentaje_uso = presupuesto_usado_pct,
-        cumplido = mejor_coste <= presupuesto_max
+
+  return(
+    list(
+      exito = TRUE,
+      cobertura_alcanzada = mejor_cobertura,
+      coste_total = mejor_coste,
+      soportes_seleccionados = tabla_plan,
+      plan_completo = mejor_combinacion,
+      objetivo_alcanzado = abs(diferencia_cobertura) < tolerancia_cobertura,
+      presupuesto_cumplido = abs(mejor_coste - presupuesto_max) < tolerancia_presupuesto_abs,
+      evaluacion = list(
+        presupuesto = list(
+          disponible = presupuesto_max,
+          utilizado = mejor_coste,
+          porcentaje_uso = presupuesto_usado_pct,
+          cumplido = abs(mejor_coste - presupuesto_max) < tolerancia_presupuesto_abs,
+          tolerancia_tipo = tolerancia_presupuesto_tipo,
+          tolerancia_valor = tolerancia_presupuesto
+        ),
+        cobertura = list(
+          objetivo = objetivo_cobertura,
+          alcanzada = mejor_cobertura,
+          diferencia = diferencia_cobertura,
+          cumplido = abs(diferencia_cobertura) < tolerancia_cobertura,
+          tolerancia_tipo = tolerancia_cobertura_tipo,
+          tolerancia_valor = tolerancia_cobertura
+        ),
+        FEM = list(
+          requerida = FEM,
+          poblacion_alcanzada = contactos_FEM
+        )
       ),
-      cobertura = list(
-        objetivo = objetivo_cobertura,
-        alcanzada = mejor_cobertura,
-        diferencia = objetivo_cobertura - mejor_cobertura,
-        cumplido = mejor_cobertura >= objetivo_cobertura
-      ),
-      FEM = list(
-        requerida = FEM,
-        poblacion_alcanzada = contactos_FEM
-      )
-    ),
-    distribucion = distribucion_final,
-    soportes_vetados = soportes_vetados,
-    soportes_no_encontrados = soportes_no_encontrados,
-    tipo_audiencia = ifelse(usar_audiencia_util, "util", "bruta"),
-    modelo_usado = modelo
-  ))
+      distribucion = distribucion_final,
+      soportes_vetados = soportes_vetados,
+      soportes_no_encontrados = soportes_no_encontrados,
+      tipo_audiencia = ifelse(usar_audiencia_util, "util", "bruta"),
+      modelo_usado = modelo
+    )
+  )
 }

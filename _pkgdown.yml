@@ -1,0 +1,12 @@
+template:
+  bootstrap: 5
+  
+reference:
+- title: "Funciones principales"
+  desc: "Funciones para análisis de reach y frecuencia"
+  contents:
+  - starts_with("calc_")
+  - reach_frequency
+  - starts_with("optimizar_")
+  - imprimir_resultados
+

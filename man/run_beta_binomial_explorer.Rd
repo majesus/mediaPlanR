@@ -3,24 +3,22 @@
 \encoding{UTF-8}
 \name{run_beta_binomial_explorer}
 \alias{run_beta_binomial_explorer}
-\title{Función de Masa de Probabilidad Beta-Binomial}
+\title{Explorador de la Distribución Beta-Binomial}
 \usage{
 run_beta_binomial_explorer()
 }
-\arguments{
-\item{x}{Número de éxitos}
-
-\item{n}{Número de ensayos}
-
-\item{alpha}{Parámetro de forma alpha de la distribución beta}
-
-\item{beta}{Parámetro de forma beta de la distribución beta}
+\value{
+Lanza una aplicacion Shiny interactiva (efecto secundario); no
+devuelve ningun valor util para el flujo de un script.
 }
 \description{
-Calcula la función de masa de probabilidad de la distribución
-beta-binomial para un conjunto dado de parámetros.
+Aplicación Shiny para visualizar la función de masa de
+probabilidad de la distribución beta-binomial y sus estadísticos
+(media, varianza, moda) a partir de los parámetros P, A1, A2 y n.
 }
-\details{
-La función implementa la fórmula:
-\deqn{P(X = k) = \binom{n}{k} \frac{B(k+\alpha, n-k+\beta)}{B(\alpha, \beta)}}
+\examples{
+if (interactive()) {
+  run_beta_binomial_explorer()
+}
+
 }

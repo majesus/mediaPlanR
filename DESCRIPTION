@@ -1,17 +1,23 @@
 Package: mediaPlanR
 Type: Package
-Version: 0.1.1
-Date: 2024-10-25
+Version: 0.2.0
+Date: 2026-08-15
 Title: Herramientas para la Planificación de Medios Publicitarios
-Description: Indicadores, modelos y aplicaciones para la planificación de medios.
-    Proporciona interfaces interactivas para la 
-    exploración y análisis de datos de medios publicitarios.
-Manual: <https://github.com/majesus/mediaPlanR>
-Author: 
-    Manuel J. Sánchez-Franco [aut, cre] [<https://orcid.org/0000-0002-8042-3550>]
-Maintainer: Manuel J. Sánchez-Franco <majesus@us.es>
-Repository: GitHub
-URL: <https://github.com/majesus/mediaPlanR>
+Description: Indicadores, modelos y aplicaciones interactivas para la
+    planificación de medios publicitarios. Incluye modelos clásicos de
+    cobertura y distribución de contactos (Sainsbury, Binomial,
+    Beta-Binomial, Metheringham, Hofmans, Agostini, MBBD y CANEX),
+    indicadores de eficiencia de un plan (GRP, CPM, ROAS), herramientas de
+    optimización de planes de medios sujetos a restricciones presupuestarias,
+    y aplicaciones Shiny para la exploración interactiva de estos modelos.
+Authors@R: person(
+    given = "Manuel J.",
+    family = "Sánchez-Franco",
+    email = "majesus@us.es",
+    role = c("aut", "cre"),
+    comment = c(ORCID = "0000-0002-8042-3550")
+  )
+URL: https://github.com/majesus/mediaPlanR
 BugReports: https://github.com/majesus/mediaPlanR/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -24,27 +30,15 @@ Imports:
     bslib (>= 0.4.0),
     ggplot2 (>= 3.4.0),
     dplyr (>= 1.0.0),
-    readxl,
-    readr,
-    DT,
-    janitor,
     ggrepel,
-    factoextra,
-    microbenchmark,
-    Deriv,
-    doBy,
-    scales,
-    tidyr,
-    tibble,
-    purrr,
-    magrittr,
-    plotly
+    scales
 Suggests:
     knitr,
     rmarkdown,
     testthat (>= 3.0.0),
-    devtools
+    readr
 Config/testthat/edition: 3
-Depends: 
-    R (>= 2.10)
+Depends:
+    R (>= 4.0)
 LazyData: true
+VignetteBuilder: knitr

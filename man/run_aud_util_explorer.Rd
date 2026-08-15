@@ -7,6 +7,10 @@
 \usage{
 run_aud_util_explorer()
 }
+\value{
+Lanza una aplicacion Shiny interactiva (efecto secundario); no
+devuelve ningun valor util para el flujo de un script.
+}
 \description{
 Aplicación Shiny para el análisis de audiencias brutas y útiles
 con diferentes criterios demográficos.
@@ -30,3 +34,9 @@ La aplicación permite:
 }
 }
 
+\examples{
+if (interactive()) {
+  run_aud_util_explorer()
+}
+
+}

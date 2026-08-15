@@ -1,0 +1,172 @@
+---
+title: "Introducción a mediaPlanR"
+author: "Manuel J. Sánchez-Franco"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introducción a mediaPlanR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4
+)
+```
+
+## Qué ofrece mediaPlanR
+
+**mediaPlanR** reúne, en un único paquete de R, los modelos clásicos de
+cobertura y distribución de contactos empleados en planificación de medios
+publicitarios, indicadores de eficiencia de un plan (GRP, CPM, ROAS) y
+herramientas de optimización, junto con aplicaciones Shiny para explorar
+estos modelos de forma interactiva.
+
+```{r setup}
+library(mediaPlanR)
+```
+
+## La familia de modelos de cobertura y distribución de contactos
+
+Todos estos modelos responden a la misma pregunta — *¿qué proporción de la
+población objetivo se alcanza, y cuántas veces, con un plan de medios
+determinado?* — pero difieren en los supuestos que asumen sobre la
+**duplicación** de audiencias entre soportes y sobre la **heterogeneidad**
+de las probabilidades individuales de exposición.
+
+| Modelo | Función | Duplicación asumida | Heterogeneidad |
+|---|---|---|---|
+| Sainsbury | `calc_sainsbury()` | Aleatoria (independencia) | Sí, entre soportes |
+| Binomial | `calc_binomial()` | Aleatoria (independencia) | No (soporte promedio) |
+| Beta-Binomial | `calc_beta_binomial()` | Implícita (un soporte, n inserciones) | Sí, entre individuos (mezcla Binomial-Beta) |
+| NBD | `calc_nbd()` | Implícita (frecuencia media del plan) | Sí, entre individuos (mezcla Poisson-Gamma) |
+| Metheringham | `calc_metheringham()` | Observada (promediada) | Sí, vía Beta |
+| Hofmans | `calc_hofmans()` | Observada (R1, R2) | Curva empírica no lineal |
+| Agostini | `calc_agostini()` | Corregida con un coeficiente k | Aleatoria + corrección empírica |
+| MBBD (Morgensztern) | `calc_MBBD()` | Calibrada contra una estimación de cobertura | Sí, vía Beta-Binomial |
+| CANEX | `calc_canex()` | Observada, matriz de correlaciones | Sí, por vehículo (Beta-Binomial) |
+
+### Ejemplo: tres soportes, mismo plan, distintos supuestos
+
+```{r}
+audiencias <- c(300000, 400000, 200000)
+pob_total <- 1000000
+
+reach_sainsbury <- calc_sainsbury(audiencias, pob_total)
+reach_binomial <- calc_binomial(audiencias, pob_total)
+reach_agostini_independencia <- calc_agostini(audiencias, pob_total, k = 1)
+reach_agostini_corregido <- calc_agostini(audiencias, pob_total, k = 0.9)
+
+data.frame(
+  modelo = c("Sainsbury", "Binomial", "Agostini (k=1)", "Agostini (k=0.9)"),
+  cobertura_pct = round(c(
+    reach_sainsbury$reach$porcentaje,
+    reach_binomial$reach$porcentaje,
+    reach_agostini_independencia$reach$porcentaje,
+    reach_agostini_corregido$reach$porcentaje
+  ), 2)
+)
+```
+
+Nótese que, con `k = 1`, `calc_agostini()` coincide exactamente con
+`calc_sainsbury()`: ambos parten del mismo supuesto de duplicación
+aleatoria, aplicado de forma iterativa en el caso de Agostini. Con `k = 0.9`
+se corrige la duplicación predicha, reduciendo ligeramente la cobertura
+estimada frente al supuesto de independencia pura.
+
+## Beta-Binomial vs. NBD: dos formas de modelar la heterogeneidad
+
+Tanto `calc_beta_binomial()` como `calc_nbd()` asumen que cada individuo
+tiene su propia probabilidad (o tasa) personal de exposición, heterogénea
+en la población, pero difieren en el supuesto distribucional: el primero
+mezcla una Binomial (n inserciones fijas) con una Beta; el segundo mezcla
+una Poisson (frecuencia media del plan) con una Gamma. `calc_nbd()` puede
+calibrarse indicando directamente el parámetro de heterogeneidad `k`, o a
+partir de una cobertura conocida (p.ej. estimada con otro modelo sobre el
+mismo plan):
+
+```{r}
+plan <- list(audiencias = c(300000, 400000, 200000), inserciones = c(3, 2, 4))
+pob <- 1000000
+
+reach_nbd <- calc_nbd(plan$audiencias, plan$inserciones, pob, reach_conocida = 0.60)
+reach_nbd$parametros$k
+reach_nbd$reach$porcentaje
+```
+
+## Modelo CANEX: heterogeneidad y duplicación observada conjuntamente
+
+`calc_canex()` implementa el modelo de expansión canónica de Danaher (1991),
+que combina una distribución Beta-Binomial por vehículo con un término de
+correlación que ajusta la probabilidad conjunta según la duplicación
+observada entre cada par de vehículos:
+
+```{r}
+vehiculos <- data.frame(
+  k = c(2, 2),
+  R1 = c(0.4902, 0.033),
+  R2 = c(0.5805, 0.0502)
+)
+duplicaciones <- matrix(
+  c(1.000, 0.0157,
+    0.0157, 1.000),
+  nrow = 2, byrow = TRUE
+)
+
+resultado_canex <- calc_canex(vehiculos, duplicaciones, poblacion = 1000000)
+resultado_canex
+```
+
+El número de combinaciones de exposición a evaluar crece de forma
+exponencial con el número de vehículos y de inserciones, por lo que el
+modelo está pensado para pautas de tamaño pequeño o mediano; para pautas
+muy extensas, `calc_canex()` se detiene con un error informativo en lugar
+de agotar la memoria disponible.
+
+## Indicadores de eficiencia
+
+```{r}
+grps <- calc_grps(
+  audiencias = c(300000, 400000, 200000),
+  inserciones = c(3, 2, 4),
+  pob_total = 1000000
+)
+grps$grps
+
+cpm <- calc_cpm(
+  precios = c(1000, 1500, 800),
+  audiencias = c(300000, 400000, 200000)
+)
+cpm$cpm
+```
+
+## Aplicaciones interactivas
+
+El paquete incluye varias aplicaciones Shiny para explorar estos modelos
+sin necesidad de escribir código:
+
+```{r, eval = FALSE}
+run_canex_explorer()          # Modelo CANEX
+run_beta_binomial_explorer()  # Distribución Beta-Binomial
+run_reach_converg_explorer()  # Convergencia de la cobertura acumulada
+run_aud_util_explorer()       # Audiencia bruta vs. audiencia útil
+```
+
+## Referencias
+
+- Aldás Manzano, J. (1998). *Modelos de determinación de la cobertura y la
+  distribución de contactos en la planificación de medios publicitarios
+  impresos*. Tesis doctoral, Universidad de Valencia.
+- Agostini, J. M. (1961). How to estimate unduplicated audiences. *Journal
+  of Advertising Research*, 1(3), 11-14.
+- Danaher, P. J. (1991). A canonical expansion model for multivariate media
+  exposure distributions. *Journal of Marketing Research*, 28(3), 361-367.
+- Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. *Journal of
+  the Royal Statistical Society: Series C*, 8(1), 26-41.
+- Leckenby, J. D., & Kishi, S. (1982). Performance of exposure distribution
+  models. *Journal of Advertising Research*, 22(2), 35-44.
+- Metheringham, R. A. (1964). Measuring the net cumulative coverage of a
+  print campaign. *Journal of Advertising Research*, 4(4), 23-28.

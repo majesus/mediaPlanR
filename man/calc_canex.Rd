@@ -3,70 +3,63 @@
 \encoding{UTF-8}
 \name{calc_canex}
 \alias{calc_canex}
-\title{Calcular Modelo CANEX}
+\title{Calcular el modelo CANEX (Canonical Expansion Model)}
 \usage{
 calc_canex(vehicles_data, duplications, poblacion = 1e+06)
 }
 \arguments{
-\item{vehicles_data}{Marco de datos que contiene datos de vehículos de medios con columnas:
+\item{vehicles_data}{Data frame con los datos de cada vehiculo de medios:
 \itemize{
-\item k: Número de inserciones por vehículo (entero)
-\item R1: Alcance de inserción tras primera inserción (0-1)
-\item R2: Alcance de inserción tras segunda inserción (0-1)
+\item k: Numero de inserciones del vehiculo (entero positivo)
+\item R1: Cobertura tras la primera insercion (0-1)
+\item R2: Cobertura tras la segunda insercion (0-1)
 }}
 
-\item{duplications}{Matriz. Matriz de duplicación de vehículos donde el elemento \link{i,j} representa
-la proporción de población expuesta a ambos vehículos i y j}
+\item{duplications}{Matriz cuadrada donde el elemento \verb{[i,j]} es la
+proporcion de poblacion expuesta simultaneamente a los vehiculos i y j}
 
-\item{poblacion}{Entero. Tamaño de la población objetivo (predeterminado: 1,000,000)}
+\item{poblacion}{Entero. Tamano de la poblacion objetivo (por defecto 1.000.000)}
 }
 \value{
-Lista con componentes:
+Un objeto de clase \code{"reach_canex"}: una lista con los
+componentes:
 \itemize{
-\item total_reach: Proporción de población alcanzada (0-1)
-\item total_reach_people: Número de personas alcanzadas
-\item distribution: Marco de datos con columnas:
-\itemize{
-\item contacts: Número de exposiciones
-\item percentage: Porcentaje de población
-\item people: Número de personas
-}
-\item cumulative: Marco de datos con columnas:
-\itemize{
-\item min_contacts: Número mínimo de exposiciones
-\item percentage: Porcentaje acumulado
-\item people: Número acumulado de personas
-}
-\item stats: Lista con métricas adicionales:
-\itemize{
-\item avg_contacts: Contactos promedio por persona alcanzada
-\item zero_contacts_prob: Probabilidad de cero contactos
-}
+\item total_reach: Proporcion de poblacion alcanzada (0-1)
+\item total_reach_people: Numero de personas alcanzadas
+\item distribution: Data frame con columnas contacts, percentage, people
+\item cumulative: Data frame con columnas min_contacts, percentage, people
+\item stats: Lista con avg_contacts (contactos medios entre alcanzados)
+y zero_contacts_prob (probabilidad de cero contactos)
 }
 }
 \description{
-Función principal que implementa los cálculos del modelo CANEX (Canonical Expansion model).
-Este modelo calcula la distribución de alcance y frecuencia considerando la heterogeneidad y duplicaciones y correlaciones
-entre vehículos de medios.
+Implementa el modelo de expansion canonica de Danaher (1991)
+para calcular la distribucion de alcance y frecuencia de una pauta
+multivehiculo, considerando explicitamente la heterogeneidad de exposicion
+de cada vehiculo (via Beta-Binomial) y las duplicaciones observadas entre
+vehiculos (via un termino de correlacion de segundo orden).
 }
 \details{
-El modelo CANEX integra tres componentes clave:
-\itemize{
-\item Distribución Beta Binomial (BBD) para modelar la heterogeneidad de exposición
-\item Duplicaciones de vehículos a través de coeficientes de duplicación y correlación
-\item Ajuste multivariado para probabilidades conjuntas
-}
-
 El modelo sigue estos pasos:
 \enumerate{
-\item Calcular parámetros BBD (alfa, beta) para cada vehículo
-\item Transformar matriz de duplicación a correlaciones
-\item Generar distribución de probabilidad conjunta
-\item Calcular métricas de alcance y frecuencia
+\item Calcula los parametros Beta-Binomial (alpha, beta) de cada vehiculo
+\item Transforma la matriz de duplicaciones brutas en correlaciones
+\item Genera la distribucion de probabilidad conjunta de exposicion,
+truncando a cero las probabilidades negativas que puede producir la
+expansion canonica truncada, y renormalizando el resultado para que la
+masa de probabilidad total vuelva a sumar 1
+\item Agrega la distribucion conjunta por numero total de contactos y
+calcula las metricas de alcance y frecuencia
 }
+
+El numero de combinaciones de exposicion a evaluar crece de forma
+exponencial con el numero de vehiculos y de inserciones
+(\code{prod(k_i + 1)}), por lo que el modelo esta pensado para pautas de
+tamano pequeno o mediano; para pautas extensas la funcion se detiene con
+un error informativo en lugar de agotar la memoria disponible.
 }
 \examples{
-# Ejemplo 1: Uso básico con dos vehículos
+# Dos vehiculos (valores tomados de un caso de referencia del modelo)
 vehicles <- data.frame(
   k = c(2, 2),
   R1 = c(0.4902, 0.033),
@@ -80,7 +73,7 @@ duplications <- matrix(
 results <- calc_canex(vehicles, duplications)
 print(results)
 
-# Ejemplo 2: Tres vehículos con población personalizada
+# Tres vehiculos con poblacion personalizada
 vehicles2 <- data.frame(
   k = c(2, 2, 2),
   R1 = c(0.4902, 0.033, 0.0300),
@@ -93,20 +86,17 @@ duplications2 <- matrix(
   nrow = 3, byrow = TRUE
 )
 results2 <- calc_canex(vehicles2, duplications2, poblacion = 500000)
-
-# Acceder a métricas específicas
 total_reach <- results2$total_reach
 avg_contacts <- results2$stats$avg_contacts
-dist_table <- results2$distribution
 
 }
 \references{
-Danaher, P. J. (1991). A canonical expansion model for multivariate media exposure
-distributions: A generalization of the "duplication of viewing law."
-Journal of Marketing Research, 28(3), 361–367.
+Danaher, P. J. (1991). A canonical expansion model for multivariate media
+exposure distributions: A generalization of the "duplication of viewing
+law". Journal of Marketing Research, 28(3), 361-367.
 }
 \seealso{
-\code{\link{calculate_bbd_params}} para el cálculo de parámetros BBD
-\code{\link{transform_duplications}} para la transformación de matriz de duplicación
-\code{\link{calculate_metrics}} para el cálculo detallado de métricas
+\code{\link{calculate_bbd_params}} para el calculo de parametros BBD
+\code{\link{transform_duplications}} para la transformacion de la matriz de duplicacion
+\code{\link{calc_beta_binomial}} para el modelo univariante (un solo vehiculo)
 }

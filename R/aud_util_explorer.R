@@ -21,26 +21,19 @@
 #'   \item Niveles socioeconómicos (porcentajes)
 #' }
 #'
+#' @return Lanza una aplicacion Shiny interactiva (efecto secundario); no
+#' devuelve ningun valor util para el flujo de un script.
+#'
+#' @examples
+#' if (interactive()) {
+#'   run_aud_util_explorer()
+#' }
+#'
+#' @import shiny
+#' @import bslib
+#' @import dplyr
 #' @export
-
 run_aud_util_explorer <- function() {
-
-  # Verificar y cargar las dependencias necesarias
-  if (!requireNamespace("bslib", quietly = TRUE)) {
-    message("Instalando bslib...")
-    install.packages("bslib", type = "binary", dependencies = TRUE)
-  }
-  if (!requireNamespace("ggplot2", quietly = TRUE)) {
-    message("Instalando ggplot2...")
-    install.packages("ggplot2", type = "binary", dependencies = TRUE)
-  }
-
-  # Cargar los paquetes
-  library(shiny)
-  library(bslib)
-  library(dplyr)
-  library(ggplot2)
-  library(scales)
 
   ui <- bslib::page_fluid(
     theme = bslib::bs_theme(version = 5, bootswatch = "flatly"),
@@ -236,9 +229,9 @@ run_aud_util_explorer <- function() {
 
     # Función genérica para crear gráficos de barras
     crear_grafico_barras <- function(data, variable, titulo) {
-      ggplot(data, aes_string(x = variable, fill = variable)) +
+      ggplot(data, aes(x = .data[[variable]], fill = .data[[variable]])) +
         geom_bar(aes(y = after_stat(count)/nrow(data))) +
-        scale_y_continuous(labels = percent_format()) +
+        scale_y_continuous(labels = scales::percent_format()) +
         theme_minimal() +
         theme(
           legend.position = "none",
@@ -324,6 +317,3 @@ run_aud_util_explorer <- function() {
   # Ejecutar la aplicación Shiny
   shinyApp(ui = ui, server = server)
 }
-
-
-run_aud_util_explorer()

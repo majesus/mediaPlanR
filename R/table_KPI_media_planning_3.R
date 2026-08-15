@@ -73,6 +73,7 @@
 #' @seealso
 #' \code{\link{calc_cpm}} para cálculo de costes por mil (CPM)
 #' \code{\link{calc_grps}} para cálculo de GRPs
+#' @importFrom utils read.csv
 calcular_metricas_medios <- function(soportes = NULL,
                                      audiencias = NULL,
                                      tarifas = NULL,
@@ -100,8 +101,11 @@ calcular_metricas_medios <- function(soportes = NULL,
     # Para cada campo, usar el vector si se proporciona, si no, intentar leer del CSV
     for (nombre in names(columnas)) {
       valor <- get(nombre)
-      # Si es un vector directo, usarlo
-      if (is.vector(valor) && length(valor) > 1) {
+      # Un vector se usa directamente salvo que sea un unico caracter, en
+      # cuyo caso se interpreta como el nombre de una columna del CSV (esto
+      # incluye el caso de un unico soporte, donde el vector de datos
+      # tambien tiene longitud 1)
+      if (!is.null(valor) && !(is.character(valor) && length(valor) == 1)) {
         datos_finales[[nombre]] <- valor
       } else if (is.character(valor) && length(valor) == 1) {
         # Si es nombre de columna, leer del CSV

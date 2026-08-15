@@ -75,6 +75,7 @@
 #' \code{\link{calc_beta_binomial}} para estimaciones con la distribución Beta-Binomial
 #' \code{\link{calc_metheringham}} para estimaciones con la distribución de Metheringham
 #' \code{\link{calc_hofmans}} para estimaciones con la distribución de Hofmans
+#' @importFrom utils combn
 calc_sainsbury <- function(audiencias, pob_total) {
   # Validación de inputs
   if (!is.numeric(audiencias) || !is.numeric(pob_total)) {
@@ -358,6 +359,7 @@ calc_binomial <- function(audiencias, pob_total) {
 #' \code{\link{calc_binomial}} para estimaciones con la distribución Beta-Binomial
 #' \code{\link{calc_metheringham}} para estimaciones con la distribución de Metheringham
 #' \code{\link{calc_hofmans}} para estimaciones con la distribución de Hofmans
+#' \code{\link{calc_nbd}} para el modelo alternativo de heterogeneidad Binomial Negativa (NBD)
 calc_beta_binomial <- function(A1, A2, P, n) {
   # Validación de inputs
   if (!all(is.numeric(c(A1, A2, P, n)))) {
@@ -575,8 +577,22 @@ print.reach_beta_binomial <- function(x, ...) {
 
 #__________________________________________________________#
 
+#' @encoding UTF-8
+#' @title Convertir una matriz simétrica en un vector (triángulo superior)
+#' @description Linealiza una matriz simétrica (p.ej. de duplicaciones o de
+#' oportunidades de contacto) recorriendo su triángulo superior, incluyendo
+#' la diagonal, en el orden (1,1), (1,2), ..., (1,n), (2,2), (2,3), ....
+#' Función auxiliar empleada por \code{\link{calc_metheringham}}.
+#'
+#' @param matriz Matriz cuadrada simétrica
+#'
+#' @return Vector numérico con los elementos del triángulo superior de \code{matriz}
+#'
+#' @examples
+#' m <- matrix(c(1, 2, 2, 3), nrow = 2)
+#' matriz_a_vector(m)
+#'
 #' @export
-# Función para convertir matriz a vector de duplicación
 matriz_a_vector <- function(matriz) {
   n <- nrow(matriz)
   vector <- numeric()
@@ -588,8 +604,22 @@ matriz_a_vector <- function(matriz) {
   return(vector)
 }
 
+#' @encoding UTF-8
+#' @title Crear la matriz de oportunidades de contacto entre soportes
+#' @description A partir del número de inserciones de cada soporte, calcula
+#' el número de pares de oportunidades de contacto entre cada par de
+#' soportes (fuera de la diagonal) y dentro de un mismo soporte (en la
+#' diagonal, como combinaciones de 2 entre sus propias inserciones). Función
+#' auxiliar empleada por \code{\link{calc_metheringham}}.
+#'
+#' @param inserciones Vector numérico con el número de inserciones de cada soporte
+#'
+#' @return Matriz cuadrada simétrica de oportunidades de contacto
+#'
+#' @examples
+#' crear_matriz_oportunidades(c(4, 3, 5))
+#'
 #' @export
-# Función para crear matriz de oportunidades
 crear_matriz_oportunidades <- function(inserciones) {
   n <- length(inserciones)
   matriz <- matrix(0, nrow = n, ncol = n)
@@ -658,8 +688,8 @@ crear_matriz_oportunidades <- function(inserciones) {
 #' La matriz de duplicación debe ser simétrica donde:
 #' \itemize{
 #'   \item La diagonal contiene la duplicación de cada soporte consigo mismo
-#'   \item El elemento [i,j] contiene la duplicación entre los soportes i y j
-#'   \item Se debe cumplir que matriz[i,j] = matriz[j,i]
+#'   \item El elemento `[i,j]` contiene la duplicación entre los soportes i y j
+#'   \item Se debe cumplir que `matriz[i,j] = matriz[j,i]`
 #'   \item Para n soportes, la matriz debe ser de dimensiones n x n
 #' }
 #'
@@ -688,6 +718,12 @@ calc_metheringham <- function(audiencias, inserciones, matriz_duplicacion) {
   if (length(audiencias) != length(inserciones)) {
     stop("Los vectores de audiencias e inserciones deben tener la misma longitud")
   }
+  if (any(inserciones < 0) || any(audiencias < 0)) {
+    stop("Las audiencias y las inserciones deben ser no negativas")
+  }
+  if (sum(inserciones) <= 0) {
+    stop("El total de inserciones debe ser mayor que 0")
+  }
 
   n_soportes <- length(audiencias)
 
@@ -708,6 +744,10 @@ calc_metheringham <- function(audiencias, inserciones, matriz_duplicacion) {
 
   vec_duplicacion <- matriz_a_vector(matriz_duplicacion)
   vector_oportunidades <- matriz_a_vector(matriz_oportunidades)
+
+  if (sum(vector_oportunidades) <= 0) {
+    stop("No hay oportunidades de contacto entre soportes (revisa las inserciones)")
+  }
 
   A1 <- sum(audiencias * inserciones) / sum(inserciones)
   D <- sum(vec_duplicacion * vector_oportunidades) / sum(vector_oportunidades)
