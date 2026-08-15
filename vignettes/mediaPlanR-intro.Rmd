@@ -126,6 +126,23 @@ modelo está pensado para pautas de tamaño pequeño o mediano; para pautas
 muy extensas, `calc_canex()` se detiene con un error informativo en lugar
 de agotar la memoria disponible.
 
+## Datasets de ejemplo listos para usar
+
+Cada modelo tiene un dataset de ejemplo con el mismo nombre que la parte
+distintiva de su función (`calc_canex()` → `canex`, `calc_sainsbury()` →
+`sainsbury`, ...), cuyos elementos coinciden exactamente con los argumentos
+de la función, para poder pasarlos directamente con `do.call()` sin
+construir los datos a mano:
+
+```{r}
+data(canex)
+str(canex)
+do.call(calc_canex, canex)$total_reach
+```
+
+El dataset de `calc_binomial()` se llama `binomial_plan` (no `binomial`)
+para no enmascarar `stats::binomial` al cargar el paquete.
+
 ## Indicadores de eficiencia
 
 ```{r}

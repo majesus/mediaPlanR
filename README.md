@@ -51,6 +51,16 @@ resultado <- calc_sainsbury(audiencias, pob_total = 1000000)
 resultado
 ```
 
+Cada modelo trae además un dataset de ejemplo con el mismo nombre (sin el
+prefijo `calc_`), listo para usar con `do.call()` sin construir los datos
+a mano: `sainsbury`, `binomial_plan`, `beta_binomial`, `metheringham`,
+`hofmans`, `agostini`, `MBBD`, `canex`, `nbd`, `grps`, `cpm`, `roas`.
+
+```r
+data(canex)
+do.call(calc_canex, canex)
+```
+
 Para una introducción más completa, con ejemplos de todos los modelos:
 
 ```r
