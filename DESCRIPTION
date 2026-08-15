@@ -17,6 +17,8 @@ Authors@R: person(
     role = c("aut", "cre"),
     comment = c(ORCID = "0000-0002-8042-3550")
   )
+Author: Manuel J. Sánchez-Franco [aut, cre] (<https://orcid.org/0000-0002-8042-3550>)
+Maintainer: Manuel J. Sánchez-Franco <majesus@us.es>
 URL: https://github.com/majesus/mediaPlanR
 BugReports: https://github.com/majesus/mediaPlanR/issues
 License: MIT + file LICENSE
