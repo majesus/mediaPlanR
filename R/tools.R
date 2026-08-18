@@ -2,28 +2,28 @@
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Impresión editada de resultados del análisis de medios
-#' @description Imprime en consola un resumen estructurado de los resultados del análisis
-#' de medios, incluyendo combinaciones de soportes, distribución de contactos y
-#' los parámetros alpha y beta utilizados.
+#' @title Impresion editada de resultados del analisis de medios
+#' @description Imprime en consola un resumen estructurado de los resultados del analisis
+#' de medios, incluyendo combinaciones de soportes, distribucion de contactos y
+#' los parametros alpha y beta utilizados.
 #'
 #' @param data_ls Una lista que debe contener los siguientes elementos:
 #' \itemize{
-#'   \item resultados: Data frame con las combinaciones más relevantes de soportes
-#'   \item distribucion: Data frame con la distribución de contactos, incluyendo:
+#'   \item resultados: Data frame con las combinaciones mas relevantes de soportes
+#'   \item distribucion: Data frame con la distribucion de contactos, incluyendo:
 #'     \itemize{
-#'       \item cont: Número de contactos
+#'       \item cont: Numero de contactos
 #'       \item prob: Probabilidad asociada
 #'     }
-#'   \item alpha: Valor del parámetro alpha utilizado en el análisis
-#'   \item beta: Valor del parámetro beta utilizado en el análisis
+#'   \item alpha: Valor del parametro alpha utilizado en el analisis
+#'   \item beta: Valor del parametro beta utilizado en el analisis
 #' }
 #'
-#' @return No retorna valor. Imprime en consola una visualización estructurada de:
+#' @return No retorna valor. Imprime en consola una visualizacion estructurada de:
 #' \itemize{
-#'   \item Combinaciones más relevantes de soportes
-#'   \item Distribución de contactos y sus probabilidades
-#'   \item Valores de los parámetros alpha y beta utilizados
+#'   \item Combinaciones mas relevantes de soportes
+#'   \item Distribucion de contactos y sus probabilidades
+#'   \item Valores de los parametros alpha y beta utilizados
 #' }
 #'
 #' @examples
@@ -48,16 +48,16 @@
 #'
 #' @export
 #' @seealso
-#' \code{\link{calc_R1_R2}} para cálculos de coeficientes de duplicación
+#' \code{\link{calc_R1_R2}} para calculos de coeficientes de duplicacion
 imprimir_resultados <- function(data_ls) {
   nombres_resultados <- c(
-    "Combinaciones más relevantes",
-    "Distribución de contactos",
+    "Combinaciones mas relevantes",
+    "Distribucion de contactos",
     "Valor Alpha seleccionado",
     "Valor Beta seleccionado"
   )
 
-  cat("\n=== RESULTADOS DEL ANÁLISIS ===\n")
+  cat("\n=== RESULTADOS DEL ANALISIS ===\n")
 
   for (i in 2:5) {
     cat(sprintf("\n%s:\n", nombres_resultados[i-1]))

@@ -29,6 +29,61 @@ estos modelos de forma interactiva.
 library(mediaPlanR)
 ```
 
+## Flujo de trabajo de la version 2
+
+La API principal comienza con un plan validado y conserva las unidades de cada
+variable. La audiencia representa personas por insercion; el coste representa
+moneda por insercion; la poblacion es el universo de planificacion.
+
+```{r v2-plan}
+plan <- media_plan(
+  data.frame(
+    channel = c("TV", "Radio", "Digital"),
+    audience = c(300000, 180000, 120000),
+    insertions = c(4, 6, 10),
+    cost_per_insertion = c(18000, 3500, 1200),
+    target_audience = c(180000, 90000, 84000)
+  ),
+  population = 1000000,
+  target_audience = "target_audience"
+)
+
+metrics <- plan_metrics(plan)
+reach <- estimate_reach(plan, model = "independent")
+reach
+```
+
+La distribucion devuelta incluye cero contactos. Esto permite comprobar que
+las probabilidades suman uno, que la cobertura es `1 - P(X=0)` y que la
+frecuencia media coincide con las impresiones divididas por personas
+alcanzadas.
+
+```{r v2-invariants}
+sum(reach$distribution$probability)
+reach$reach$probability
+reach$average_frequency
+```
+
+### Optimizacion con diagnostico de optimalidad
+
+```{r v2-optimization}
+optimized <- optimize_media_plan(
+  plan,
+  budget = 60000,
+  objective = "max_reach",
+  effective_frequency = 2,
+  max_insertions = c(4, 8, 12),
+  method = "auto"
+)
+
+optimized$allocation
+optimized$global_optimum
+```
+
+Cuando el espacio es manejable se evalua por completo y
+`global_optimum = TRUE`. En espacios grandes, el modo heuristico se identifica
+como tal; nunca se presenta como optimo global.
+
 ## La familia de modelos de cobertura y distribución de contactos
 
 Todos estos modelos responden a la misma pregunta — *¿qué proporción de la
@@ -42,11 +97,13 @@ de las probabilidades individuales de exposición.
 | Sainsbury | `calc_sainsbury()` | Aleatoria (independencia) | Sí, entre soportes |
 | Binomial | `calc_binomial()` | Aleatoria (independencia) | No (soporte promedio) |
 | Beta-Binomial | `calc_beta_binomial()` | Implícita (un soporte, n inserciones) | Sí, entre individuos (mezcla Binomial-Beta) |
-| NBD | `calc_nbd()` | Implícita (frecuencia media del plan) | Sí, entre individuos (mezcla Poisson-Gamma) |
+| NBD experimental | `nbd_exposure_distribution()` | No representa dependencia entre vehículos | Sí, heterogeneidad Poisson-Gamma en un proceso ilimitado |
 | Metheringham | `calc_metheringham()` | Observada (promediada) | Sí, vía Beta |
 | Hofmans | `calc_hofmans()` | Observada (R1, R2) | Curva empírica no lineal |
 | Agostini | `calc_agostini()` | Corregida con un coeficiente k | Aleatoria + corrección empírica |
-| MBBD (Morgensztern) | `calc_MBBD()` | Calibrada contra una estimación de cobertura | Sí, vía Beta-Binomial |
+| BBD ajustada a reach externo | `fit_bbd_to_reach()` | Recibe la cobertura como restricción | Sí, vía Beta-Binomial |
+| CSD (expansión canónica secuencial) | `calc_csd()` | Observada; reach canónico por subpauta y márgenes preservados | Sí, marginal BBD por vehículo |
+| MSAD (Morgensztern) | `calc_msad()` | Observada y conservada durante la agregación secuencial | Sí, marginal BBD por vehículo |
 | CANEX | `calc_canex()` | Observada, matriz de correlaciones | Sí, por vehículo (Beta-Binomial) |
 
 ### Ejemplo: tres soportes, mismo plan, distintos supuestos
@@ -71,31 +128,118 @@ data.frame(
 )
 ```
 
-Nótese que, con `k = 1`, `calc_agostini()` coincide exactamente con
+Notese que, con `k = 1`, `calc_agostini()` coincide exactamente con
 `calc_sainsbury()`: ambos parten del mismo supuesto de duplicación
 aleatoria, aplicado de forma iterativa en el caso de Agostini. Con `k = 0.9`
-se corrige la duplicación predicha, reduciendo ligeramente la cobertura
-estimada frente al supuesto de independencia pura.
+se reduce la duplicacion predicha y, por tanto, aumenta la cobertura estimada
+frente al supuesto de independencia pura.
 
-## Beta-Binomial vs. NBD: dos formas de modelar la heterogeneidad
+## Beta-Binomial vs. NBD: oportunidades finitas y procesos de conteo
 
-Tanto `calc_beta_binomial()` como `calc_nbd()` asumen que cada individuo
+Tanto `calc_beta_binomial()` como la NBD asumen que cada individuo
 tiene su propia probabilidad (o tasa) personal de exposición, heterogénea
 en la población, pero difieren en el supuesto distribucional: el primero
-mezcla una Binomial (n inserciones fijas) con una Beta; el segundo mezcla
-una Poisson (frecuencia media del plan) con una Gamma. `calc_nbd()` puede
-calibrarse indicando directamente el parámetro de heterogeneidad `k`, o a
-partir de una cobertura conocida (p.ej. estimada con otro modelo sobre el
-mismo plan):
+mezcla una Binomial (n inserciones fijas) con una Beta; la NBD mezcla una
+Poisson con una Gamma. Esa diferencia es sustantiva: la NBD tiene soporte
+ilimitado y es apropiada para páginas vistas, contactos de ad-server u otros
+procesos con oportunidades continuas, no para fingir que una pauta tradicional
+permite más contactos que inserciones.
+
+Cuando existen conteos individuales observados, `fit_nbd_exposure()` estima
+la media y la heterogeneidad por máxima verosimilitud. Para escenarios con
+parámetros externos, `nbd_exposure_distribution()` conserva la última celda
+como cola abierta y nunca la presenta como un conteo exacto:
 
 ```{r}
-plan <- list(audiencias = c(300000, 400000, 200000), inserciones = c(3, 2, 4))
-pob <- 1000000
+conteos <- c(rep(0, 40), rep(1, 25), rep(2, 15), rep(3, 8), 5, 7)
+ajuste_nbd <- fit_nbd_exposure(conteos)
+ajuste_nbd$estimates
 
-reach_nbd <- calc_nbd(plan$audiencias, plan$inserciones, pob, reach_conocida = 0.60)
-reach_nbd$parametros$k
-reach_nbd$reach$porcentaje
+escenario_nbd <- nbd_exposure_distribution(
+  mean_contacts = 2.5, size = 1.7, report_max = 9, opportunities = 9
+)
+escenario_nbd$diagnostics$probability_above_opportunities
 ```
+
+El último diagnóstico cuantifica la masa que una NBD ilimitada asigna por
+encima de las oportunidades finitas. `calc_nbd()` permanece como wrapper
+histórico, pero no es la API recomendada para análisis nuevos.
+
+## CSD y MSAD: dos estimadores de reach, una arquitectura secuencial
+
+`calc_csd()` reproduce el ejemplo numérico completo de Kim (2005): tres
+vehículos, marginales BBD, reach por expansión canónica de segundo orden y
+convolución no aleatoria con conservación de márgenes.
+
+```{r}
+data(csd_example)
+resultado_csd <- do.call(calc_csd, csd_example)
+resultado_csd$reach
+resultado_csd$distribution
+resultado_csd$steps
+```
+
+Los resultados exactos pueden diferir unas centésimas de punto porcentual de
+las tablas de Kim porque la tesis redondea parámetros y matrices intermedias a
+cuatro decimales. La función conserva la precisión de los datos de entrada.
+
+### MSAD: agregación secuencial de Morgensztern
+
+`calc_msad()` implementa la estructura descrita por Leckenby y Rice (1986) y
+Kim (2005): marginal BBD por vehículo, reach de Morgensztern para cada
+subpauta y convolución no aleatoria que preserva las marginales y fija la
+probabilidad de cero contactos en `1 - reach`.
+
+```{r}
+data(msad_example)
+resultado_msad <- do.call(calc_msad, msad_example)
+resultado_msad$reach
+resultado_msad$steps
+resultado_msad$diagnostics
+```
+
+La regla predeterminada agrega primero los vehículos de mayor audiencia, como
+indica Kim. También puede proporcionarse una permutación explícita para
+analizar sensibilidad al orden. La función se detiene si las duplicaciones o
+el reach de Morgensztern violan límites probabilísticos.
+
+Kim especifica MSAD, pero remite a Lee (1988) para el ejemplo numérico completo.
+Por ello `msad_example` reutiliza las entradas del ejemplo CSD de Kim y etiqueta
+su salida como cálculo derivado, no como resultado MSAD publicado en la tesis.
+
+## Validación frente a datos observados
+
+Los datos observados los aporta siempre el analista. Para una pauta, deben
+introducirse como una tabla con las columnas `contacts` y `observed`, incluyendo
+explícitamente cero contactos. También debe declararse si los valores son
+conteos, probabilidades o porcentajes:
+
+```{r}
+observado_kim <- data.frame(
+  contacts = 0:6,
+  observed = c(38.41, 17.89, 39.66, 2.67, 1.36, 0, 0)
+)
+
+evaluacion_csd <- evaluate_exposure_model(
+  observed = observado_kim,
+  predicted = resultado_csd,
+  observed_scale = "percent"
+)
+
+evaluacion_csd$summary
+evaluacion_csd$by_schedule
+```
+
+Si la predicción también se proporciona como tabla, sus columnas deben llamarse
+`contacts` y `predicted`, y debe declararse `predicted_scale`. Para evaluar
+varias pautas se añade a ambas tablas una columna identificadora y se indica su
+nombre mediante `schedule_col`.
+
+El evaluador exige soportes idénticos. No interpreta una cola abierta NBD como
+si fuese una frecuencia exacta: antes de evaluarla, las colas observada y
+predicha deben agruparse con el mismo umbral. Además de los AER/APE históricos
+de Kim, devuelve error absoluto de cobertura, variación total, MAE por celda y
+sesgo en la media de contactos.
 
 ## Modelo CANEX: heterogeneidad y duplicación observada conjuntamente
 
@@ -128,20 +272,44 @@ de agotar la memoria disponible.
 
 ## Datasets de ejemplo listos para usar
 
-Cada modelo tiene un dataset de ejemplo con el mismo nombre que la parte
-distintiva de su función (`calc_canex()` → `canex`, `calc_sainsbury()` →
-`sainsbury`, ...), cuyos elementos coinciden exactamente con los argumentos
-de la función, para poder pasarlos directamente con `do.call()` sin
-construir los datos a mano:
+Los modelos con estructuras de entrada complejas tienen datasets con nombres
+descriptivos, cuyos elementos coinciden con los argumentos de la función:
 
 ```{r}
-data(canex)
-str(canex)
-do.call(calc_canex, canex)$total_reach
+data(canex_example)
+str(canex_example)
+do.call(calc_canex, canex_example)$total_reach
 ```
 
-El dataset de `calc_binomial()` se llama `binomial_plan` (no `binomial`)
-para no enmascarar `stats::binomial` al cargar el paquete.
+También están disponibles `csd_example`, `nbd_example`, `mbbd_example` y
+`msad_example`.
+Los nombres históricos `canex`, `nbd` y `MBBD` permanecen por compatibilidad.
+El dataset de `calc_binomial()` se llama `binomial_plan` para no enmascarar
+`stats::binomial`.
+
+## Cobertura de la literatura y próximos modelos
+
+La tesis de Kim no ofrece el mismo nivel de reproducibilidad para todos los
+modelos. La política de `mediaPlanR` es no incorporar un modelo nuevo hasta
+disponer de su especificación primaria y de una referencia numérica que permita
+una prueba de regresión independiente.
+
+| Modelo | Evidencia numérica accesible | Decisión en v2 |
+|---|---|---|
+| CSD | Ejemplo completo, tablas 4.2.2.1-4.2.2.10 de Kim (2005) | Implementado y contrastado |
+| MSAD | Algoritmo en Kim; ejemplo detallado remitido a Lee (1988) | Implementado con invariantes; benchmark externo pendiente |
+| CANEX | Fórmula primaria de Danaher y ejemplo CSD que usa su reach | Implementado; mantiene diagnósticos de aproximación |
+| BBD y Binomial | Fórmulas cerradas y marginales publicados por Kim | Implementados y probados en sus límites |
+| HBBD | Kim remite los pasos detallados a Boyd (1985) y Kim (1994) | Candidato prioritario; no afirmar equivalencia hasta obtener esas fuentes |
+| CBD | Kim remite el ejemplo numérico a Kim (1994) | Pendiente de la fuente primaria |
+| DMD | Kim remite pasos y ejemplos a Boyd (1985) y Kim (1994) | Pendiente; requiere validar toda la matriz multivariante |
+| NBD multivariante | No es el ejemplo de Kim; requiere la formulación de Danaher para procesos online | Línea futura separada de la NBD experimental univariante |
+
+El Apéndice B de Kim publica distribuciones observadas y estimadas para 560
+pautas y ocho modelos. Es un recurso valioso para una futura batería externa de
+benchmarks, pero no sustituye las especificaciones primarias de HBBD, CBD o DMD.
+Incorporar únicamente las columnas de resultados sin reconstruir sus entradas y
+algoritmos produciría pruebas circulares o incompletas.
 
 ## Indicadores de eficiencia
 
@@ -181,6 +349,8 @@ run_aud_util_explorer()       # Audiencia bruta vs. audiencia útil
   of Advertising Research*, 1(3), 11-14.
 - Danaher, P. J. (1991). A canonical expansion model for multivariate media
   exposure distributions. *Journal of Marketing Research*, 28(3), 361-367.
+- Kim, H. G. (2005). *A Canonical Sequential Aggregation Media Model*.
+  Doctoral dissertation, The University of Texas at Austin.
 - Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. *Journal of
   the Royal Statistical Society: Series C*, 8(1), 26-41.
 - Leckenby, J. D., & Kishi, S. (1982). Performance of exposure distribution

@@ -1,83 +1,84 @@
 #' @encoding UTF-8
-#' @title Cálculo de la cobertura y distribución de contactos según el modelo de Distribución Binomial Negativa (NBD)
-#' @description Implementa el modelo NBD (Poisson-Gamma) como alternativa al
-#' modelo Beta-Binomial para estimar la distribución de contactos de un plan
-#' de medios. En lugar de modelar un número fijo de n inserciones discretas
-#' (como el Beta-Binomial), el modelo NBD asume que cada individuo tiene una
-#' tasa personal de exposición (Poisson) que varía entre la población según
-#' una distribución Gamma, dando lugar a una distribución Binomial Negativa
-#' para el número total de contactos.
+#' @title Legacy plan wrapper for an experimental Negative-Binomial exposure approximation
+#' @description Applies a univariate NBD (Poisson-Gamma) approximation to the
+#' aggregate contact pressure of a media plan. Unlike the Beta-Binomial, it
+#' does not model a fixed number of discrete insertion opportunities and does
+#' not preserve vehicle-level dependence. It is retained for compatibility;
+#' use \code{\link{nbd_exposure_distribution}} for explicit scenario work or
+#' \code{\link{fit_nbd_exposure}} with observed person-level counts.
+#' The model assumes that each individual has a
+#' tasa personal de exposicion (Poisson) que varia entre la poblacion segun
+#' una distribucion Gamma, dando lugar a una distribucion Binomial Negativa
+#' para el numero total de contactos.
 #'
 #' @references
-#' Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. Journal of
-#' the Royal Statistical Society: Series C (Applied Statistics), 8(1), 26-41.
-#' (formulación original de la mezcla Poisson-Gamma / Binomial Negativa)
+#' Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. Applied
+#' Statistics, 8(1), 26-41. \doi{10.2307/2985810}
 #'
-#' Leckenby, J. D., & Kishi, S. (1982). Performance of exposure distribution
-#' models. Journal of Advertising Research, 22(2), 35-44. (aplicación y
-#' comparación de los modelos Beta-Binomial y Binomial Negativa como
-#' modelos de exposición a medios)
+#' Danaher, P. J. (2007). Modeling Page Views Across Multiple Websites with an
+#' Application to Internet Reach and Frequency Prediction. Marketing Science,
+#' 26(3), 422-437. \doi{10.1287/mksc.1060.0226}
 #'
-#' @param audiencias Vector numérico con las audiencias de cada soporte
-#' @param inserciones Vector numérico con el número de inserciones por soporte
-#' @param pob_total Tamaño de la población
-#' @param k Numérico. Parámetro de heterogeneidad (forma de la distribución
-#' Gamma) de la NBD. Valores pequeños de k indican alta heterogeneidad
-#' (la exposición se concentra en pocos individuos); valores grandes de k
-#' aproximan el caso homogéneo (modelo de Poisson puro). Debe indicarse
+#' @param audiencias Vector numerico con las audiencias de cada soporte
+#' @param inserciones Vector numerico con el numero de inserciones por soporte
+#' @param pob_total Tamano de la poblacion
+#' @param k Numerico. Parametro de heterogeneidad (forma de la distribucion
+#' Gamma) de la NBD. Valores pequenos de k indican alta heterogeneidad
+#' (la exposicion se concentra en pocos individuos); valores grandes de k
+#' aproximan el caso homogeneo (modelo de Poisson puro). Debe indicarse
 #' \code{k} o \code{reach_conocida}, pero no ambos
-#' @param reach_conocida Numérico (0-1). Cobertura del plan conocida o
-#' estimada por otra vía (p.ej. panel de audiencias, u otro modelo aplicado
-#' al mismo plan). Si se indica, \code{k} se calibra numéricamente para
+#' @param reach_conocida Numerico (0-1). Cobertura del plan conocida o
+#' estimada por otra via (p.ej. panel de audiencias, u otro modelo aplicado
+#' al mismo plan). Si se indica, \code{k} se calibra numericamente para
 #' reproducir exactamente esta cobertura dada la frecuencia media del plan.
 #' Debe indicarse \code{k} o \code{reach_conocida}, pero no ambos
-#' @param max_contactos Entero. Número máximo de contactos a reportar en la
-#' distribución. Por defecto, el total de inserciones del plan
-#' (\code{sum(inserciones)}), ya que ningún individuo puede resultar
-#' expuesto más veces que el número de inserciones planificadas
+#' @param max_contactos Entero. Numero maximo de contactos a reportar en la
+#' distribucion. Por defecto, el total de inserciones del plan
+#' (\code{sum(inserciones)}), ya que ningun individuo puede resultar
+#' expuesto mas veces que el numero de inserciones planificadas
 #'
 #' @details
 #' El modelo se apoya en dos cantidades:
 #' \enumerate{
-#'   \item La frecuencia media de exposición del plan,
+#'   \item La frecuencia media de exposicion del plan,
 #'   \eqn{m = \sum(Audiencia_i \times Inserciones_i) / Poblacion}, esto es,
-#'   el mismo cálculo que \code{\link{calc_grps}} expresa como GRPs/100
-#'   \item El parámetro de heterogeneidad k de la distribución Gamma que
+#'   el mismo calculo que \code{\link{calc_grps}} expresa como GRPs/100
+#'   \item El parametro de heterogeneidad k de la distribucion Gamma que
 #'   mezcla con la Poisson
 #' }
-#' Dados m y k, el número de contactos X sigue una distribución Binomial
+#' Dados m y k, el numero de contactos X sigue una distribucion Binomial
 #' Negativa, \eqn{P(X = x) = dnbinom(x, size = k, mu = m)}, y la cobertura
-#' es \eqn{P(X \geq 1) = 1 - P(X = 0)}. Como la distribución Binomial
-#' Negativa tiene soporte teórico ilimitado, mientras que en la práctica
-#' nadie puede recibir más contactos que el total de inserciones del plan,
+#' es \eqn{P(X \geq 1) = 1 - P(X = 0)}. Como la distribucion Binomial
+#' Negativa tiene soporte teorico ilimitado, mientras que en la practica
+#' nadie puede recibir mas contactos que el total de inserciones del plan,
 #' toda la masa de probabilidad correspondiente a \code{max_contactos} o
-#' más contactos se acumula en el último tramo reportado (en vez de
-#' truncarse y renormalizarse, lo que distorsionaría la cobertura ya
-#' calibrada): así, \code{P(X = 0)} y, por tanto, la cobertura total,
+#' mas contactos se informa como una cola abierta en el ultimo tramo (en vez de
+#' truncarse y renormalizarse, lo que distorsionaria la cobertura ya
+#' calibrada): asi, \code{P(X = 0)} y, por tanto, la cobertura total,
 #' se reproducen de forma exacta con independencia de \code{max_contactos}.
 #'
-#' Para un mismo valor de m, la cobertura es una función creciente de k,
-#' acotada superiormente por el caso homogéneo (Poisson puro),
+#' Para un mismo valor de m, la cobertura es una funcion creciente de k,
+#' acotada superiormente por el caso homogeneo (Poisson puro),
 #' \eqn{1 - e^{-m}}. Por ello, si se indica \code{reach_conocida}, su valor
 #' debe ser estrictamente menor que \eqn{1 - e^{-m}}; de lo contrario no
-#' existe ningún k que la reproduzca y la función se detiene con un error.
+#' existe ningun k que la reproduzca y la funcion se detiene con un error.
 #'
 #' @return Una lista "reach_nbd" conteniendo:
 #' \itemize{
 #'   \item reach: Lista con la cobertura:
 #'     \itemize{
 #'       \item porcentaje: Cobertura en porcentaje
-#'       \item personas: Cobertura en número de personas
+#'       \item personas: Cobertura en numero de personas
 #'     }
-#'   \item distribucion: Lista con la distribución de contactos (0 a max_contactos):
+#'   \item distribucion: Lista con la distribucion de contactos (0 a max_contactos):
 #'     \itemize{
-#'       \item porcentaje: Vector con probabilidad de cada número de contactos
-#'       \item personas: Vector con número de personas para cada número de contactos
+#'       \item porcentaje: Vector con probabilidad de cada numero de contactos
+#'       \item personas: Vector con numero de personas para cada numero de contactos
 #'     }
-#'   \item acumulada: Lista con la distribución acumulada (1 o más contactos, 2 o más, ...):
+#'   \item acumulada: Lista con la distribucion acumulada (1 o mas contactos, 2 o mas, ...):
 #'     \itemize{
 #'       \item porcentaje: Vector con probabilidades acumuladas
-#'       \item personas: Vector con número de personas acumuladas al menos i veces
+#'       \item personas: Vector con numero de personas acumuladas al menos i veces
 #'     }
 #'   \item parametros: Lista con m (frecuencia media), k (heterogeneidad) y
 #'   max_contactos empleados
@@ -106,25 +107,29 @@
 #' @export
 #' @seealso
 #' \code{\link{calc_beta_binomial}} para el modelo alternativo de heterogeneidad Beta-Binomial
-#' \code{\link{calc_sainsbury}} para el supuesto de duplicación aleatoria
-#' \code{\link{calc_grps}} para el cálculo de la frecuencia media (GRPs)
+#' \code{\link{calc_sainsbury}} para el supuesto de duplicacion aleatoria
+#' \code{\link{calc_grps}} para el calculo de la frecuencia media (GRPs)
 #'
 #' @importFrom stats dnbinom uniroot
 calc_nbd <- function(audiencias, inserciones, pob_total,
                       k = NULL, reach_conocida = NULL,
                       max_contactos = NULL) {
 
-  if (!is.numeric(audiencias) || !is.numeric(inserciones) || !is.numeric(pob_total)) {
-    stop("audiencias, inserciones y pob_total deben ser numéricos")
+  if (!is.numeric(pob_total) || length(pob_total) != 1L ||
+      !is.finite(pob_total) || pob_total <= 0) {
+    stop("pob_total debe ser un unico numero positivo y finito", call. = FALSE)
   }
-  if (length(audiencias) != length(inserciones)) {
-    stop("audiencias e inserciones deben tener la misma longitud")
+  if (!is.numeric(audiencias) || !length(audiencias) || anyNA(audiencias) ||
+      any(!is.finite(audiencias)) || any(audiencias < 0) ||
+      any(audiencias > pob_total)) {
+    stop("audiencias debe contener valores finitos entre cero y pob_total",
+         call. = FALSE)
   }
-  if (any(audiencias < 0) || any(audiencias > pob_total) || any(inserciones < 0)) {
-    stop("Las audiencias deben ser no negativas y como máximo la población; las inserciones no negativas")
-  }
-  if (length(pob_total) != 1 || pob_total <= 0) {
-    stop("pob_total debe ser un único número positivo")
+  if (!is.numeric(inserciones) || length(inserciones) != length(audiencias) ||
+      anyNA(inserciones) || any(!is.finite(inserciones)) ||
+      any(inserciones < 0 | inserciones != round(inserciones))) {
+    stop("inserciones debe contener un entero no negativo por audiencia",
+         call. = FALSE)
   }
   if (is.null(k) && is.null(reach_conocida)) {
     stop("Debe indicarse 'k' o 'reach_conocida' (pero no ambos)")
@@ -140,26 +145,30 @@ calc_nbd <- function(audiencias, inserciones, pob_total,
   if (is.null(max_contactos)) {
     max_contactos <- n_total
   }
-  if (max_contactos <= 0 || max_contactos != round(max_contactos)) {
+  if (!is.numeric(max_contactos) || length(max_contactos) != 1L ||
+      !is.finite(max_contactos) || max_contactos <= 0 ||
+      max_contactos != round(max_contactos)) {
     stop("max_contactos debe ser un entero positivo")
   }
 
-  # Frecuencia media de exposición del plan (m = GRPs/100, ver calc_grps())
+  # Frecuencia media de exposicion del plan (m = GRPs/100, ver calc_grps())
   m <- sum(audiencias * inserciones) / pob_total
   if (m <= 0) {
-    stop("La frecuencia media del plan (impresiones totales / población) debe ser mayor que 0")
+    stop("La frecuencia media del plan (impresiones totales / poblacion) debe ser mayor que 0")
   }
 
   reach_dado_k <- function(k_val) 1 - stats::dnbinom(0, size = k_val, mu = m)
 
   if (!is.null(k)) {
-    if (!is.numeric(k) || length(k) != 1 || k <= 0) {
-      stop("k debe ser un único número positivo")
+    if (!is.numeric(k) || length(k) != 1L || !is.finite(k) || k <= 0) {
+      stop("k debe ser un unico numero positivo")
     }
+    k_source <- "supplied"
   } else {
     if (!is.numeric(reach_conocida) || length(reach_conocida) != 1 ||
+        !is.finite(reach_conocida) ||
         reach_conocida <= 0 || reach_conocida >= 1) {
-      stop("reach_conocida debe ser un único número entre 0 y 1")
+      stop("reach_conocida debe ser un unico numero entre 0 y 1")
     }
     reach_maxima <- 1 - exp(-m)
     if (reach_conocida >= reach_maxima) {
@@ -167,33 +176,38 @@ calc_nbd <- function(audiencias, inserciones, pob_total,
         paste(
           "reach_conocida (%.4f) no es alcanzable para una frecuencia media",
           "de %.4f: incluso sin heterogeneidad (modelo de Poisson puro) la",
-          "cobertura máxima posible es %.4f. Reduzca reach_conocida o revise",
+          "cobertura maxima posible es %.4f. Reduzca reach_conocida o revise",
           "audiencias/inserciones/pob_total."
         ),
         reach_conocida, m, reach_maxima
       ))
     }
+    log_interval <- c(-30, 30)
+    endpoint_reach <- vapply(log_interval, function(log_k) {
+      reach_dado_k(exp(log_k))
+    }, numeric(1))
+    if (reach_conocida <= endpoint_reach[1L]) {
+      stop("reach_conocida is too close to zero for stable NBD calibration.",
+           call. = FALSE)
+    }
     sol <- stats::uniroot(
-      function(k_val) reach_dado_k(k_val) - reach_conocida,
-      interval = c(1e-8, 1e8), tol = .Machine$double.eps^0.5
+      function(log_k) reach_dado_k(exp(log_k)) - reach_conocida,
+      interval = log_interval, tol = .Machine$double.eps^0.5
     )
-    k <- sol$root
+    k <- exp(sol$root)
+    k_source <- "calibrated_from_external_reach"
   }
 
-  # P(X = 0), ..., P(X = max_contactos - 1) de forma exacta, y toda la masa
-  # restante (X >= max_contactos) se acumula en el último tramo (ver
-  # @details): así P(X=0) -y por tanto la cobertura- no se ve alterado por
-  # dónde se trunque la tabla, a diferencia de una renormalización proporcional.
-  probs_exactas <- stats::dnbinom(0:(max_contactos - 1), size = k, mu = m)
-  p_cola <- max(0, 1 - sum(probs_exactas))
-  probs <- c(probs_exactas, p_cola)
-  if (any(!is.finite(probs)) || sum(probs) <= 0) {
-    stop("No se pudo calcular una distribución válida con los parámetros proporcionados")
-  }
+  model <- nbd_exposure_distribution(
+    mean_contacts = m,
+    size = k,
+    report_max = max_contactos,
+    opportunities = n_total
+  )
+  probs <- model$distribution$probability
+  reach <- model$reach$probability
 
-  reach <- 1 - probs[1]
-
-  # Distribución acumulada: P(X >= i) para i = 1..max_contactos
+  # Distribucion acumulada: P(X >= i) para i = 1..max_contactos
   acumulada <- rev(cumsum(rev(probs)))[-1]
 
   structure(list(
@@ -212,19 +226,21 @@ calc_nbd <- function(audiencias, inserciones, pob_total,
     parametros = list(
       m = m,
       k = k,
+      k_source = k_source,
       max_contactos = max_contactos
-    )
+    ),
+    diagnostics = model$diagnostics
   ), class = "reach_nbd")
 }
 
 #' @encoding UTF-8
 #' @title Imprimir un objeto reach_nbd
-#' @description Genera un informe formateado con las métricas del modelo NBD.
+#' @description Genera un informe formateado con las metricas del modelo NBD.
 #'
 #' @param x Objeto de clase \code{"reach_nbd"}, resultado de \code{\link{calc_nbd}}
 #' @param ... Argumentos adicionales (no usados)
 #'
-#' @return Invisible \code{x}. La función se invoca por su efecto de impresión.
+#' @return Invisible \code{x}. La funcion se invoca por su efecto de impresion.
 #'
 #' @examples
 #' resultado <- calc_nbd(c(300000, 400000, 200000), c(3, 2, 4), 1000000, k = 1.7)
@@ -234,35 +250,42 @@ calc_nbd <- function(audiencias, inserciones, pob_total,
 print.reach_nbd <- function(x, ...) {
   cat("MODELO NBD (Binomial Negativa / Poisson-Gamma)\n")
   cat("===============================================\n")
-  cat("Descripción: Heterogeneidad de exposición modelada como mezcla Poisson-Gamma\n\n")
+  cat("Scope: experimental unbounded count approximation; not a finite-insertion cross-media model\n\n")
 
-  cat("PARÁMETROS DEL MODELO:\n")
+  cat("PARAMETROS DEL MODELO:\n")
   cat("----------------------\n")
   cat(sprintf("Frecuencia media (m = GRPs/100): %.4f\n", x$parametros$m))
   cat(sprintf("k (heterogeneidad): %.4f\n", x$parametros$k))
+  if (!is.null(x$parametros$k_source)) {
+    cat(sprintf("k source: %s\n", x$parametros$k_source))
+  }
+  if (!is.null(x$diagnostics$probability_above_opportunities)) {
+    cat(sprintf("Probability above the plan's finite opportunities: %.6g\n",
+                x$diagnostics$probability_above_opportunities))
+  }
 
-  cat("\nMÉTRICAS PRINCIPALES:\n")
+  cat("\nMETRICAS PRINCIPALES:\n")
   cat("--------------------\n")
   cat(sprintf("Cobertura total: %.2f%% (%.0f personas)\n",
               x$reach$porcentaje, x$reach$personas))
 
-  cat("\nDISTRIBUCIÓN DE CONTACTOS:\n")
+  cat("\nDISTRIBUCION DE CONTACTOS:\n")
   cat("-------------------------\n")
-  cat("(Porcentaje de población; el último tramo agrupa 'max_contactos o más')\n")
+  cat("(Porcentaje de poblacion; el ultimo tramo agrupa 'max_contactos o m\u00e1s')\n")
   n_filas <- length(x$distribucion$porcentaje)
   for (i in seq_len(n_filas)) {
     n <- i - 1
-    etiqueta <- if (i == n_filas) sprintf("%d o más contactos", n) else
+    etiqueta <- if (i == n_filas) sprintf("%d o m\u00e1s contactos", n) else
       sprintf("%d contacto%s", n, ifelse(n == 1, "", "s"))
     cat(sprintf("%s: %.2f%% (%.0f personas)\n",
                 etiqueta, x$distribucion$porcentaje[i], x$distribucion$personas[i]))
   }
 
-  cat("\nDISTRIBUCIÓN ACUMULADA:\n")
+  cat("\nDISTRIBUCION ACUMULADA:\n")
   cat("----------------------\n")
-  cat("(Porcentaje de población que recibe N o más contactos)\n")
+  cat("(Porcentaje de poblacion que recibe N o mas contactos)\n")
   for (i in seq_along(x$acumulada$porcentaje)) {
-    cat(sprintf("≥ %d contacto%s: %.2f%% (%.0f personas)\n",
+    cat(sprintf(">= %d contacto%s: %.2f%% (%.0f personas)\n",
                 i, ifelse(i == 1, "", "s"),
                 x$acumulada$porcentaje[i], x$acumulada$personas[i]))
   }

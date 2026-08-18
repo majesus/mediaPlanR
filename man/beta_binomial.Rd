@@ -8,10 +8,10 @@
 \format{
 Una lista con los componentes:
 \describe{
-\item{A1}{Audiencia del soporte tras la primera inserción}
-\item{A2}{Audiencia del soporte tras la segunda inserción}
-\item{P}{Tamaño total de la población}
-\item{n}{Número total de inserciones planificadas}
+\item{A1}{Audiencia del soporte tras la primera insercion}
+\item{A2}{Audiencia del soporte tras la segunda insercion}
+\item{P}{Tamano total de la poblacion}
+\item{n}{Numero total de inserciones planificadas}
 }
 }
 \usage{

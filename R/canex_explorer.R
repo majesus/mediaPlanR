@@ -1,20 +1,20 @@
 #' @encoding UTF-8
 #' @title Explorador del Modelo CANEX
-#' @description Aplicación Shiny para configurar una pauta multivehículo,
-#' calcular su distribución de contactos mediante el modelo CANEX
-#' (\code{\link{calc_canex}}) y visualizar la distribución de frecuencias y
+#' @description Aplicacion Shiny para configurar una pauta multivehiculo,
+#' calcular su distribucion de contactos mediante el modelo CANEX
+#' (\code{\link{calc_canex}}) y visualizar la distribucion de frecuencias y
 #' la cobertura acumulada.
 #'
 #' @details
-#' La aplicación permite:
+#' La aplicacion permite:
 #' \itemize{
-#'   \item Configurar la población objetivo y el número de vehículos (2 a 5)
-#'   \item Introducir, para cada vehículo, el número de inserciones (k) y las
-#'   coberturas tras la primera y segunda inserción (R1, R2)
+#'   \item Configurar la poblacion objetivo y el numero de vehiculos (2 a 5)
+#'   \item Introducir, para cada vehiculo, el numero de inserciones (k) y las
+#'   coberturas tras la primera y segunda insercion (R1, R2)
 #'   \item Introducir la matriz de duplicaciones observadas entre cada par de
-#'   vehículos
+#'   vehiculos
 #'   \item Cargar un ejemplo predefinido de referencia
-#'   \item Visualizar la distribución de frecuencias y la cobertura acumulada
+#'   \item Visualizar la distribucion de frecuencias y la cobertura acumulada
 #' }
 #'
 #' @return Lanza una aplicacion Shiny interactiva (efecto secundario); no
@@ -35,26 +35,26 @@ run_canex_explorer <- function() {
     title = "Explorador del Modelo CANEX",
     sidebar = sidebar(
       width = 380,
-      numericInput("poblacion_canex", "Población objetivo:", value = 1000000, min = 1, step = 1000),
-      numericInput("n_vehiculos_canex", "Número de vehículos:", value = 2, min = 2, max = 5, step = 1),
+      numericInput("poblacion_canex", "Poblacion objetivo:", value = 1000000, min = 1, step = 1000),
+      numericInput("n_vehiculos_canex", "Numero de vehiculos:", value = 2, min = 2, max = 5, step = 1),
       uiOutput("vehiculos_ui"),
       uiOutput("duplicaciones_ui"),
-      actionButton("calcular_canex", "Calcular distribución", class = "btn-primary"),
+      actionButton("calcular_canex", "Calcular distribucion", class = "btn-primary"),
       actionButton("ejemplo_canex", "Cargar ejemplo", class = "btn-secondary"),
       hr(),
-      helpText("k: inserciones. R1: cobertura tras 1 inserción. R2: cobertura tras 2 inserciones. ",
-               "p(i,j): proporción de población expuesta simultáneamente a los vehículos i y j.")
+      helpText("k: inserciones. R1: cobertura tras 1 insercion. R2: cobertura tras 2 inserciones. ",
+               "p(i,j): proporcion de poblacion expuesta simultaneamente a los vehiculos i y j.")
     ),
     card(
       card_header("Resumen"),
       tableOutput("resumen_canex")
     ),
     layout_columns(
-      card(card_header("Distribución de frecuencias (K = k)"), plotOutput("plot_prob_canex")),
-      card(card_header("Cobertura acumulada (K ≥ k)"), plotOutput("plot_cum_canex"))
+      card(card_header("Distribucion de frecuencias (K = k)"), plotOutput("plot_prob_canex")),
+      card(card_header("Cobertura acumulada (K >= k)"), plotOutput("plot_cum_canex"))
     ),
     card(
-      card_header("Distribución de contactos detallada"),
+      card_header("Distribucion de contactos detallada"),
       tableOutput("tabla_canex")
     )
   )
@@ -99,7 +99,7 @@ run_canex_explorer <- function() {
     output$vehiculos_ui <- renderUI({
       n <- rv$n
       tagList(
-        h5("Datos por vehículo"),
+        h5("Datos por vehiculo"),
         lapply(seq_len(n), function(i) {
           fluidRow(
             column(4, numericInput(paste0("veh_k_", i), paste0("V", i, ": k"),
@@ -168,7 +168,7 @@ run_canex_explorer <- function() {
       res <- resultado()
       req(res)
       data.frame(
-        Métrica = c("Cobertura total (1+)", "OTS medio (entre alcanzados)", "Probabilidad de 0 contactos"),
+        Metrica = c("Cobertura total (1+)", "OTS medio (entre alcanzados)", "Probabilidad de 0 contactos"),
         Valor = c(
           sprintf("%.2f%% (%s personas)", res$total_reach * 100,
                   format(res$total_reach_people, big.mark = ",", scientific = FALSE)),
@@ -185,8 +185,8 @@ run_canex_explorer <- function() {
         k = res$distribution$contacts,
         `Prob. (K=k)` = sprintf("%.2f%%", res$distribution$percentage),
         `Personas (K=k)` = format(round(res$distribution$people), big.mark = ",", scientific = FALSE),
-        `Prob. (K≥k)` = sprintf("%.2f%%", res$cumulative$percentage),
-        `Personas (K≥k)` = format(round(res$cumulative$people), big.mark = ",", scientific = FALSE),
+        `Prob. (K>=k)` = sprintf("%.2f%%", res$cumulative$percentage),
+        `Personas (K>=k)` = format(round(res$cumulative$people), big.mark = ",", scientific = FALSE),
         check.names = FALSE
       )
     })
@@ -196,7 +196,7 @@ run_canex_explorer <- function() {
       req(res)
       ggplot(res$distribution, aes(x = factor(.data$contacts), y = .data$percentage)) +
         geom_col(fill = "#0984e3") +
-        labs(x = "k contactos", y = "% de población", title = NULL) +
+        labs(x = "k contactos", y = "% de poblacion", title = NULL) +
         theme_minimal()
     })
 
@@ -206,7 +206,7 @@ run_canex_explorer <- function() {
       ggplot(res$cumulative, aes(x = factor(.data$min_contacts), y = .data$percentage, group = 1)) +
         geom_line(color = "#ff7a00", linewidth = 1) +
         geom_point(color = "#ff7a00", size = 2) +
-        labs(x = "k contactos (mínimo)", y = "% de población acumulado", title = NULL) +
+        labs(x = "k contactos (minimo)", y = "% de poblacion acumulado", title = NULL) +
         theme_minimal()
     })
   }

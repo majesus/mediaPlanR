@@ -3,14 +3,14 @@
 \encoding{UTF-8}
 \name{calc_sainsbury}
 \alias{calc_sainsbury}
-\title{Cálculo de cobertura y distribución de contactos (y acumulada) según modelo de Sainsbury}
+\title{Calculo de cobertura y distribucion de contactos (y acumulada) segun modelo de Sainsbury}
 \usage{
 calc_sainsbury(audiencias, pob_total)
 }
 \arguments{
-\item{audiencias}{Vector numérico con las audiencias individuales de cada soporte}
+\item{audiencias}{Vector numerico con las audiencias individuales de cada soporte}
 
-\item{pob_total}{Tamaño de la población}
+\item{pob_total}{Tamano de la poblacion}
 }
 \value{
 Una lista "reach_sainsbury" conteniendo:
@@ -18,70 +18,70 @@ Una lista "reach_sainsbury" conteniendo:
 \item reach: Lista con la cobertura:
 \itemize{
 \item porcentaje: Cobertura en porcentaje
-\item personas: Cobertura en número de personas
+\item personas: Cobertura en numero de personas
 }
-\item distribucion: Lista con la distribución de contactos:
+\item distribucion: Lista con la distribucion de contactos:
 \itemize{
-\item porcentaje: Vector con probabilidad de cada número de exposiciones
-\item personas: Vector con número de personas para cada número de exposiciones
+\item porcentaje: Vector con probabilidad de cada numero de exposiciones
+\item personas: Vector con numero de personas para cada numero de exposiciones
 }
-\item acumulada: Lista con la distribución acumulada:
+\item acumulada: Lista con la distribucion acumulada:
 \itemize{
 \item porcentaje: Vector con probabilidades acumuladas
-\item personas: Vector con número de personas acumuladas al menos i veces
+\item personas: Vector con numero de personas acumuladas al menos i veces
 }
 }
 }
 \description{
 Implementa el modelo de Sainsbury, desarrollado por E. J. Sansbury en la London Press Exchange,
-para calcular la cobertura y la distribución de contactos para un conjunto de soportes publicitarios y una única inserción por soporte.
-El modelo considera la duplicación aleatoria, las probabilidades individuales de exposición homogéneas, y las probabilidades de
-exposición del soporte heterogéneas para una estimación más precisa de la cobertura y la distribución de contactos (y acumulada).
-De las dos últimas hipótesis se deriva que la probabilidad de que un individuo resulte expuesto al soporte i vendrá dado por
-el cociente entre la audiencia del soporte i (casos favorables) y la población (casos totales). Por su parte, de la asunción de la duplicación aleatoria se deriva que
-la probabilidad de exposición continuará siendo una variable Bernouilli con diferentes probabilidadades de exposición en cada soporte.
+para calcular la cobertura y la distribucion de contactos para un conjunto de soportes publicitarios y una unica insercion por soporte.
+El modelo considera la duplicacion aleatoria, las probabilidades individuales de exposicion homogeneas, y las probabilidades de
+exposicion del soporte heterogeneas para una estimacion mas precisa de la cobertura y la distribucion de contactos (y acumulada).
+De las dos ultimas hipotesis se deriva que la probabilidad de que un individuo resulte expuesto al soporte i vendra dado por
+el cociente entre la audiencia del soporte i (casos favorables) y la poblacion (casos totales). Por su parte, de la asuncion de la duplicacion aleatoria se deriva que
+la probabilidad de exposicion continuara siendo una variable Bernouilli con diferentes probabilidadades de exposicion en cada soporte.
 }
 \details{
 El modelo de Sainsbury simplificado calcula:
 \enumerate{
-\item Cobertura considerando la duplicación entre soportes como el producto de las probabilidades individuales
-\item Distribución de contactos para cada nivel de exposición i
-\item Distribución de contactos acumulada (expuestos al menos i veces)
+\item Cobertura considerando la duplicacion entre soportes como el producto de las probabilidades individuales
+\item Distribucion de contactos para cada nivel de exposicion i
+\item Distribucion de contactos acumulada (expuestos al menos i veces)
 }
 
 El proceso incluye:
 \itemize{
-\item Conversión de audiencias a probabilidades
-\item Cálculo de las posibles combinaciones de soportes
-\item Estimación de probabilidades conjuntas
-\item Agregación de resultados: distribución de contactos (y acumulada)
+\item Conversion de audiencias a probabilidades
+\item Calculo de las posibles combinaciones de soportes
+\item Estimacion de probabilidades conjuntas
+\item Agregacion de resultados: distribucion de contactos (y acumulada)
 }
 }
 \examples{
-# Ejemplo básico con tres soportes
+# Ejemplo basico con tres soportes
 audiencias <- c(300000, 400000, 200000)
 pob_total <- 1000000
 resultado <- calc_sainsbury(audiencias, pob_total)
 
 # Examinar los resultados
 print(resultado$reach$porcentaje)  # Cobertura en porcentaje
-print(resultado$distribucion$personas)  # Personas por número de contactos
+print(resultado$distribucion$personas)  # Personas por numero de contactos
 
-# Ejemplo con validación de datos
+# Ejemplo con validacion de datos
 \dontrun{
 audiencias_invalidas <- c(300000, -400000, 200000)
 resultado <- calc_sainsbury(audiencias_invalidas, pob_total)
-# Generará un error por audiencia negativa
+# Generara un error por audiencia negativa
 }
 
 }
 \references{
-Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la distribución de
-contactos en la planificación de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, España.
+Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
+contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 }
 \seealso{
-\code{\link{calc_binomial}} para estimaciones con la distribución Binomial
-\code{\link{calc_beta_binomial}} para estimaciones con la distribución Beta-Binomial
-\code{\link{calc_metheringham}} para estimaciones con la distribución de Metheringham
-\code{\link{calc_hofmans}} para estimaciones con la distribución de Hofmans
+\code{\link{calc_binomial}} para estimaciones con la distribucion Binomial
+\code{\link{calc_beta_binomial}} para estimaciones con la distribucion Beta-Binomial
+\code{\link{calc_metheringham}} para estimaciones con la distribucion de Metheringham
+\code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
 }

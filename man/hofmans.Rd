@@ -8,9 +8,9 @@
 \format{
 Una lista con los componentes:
 \describe{
-\item{R1}{Cobertura tras la primera inserción (0-1)}
-\item{R2}{Cobertura tras la segunda inserción (0-1)}
-\item{N}{Número de inserciones para las que calcular la audiencia acumulada}
+\item{R1}{Cobertura tras la primera insercion (0-1)}
+\item{R2}{Cobertura tras la segunda insercion (0-1)}
+\item{N}{Numero de inserciones para las que calcular la audiencia acumulada}
 }
 }
 \usage{

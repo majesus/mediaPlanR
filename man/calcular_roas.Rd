@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{calcular_roas}
 \alias{calcular_roas}
-\title{Calcular ROAS (Retorno sobre la Inversión Publicitaria)}
+\title{Calcular ROAS (Retorno sobre la Inversion Publicitaria)}
 \usage{
 calcular_roas(
   audiencia_efectiva = NULL,
@@ -24,47 +24,47 @@ calcular_roas(
 )
 }
 \arguments{
-\item{audiencia_efectiva}{Numérico. Número total de personas alcanzadas por la campaña}
+\item{audiencia_efectiva}{Numerico. Numero total de personas alcanzadas por la campana}
 
-\item{tasa_visita}{Numérico. Porcentaje de la audiencia que visita la web (0-1). Si es NULL, no se usa en cálculos.}
+\item{tasa_visita}{Numerico. Porcentaje de la audiencia que visita la web (0-1). Si es NULL, no se usa en calculos.}
 
-\item{tasa_prueba}{Numérico. Porcentaje de visitantes que prueban el producto (0-1). Si es NULL, no se usa en cálculos.}
+\item{tasa_prueba}{Numerico. Porcentaje de visitantes que prueban el producto (0-1). Si es NULL, no se usa en calculos.}
 
-\item{tasa_conversion}{Numérico. Porcentaje que se convierte en cliente regular (0-1). Si es NULL, no se usa en cálculos.}
+\item{tasa_conversion}{Numerico. Porcentaje que se convierte en cliente regular (0-1). Si es NULL, no se usa en calculos.}
 
-\item{tasa_wom}{Numérico. Nuevos clientes generados por cada cliente actual (0-1). Si es NULL, no se usa en cálculos.}
+\item{tasa_wom}{Numerico. Nuevos clientes generados por cada cliente actual (0-1). Si es NULL, no se usa en calculos.}
 
-\item{unidades_mes}{Numérico. Unidades compradas por cliente al mes}
+\item{unidades_mes}{Numerico. Unidades compradas por cliente al mes}
 
-\item{precio_unidad}{Numérico. Precio de venta por unidad}
+\item{precio_unidad}{Numerico. Precio de venta por unidad}
 
-\item{margen_unidad}{Numérico. Beneficio neto por unidad vendida}
+\item{margen_unidad}{Numerico. Beneficio neto por unidad vendida}
 
-\item{vida_cliente}{Numérico. Meses que permanece activo un cliente}
+\item{vida_cliente}{Numerico. Meses que permanece activo un cliente}
 
-\item{periodo_analisis}{Numérico. Meses a considerar en el análisis}
+\item{periodo_analisis}{Numerico. Meses a considerar en el analisis}
 
-\item{inversion}{Numérico. Inversión total en publicidad}
+\item{inversion}{Numerico. Inversion total en publicidad}
 
-\item{variaciones}{Lista con nombre de la variable y valor numérico.
-Escenarios para análisis de sensibilidad.}
+\item{variaciones}{Lista con nombre de la variable y valor numerico.
+Escenarios para analisis de sensibilidad.}
 
-\item{imprimir_resultados}{Lógico. Si TRUE, muestra resultados detallados}
+\item{imprimir_resultados}{Logico. Si TRUE, muestra resultados detallados}
 
-\item{roas_objetivo}{Numérico. ROAS objetivo a alcanzar; si se indica, la
-función calcula la audiencia necesaria para lograrlo (opcional)}
+\item{roas_objetivo}{Numerico. ROAS objetivo a alcanzar; si se indica, la
+funcion calcula la audiencia necesaria para lograrlo (opcional)}
 
-\item{tipo_roas_objetivo}{Carácter. Tipo de ROAS objetivo ("bruto" o "neto")}
+\item{tipo_roas_objetivo}{Caracter. Tipo de ROAS objetivo ("bruto" o "neto")}
 }
 \description{
-Implementación del cálculo de ROAS para campañas de marketing,
-considerando el embudo de conversión y efectos de recomendación (word-of-mouth).
+Implementacion del calculo de ROAS para campanas de marketing,
+considerando el embudo de conversion y efectos de recomendacion (word-of-mouth).
 }
 \details{
-La función calcula dos tipos de ROAS:
+La funcion calcula dos tipos de ROAS:
 \itemize{
-\item ROAS Bruto: Ingresos totales por ventas / Inversión publicitaria
-\item ROAS Neto: Beneficio (margen) total / Inversión publicitaria
+\item ROAS Bruto: Ingresos totales por ventas / Inversion publicitaria
+\item ROAS Neto: Beneficio (margen) total / Inversion publicitaria
 }
 }
 \examples{

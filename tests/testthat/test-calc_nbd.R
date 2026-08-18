@@ -41,5 +41,7 @@ test_that("max_contactos por defecto es sum(inserciones) y el ultimo tramo agrup
 test_that("print.reach_nbd se dispara via print() y etiqueta el ultimo tramo como 'o mas'", {
   res <- calc_nbd(c(1e5, 2e5), c(2, 3), 1e6, k = 1)
   expect_output(print(res), "MODELO NBD")
-  expect_output(print(res), "o más contactos")
+  # Tolerante a la representación <U+00E1> que usan algunas configuraciones
+  # de testthat cuando R se ejecuta en una locale ASCII/C.
+  expect_output(print(res), "o m.*s contactos")
 })

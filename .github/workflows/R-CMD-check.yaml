@@ -50,9 +50,5 @@ jobs:
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
-          # error_on = "error": el paquete usa texto en espanol (acentos) de
-          # forma deliberada en codigo y datos, lo que produce un WARNING y
-          # una NOTE conocidos y aceptados (ver DESCRIPTION/README) en vez de
-          # migrar todo el codigo a escapes \uXXXX. Solo los ERROR deben
-          # tumbar el workflow.
-          error_on: '"error"'
+          # Version 2 treats warnings as release blockers.
+          error_on: '"warning"'

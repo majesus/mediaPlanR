@@ -3,35 +3,35 @@
 \encoding{UTF-8}
 \name{imprimir_resultados}
 \alias{imprimir_resultados}
-\title{Impresión editada de resultados del análisis de medios}
+\title{Impresion editada de resultados del analisis de medios}
 \usage{
 imprimir_resultados(data_ls)
 }
 \arguments{
 \item{data_ls}{Una lista que debe contener los siguientes elementos:
 \itemize{
-\item resultados: Data frame con las combinaciones más relevantes de soportes
-\item distribucion: Data frame con la distribución de contactos, incluyendo:
+\item resultados: Data frame con las combinaciones mas relevantes de soportes
+\item distribucion: Data frame con la distribucion de contactos, incluyendo:
 \itemize{
-\item cont: Número de contactos
+\item cont: Numero de contactos
 \item prob: Probabilidad asociada
 }
-\item alpha: Valor del parámetro alpha utilizado en el análisis
-\item beta: Valor del parámetro beta utilizado en el análisis
+\item alpha: Valor del parametro alpha utilizado en el analisis
+\item beta: Valor del parametro beta utilizado en el analisis
 }}
 }
 \value{
-No retorna valor. Imprime en consola una visualización estructurada de:
+No retorna valor. Imprime en consola una visualizacion estructurada de:
 \itemize{
-\item Combinaciones más relevantes de soportes
-\item Distribución de contactos y sus probabilidades
-\item Valores de los parámetros alpha y beta utilizados
+\item Combinaciones mas relevantes de soportes
+\item Distribucion de contactos y sus probabilidades
+\item Valores de los parametros alpha y beta utilizados
 }
 }
 \description{
-Imprime en consola un resumen estructurado de los resultados del análisis
-de medios, incluyendo combinaciones de soportes, distribución de contactos y
-los parámetros alpha y beta utilizados.
+Imprime en consola un resumen estructurado de los resultados del analisis
+de medios, incluyendo combinaciones de soportes, distribucion de contactos y
+los parametros alpha y beta utilizados.
 }
 \examples{
 # Crear datos de ejemplo
@@ -55,5 +55,5 @@ imprimir_resultados(data_ls)
 
 }
 \seealso{
-\code{\link{calc_R1_R2}} para cálculos de coeficientes de duplicación
+\code{\link{calc_R1_R2}} para calculos de coeficientes de duplicacion
 }

@@ -13,10 +13,10 @@
 \item{...}{Argumentos adicionales (no usados)}
 }
 \value{
-Invisible \code{x}. La función se invoca por su efecto de impresión.
+Invisible \code{x}. La funcion se invoca por su efecto de impresion.
 }
 \description{
-Genera un informe formateado con las métricas del modelo de Agostini.
+Genera un informe formateado con las metricas del modelo de Agostini.
 }
 \examples{
 resultado <- calc_agostini(c(300000, 400000, 200000), pob_total = 1000000)

@@ -1,15 +1,15 @@
 Package: mediaPlanR
 Type: Package
-Version: 0.2.0
-Date: 2026-08-15
-Title: Herramientas para la Planificación de Medios Publicitarios
-Description: Indicadores, modelos y aplicaciones interactivas para la
-    planificación de medios publicitarios. Incluye modelos clásicos de
-    cobertura y distribución de contactos (Sainsbury, Binomial,
-    Beta-Binomial, Metheringham, Hofmans, Agostini, MBBD y CANEX),
-    indicadores de eficiencia de un plan (GRP, CPM, ROAS), herramientas de
-    optimización de planes de medios sujetos a restricciones presupuestarias,
-    y aplicaciones Shiny para la exploración interactiva de estos modelos.
+Version: 2.0.0
+Date: 2026-08-18
+Title: Reliable Cross-Media Reach and Frequency Planning
+Description: Reproducible tools for cross-media reach, contact-frequency
+    distributions, target-audience metrics and budget allocation. Provides a
+    validated media-plan data contract, exact Poisson-binomial calculations,
+    Binomial, Beta-Binomial, canonical-expansion, Canonical Sequential and
+    Morgensztern Sequential models, plus an explicitly scoped Negative-Binomial count approximation,
+    effective-reach optimization with explicit optimality diagnostics, and
+    compatibility functions for established planning workflows.
 Authors@R: person(
     given = "Manuel J.",
     family = "Sánchez-Franco",
@@ -31,7 +31,6 @@ Imports:
     shiny (>= 1.7.0),
     bslib (>= 0.4.0),
     ggplot2 (>= 3.4.0),
-    dplyr (>= 1.0.0),
     ggrepel,
     scales
 Suggests:

@@ -8,8 +8,8 @@
 \format{
 Una lista con los componentes:
 \describe{
-\item{precios}{Vector numérico con precios de cada inserción}
-\item{audiencias}{Vector numérico con audiencias de cada soporte}
+\item{precios}{Vector numerico con precios de cada insercion}
+\item{audiencias}{Vector numerico con audiencias de cada soporte}
 }
 }
 \usage{

@@ -3,48 +3,48 @@
 \encoding{UTF-8}
 \name{calc_cpm}
 \alias{calc_cpm}
-\title{Cálculo de CPM para plan de medios o soportes individuales}
+\title{Calculo de CPM para plan de medios o soportes individuales}
 \usage{
 calc_cpm(precios, audiencias = NULL, cobertura = NULL, tipo = "soporte")
 }
 \arguments{
-\item{precios}{Vector numérico con precios de cada inserción o precio total (presupuesto) del plan}
+\item{precios}{Vector numerico con precios de cada insercion o precio total (presupuesto) del plan}
 
-\item{audiencias}{Vector numérico con audiencias de cada soporte}
+\item{audiencias}{Vector numerico con audiencias de cada soporte}
 
 \item{cobertura}{Opcional. Cobertura del plan en personas}
 
-\item{tipo}{Character. Tipo de cálculo: "soporte" o "plan" (default: "soporte")}
+\item{tipo}{Character. Tipo de calculo: "soporte" o "plan" (default: "soporte")}
 }
 \value{
 Una lista conteniendo:
 \itemize{
 \item cpm: Vector de CPMs calculados o CPM del plan
-\item tipo: Tipo de cálculo realizado
+\item tipo: Tipo de calculo realizado
 \item total: Suma total de precios (si aplica)
 }
 }
 \description{
 Calcula el Coste Por Mil (CPM) ya sea para un plan de medios
 completo o para soportes individuales, permitiendo evaluar la eficiencia
-en términos de coste por cada mil personas alcanzadas, es decir, permite
-comparar la rentabilidad de diferentes estrategias y medios dentro del mismo plan de campaña.
+en terminos de coste por cada mil personas alcanzadas, es decir, permite
+comparar la rentabilidad de diferentes estrategias y medios dentro del mismo plan de campana.
 }
 \details{
 El CPM se puede calcular de dos formas:
 \enumerate{
 \item Para soportes individuales:
 \itemize{
-\item CPM = (Precio inserción / Audiencia) × 1000
+\item CPM = (Precio insercion / Audiencia) ? 1000
 }
 \item Para plan completo:
 \itemize{
-\item CPM = (Precio total / Cobertura) × 1000
+\item CPM = (Precio total / Cobertura) ? 1000
 }
 }
 }
 \note{
-El CPM es útil para:
+El CPM es util para:
 \itemize{
 \item Comparar eficiencia entre soportes
 \item Evaluar rentabilidad de planes de medios
@@ -67,5 +67,5 @@ cpm2 <- calc_cpm(
 
 }
 \seealso{
-\code{\link{calc_grps}} para cálculo de GRPs
+\code{\link{calc_grps}} para calculo de GRPs
 }

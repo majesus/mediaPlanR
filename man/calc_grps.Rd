@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{calc_grps}
 \alias{calc_grps}
-\title{Cálculo de GRPs mediante la cobertura y frecuencia media, o el cálculo de las impresiones totales}
+\title{Calculo de GRPs mediante la cobertura y frecuencia media, o el calculo de las impresiones totales}
 \usage{
 calc_grps(
   audiencias,
@@ -14,15 +14,15 @@ calc_grps(
 )
 }
 \arguments{
-\item{audiencias}{Vector numérico con las audiencias de cada soporte}
+\item{audiencias}{Vector numerico con las audiencias de cada soporte}
 
-\item{inserciones}{Vector numérico del número de inserciones por soporte}
+\item{inserciones}{Vector numerico del numero de inserciones por soporte}
 
-\item{pob_total}{Tamaño de la población}
+\item{pob_total}{Tamano de la poblacion}
 
 \item{cobertura}{Opcional. Cobertura en porcentaje (si se conoce)}
 
-\item{metodo}{Character. Método de cálculo: "impresiones" o "cobertura" (default: "impresiones")}
+\item{metodo}{Character. Metodo de calculo: "impresiones" o "cobertura" (default: "impresiones")}
 }
 \value{
 Una lista conteniendo:
@@ -30,52 +30,52 @@ Una lista conteniendo:
 \item grps: Valor de GRPs calculado
 \item impresiones_totales: Suma total de impresiones
 \item frecuencia_media: Frecuencia media (si aplica)
-\item metodo: Método utilizado para el cálculo
+\item metodo: Metodo utilizado para el calculo
 }
 }
 \description{
 Calcula los Gross Rating Points (GRPs) de un plan de medios
-utilizando dos métodos diferentes: mediante impresiones totales o mediante
-cobertura y frecuencia media. Los GRP (Gross Rating Points) son una métrica
-publicitaria que indica el impacto total de una campaña sobre una audiencia determinada,
-expresando la suma del alcance por la frecuencia de exposición.
-Se calculan dividiendo el número total de impresiones (contactos o veces
-que el anuncio fue visto) por la población relevante, multiplicado por 100,
-lo cual permite expresar la exposición acumulativa de la campaña como un porcentaje.
+utilizando dos metodos diferentes: mediante impresiones totales o mediante
+cobertura y frecuencia media. Los GRP (Gross Rating Points) son una metrica
+publicitaria que indica el impacto total de una campana sobre una audiencia determinada,
+expresando la suma del alcance por la frecuencia de exposicion.
+Se calculan dividiendo el numero total de impresiones (contactos o veces
+que el anuncio fue visto) por la poblacion relevante, multiplicado por 100,
+lo cual permite expresar la exposicion acumulativa de la campana como un porcentaje.
 }
 \details{
-El cálculo se puede realizar mediante dos métodos:
+El calculo se puede realizar mediante dos metodos:
 \enumerate{
-\item Método por impresiones:
+\item Metodo por impresiones:
 \itemize{
-\item Calcula impresiones totales: SUMATORIO(Audiencia_i × Inserciones_i)
-\item GRPs = (Impresiones / Población) × 100
+\item Calcula impresiones totales: SUMATORIO(Audiencia_i ? Inserciones_i)
+\item GRPs = (Impresiones / Poblacion) ? 100
 }
-\item Método por cobertura:
+\item Metodo por cobertura:
 \itemize{
-\item Frecuencia media = Impresiones totales / (Cobertura × Población)
-\item GRPs = Cobertura × Frecuencia media
+\item Frecuencia media = Impresiones totales / (Cobertura ? Poblacion)
+\item GRPs = Cobertura ? Frecuencia media
 }
 }
 }
 \note{
-Los GRPs son una medida de presión publicitaria que:
+Los GRPs son una medida de presion publicitaria que:
 \itemize{
 \item Pueden superar el 100\%
-\item Indican el número de impactos por cada 100 personas de la población
-\item Son útiles para comparar campañas de publicidad
-\item Su debilidad reside en que campañas con diferentes valores de cobertura \% y frecuencia media pueden arrojar un mismo nivel de GRPs
+\item Indican el numero de impactos por cada 100 personas de la poblacion
+\item Son utiles para comparar campanas de publicidad
+\item Su debilidad reside en que campanas con diferentes valores de cobertura \% y frecuencia media pueden arrojar un mismo nivel de GRPs
 }
 }
 \examples{
-# Cálculo por método de impresiones
+# Calculo por metodo de impresiones
 grps1 <- calc_grps(
   audiencias = c(300000, 400000, 200000),
   inserciones = c(3, 2, 4),
   pob_total = 1000000
 )
 
-# Cálculo por método de cobertura
+# Calculo por metodo de cobertura
 grps2 <- calc_grps(
   audiencias = c(300000, 400000, 200000),
   inserciones = c(3, 2, 4),
@@ -86,5 +86,5 @@ grps2 <- calc_grps(
 
 }
 \seealso{
-\code{\link{calc_cpm}} para cálculo de costes por mil (CPM)
+\code{\link{calc_cpm}} para calculo de costes por mil (CPM)
 }

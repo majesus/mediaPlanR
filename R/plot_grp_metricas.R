@@ -1,41 +1,40 @@
 
 #' @encoding UTF-8
-#' @title Visualización de GRPs y métricas relacionadas por soporte
-#' @description Genera un gráfico de puntos para comparar soportes publicitarios
-#' según GRPs y coste total, contactos y coste/GRP. El gráfico muestra la relación entre el coste por GRP,
+#' @title Visualizacion de GRPs y metricas relacionadas por soporte
+#' @description Genera un grafico de puntos para comparar soportes publicitarios
+#' segun GRPs y coste total, contactos y coste/GRP. El grafico muestra la relacion entre el coste por GRP,
 #' los contactos totales y el coste total de cada soporte, utilizando un sistema de
 #' burbujas con colores distintivos para cada soporte.
 #'
-#' @param audiencias Vector numérico con las audiencias de cada soporte
-#' @param inserciones Vector numérico del número de inserciones por soporte
-#' @param precios Vector numérico con el precio por inserción de cada soporte
+#' @param audiencias Vector numerico con las audiencias de cada soporte
+#' @param inserciones Vector numerico del numero de inserciones por soporte
+#' @param precios Vector numerico con el precio por insercion de cada soporte
 #' @param nombres Character vector con los nombres de los soportes
-#' @param pob_total Tamaño de la población objetivo
-#' @param titulo Character. Título del gráfico (opcional)
+#' @param pob_total Tamano de la poblacion objetivo
+#' @param titulo Character. Titulo del grafico (opcional)
 #'
-#' @return Un objeto ggplot2 que representa el gráfico de burbujas
+#' @return Un objeto ggplot2 que representa el grafico de burbujas
 #'
 #' @examples
-#' # Ejemplo básico con tres soportes
+#' # Ejemplo basico con tres soportes
 #' plot_grp_metricas(
 #'   audiencias = c(300000, 400000, 200000),
 #'   inserciones = c(3, 2, 4),
 #'   precios = c(1000, 1500, 800),
 #'   nombres = c("Marca", "As", "20 Minutos"),
 #'   pob_total = 1000000,
-#'   titulo = "Análisis de Soportes Deportivos"
+#'   titulo = "Analisis de Soportes Deportivos"
 #' )
 #'
 #' @import ggplot2
-#' @import ggrepel
 #' @importFrom scales comma
 #' @export
 
 plot_grp_metricas <- function(audiencias, inserciones, precios, nombres,
-                             pob_total, titulo = "Comparación de Soportes Publicitarios") {
+                             pob_total, titulo = "Comparacion de Soportes Publicitarios") {
 
   if (!all(sapply(list(audiencias, inserciones, precios), is.numeric))) {
-    stop("audiencias, inserciones y precios deben ser vectores numéricos")
+    stop("audiencias, inserciones y precios deben ser vectores numericos")
   }
   if (length(unique(c(length(audiencias), length(inserciones),
                       length(precios), length(nombres)))) != 1) {

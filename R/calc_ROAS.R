@@ -1,31 +1,31 @@
 #' @encoding UTF-8
-#' @title Calcular ROAS (Retorno sobre la Inversión Publicitaria)
-#' @description Implementación del cálculo de ROAS para campañas de marketing,
-#' considerando el embudo de conversión y efectos de recomendación (word-of-mouth).
+#' @title Calcular ROAS (Retorno sobre la Inversion Publicitaria)
+#' @description Implementacion del calculo de ROAS para campanas de marketing,
+#' considerando el embudo de conversion y efectos de recomendacion (word-of-mouth).
 #'
-#' @details La función calcula dos tipos de ROAS:
+#' @details La funcion calcula dos tipos de ROAS:
 #' \itemize{
-#'   \item ROAS Bruto: Ingresos totales por ventas / Inversión publicitaria
-#'   \item ROAS Neto: Beneficio (margen) total / Inversión publicitaria
+#'   \item ROAS Bruto: Ingresos totales por ventas / Inversion publicitaria
+#'   \item ROAS Neto: Beneficio (margen) total / Inversion publicitaria
 #' }
 #'
-#' @param audiencia_efectiva Numérico. Número total de personas alcanzadas por la campaña
-#' @param tasa_visita Numérico. Porcentaje de la audiencia que visita la web (0-1). Si es NULL, no se usa en cálculos.
-#' @param tasa_prueba Numérico. Porcentaje de visitantes que prueban el producto (0-1). Si es NULL, no se usa en cálculos.
-#' @param tasa_conversion Numérico. Porcentaje que se convierte en cliente regular (0-1). Si es NULL, no se usa en cálculos.
-#' @param tasa_wom Numérico. Nuevos clientes generados por cada cliente actual (0-1). Si es NULL, no se usa en cálculos.
-#' @param unidades_mes Numérico. Unidades compradas por cliente al mes
-#' @param precio_unidad Numérico. Precio de venta por unidad
-#' @param margen_unidad Numérico. Beneficio neto por unidad vendida
-#' @param vida_cliente Numérico. Meses que permanece activo un cliente
-#' @param periodo_analisis Numérico. Meses a considerar en el análisis
-#' @param inversion Numérico. Inversión total en publicidad
-#' @param variaciones Lista con nombre de la variable y valor numérico.
-#' Escenarios para análisis de sensibilidad.
-#' @param imprimir_resultados Lógico. Si TRUE, muestra resultados detallados
-#' @param roas_objetivo Numérico. ROAS objetivo a alcanzar; si se indica, la
-#' función calcula la audiencia necesaria para lograrlo (opcional)
-#' @param tipo_roas_objetivo Carácter. Tipo de ROAS objetivo ("bruto" o "neto")
+#' @param audiencia_efectiva Numerico. Numero total de personas alcanzadas por la campana
+#' @param tasa_visita Numerico. Porcentaje de la audiencia que visita la web (0-1). Si es NULL, no se usa en calculos.
+#' @param tasa_prueba Numerico. Porcentaje de visitantes que prueban el producto (0-1). Si es NULL, no se usa en calculos.
+#' @param tasa_conversion Numerico. Porcentaje que se convierte en cliente regular (0-1). Si es NULL, no se usa en calculos.
+#' @param tasa_wom Numerico. Nuevos clientes generados por cada cliente actual (0-1). Si es NULL, no se usa en calculos.
+#' @param unidades_mes Numerico. Unidades compradas por cliente al mes
+#' @param precio_unidad Numerico. Precio de venta por unidad
+#' @param margen_unidad Numerico. Beneficio neto por unidad vendida
+#' @param vida_cliente Numerico. Meses que permanece activo un cliente
+#' @param periodo_analisis Numerico. Meses a considerar en el analisis
+#' @param inversion Numerico. Inversion total en publicidad
+#' @param variaciones Lista con nombre de la variable y valor numerico.
+#' Escenarios para analisis de sensibilidad.
+#' @param imprimir_resultados Logico. Si TRUE, muestra resultados detallados
+#' @param roas_objetivo Numerico. ROAS objetivo a alcanzar; si se indica, la
+#' funcion calcula la audiencia necesaria para lograrlo (opcional)
+#' @param tipo_roas_objetivo Caracter. Tipo de ROAS objetivo ("bruto" o "neto")
 #'
 #' @examples
 #' # ROAS a partir de una audiencia efectiva
@@ -71,7 +71,7 @@ calcular_roas <- function(audiencia_efectiva = NULL,
     stop("'roas_objetivo' debe ser un valor positivo")
   }
   if (!is.null(variaciones) && !all(unlist(lapply(variaciones, is.numeric)))) {
-    stop("Todos los valores en 'variaciones' deben ser numéricos")
+    stop("Todos los valores en 'variaciones' deben ser numericos")
   }
 
   if (!is.null(tasa_visita) && (tasa_visita < 0 || tasa_visita > 1)) {
@@ -92,30 +92,30 @@ calcular_roas <- function(audiencia_efectiva = NULL,
 
   # Funciones internas
   calcular_metricas <- function(audiencia) {
-    # 1. Cálculos del embudo de conversión
+    # 1. Calculos del embudo de conversion
 
-    # Modificar el cálculo de visitas si tasa_visita es NULL
+    # Modificar el calculo de visitas si tasa_visita es NULL
     if (is.null(tasa_visita)) {
       visitas <- audiencia
     } else {
       visitas <- audiencia * tasa_visita
     }
 
-    # Modificar el cálculo de pruebas si tasa_prueba es NULL
+    # Modificar el calculo de pruebas si tasa_prueba es NULL
     if (is.null(tasa_prueba)) {
       pruebas <- visitas
     } else {
       pruebas <- visitas * tasa_prueba
     }
 
-    # Modificar el cálculo de clientes_directos si tasa_conversion es NULL
+    # Modificar el calculo de clientes_directos si tasa_conversion es NULL
     if (is.null(tasa_conversion)) {
       clientes_directos <- pruebas
     } else {
       clientes_directos <- pruebas * tasa_conversion
     }
 
-    # Modificar el cálculo de clientes_wom si tasa_wom es NULL
+    # Modificar el calculo de clientes_wom si tasa_wom es NULL
     if (is.null(tasa_wom)) {
       clientes_wom <- 0
     } else {
@@ -124,12 +124,12 @@ calcular_roas <- function(audiencia_efectiva = NULL,
 
     clientes_totales <- clientes_directos + clientes_wom
 
-    # 2. Métricas financieras
+    # 2. Metricas financieras
     periodo_efectivo <- min(periodo_analisis, vida_cliente)
     ventas_totales <- clientes_totales * unidades_mes * precio_unidad * periodo_efectivo
     beneficio_total <- clientes_totales * unidades_mes * margen_unidad * periodo_efectivo
 
-    # 3. Cálculo de ROAS y métricas relacionadas
+    # 3. Calculo de ROAS y metricas relacionadas
     roas_bruto <- ventas_totales / inversion
     roas_neto <- beneficio_total / inversion
     roi <- (beneficio_total - inversion) / inversion * 100
@@ -156,16 +156,16 @@ calcular_roas <- function(audiencia_efectiva = NULL,
   }
 
   crear_tabla_resultados <- function(resultados) {
-    cat("\n=== ANÁLISIS DE CAMPAÑA DE MARKETING ===\n\n")
+    cat("\n=== ANALISIS DE CAMPANA DE MARKETING ===\n\n")
 
-    # 1. Métricas del Embudo de Conversión
-    cat("EMBUDO DE CONVERSIÓN:\n")
+    # 1. Metricas del Embudo de Conversion
+    cat("EMBUDO DE CONVERSION:\n")
     cat(sprintf("%-25s %12s %15s\n", "Etapa", "Cantidad", "Ratio"))
     cat(paste(rep("-", 55), collapse = ""), "\n")
     cat(sprintf("%-25s %12.0f %15s\n", "Audiencia Alcanzada",
                 round(resultados$embudo$audiencia), "100%"))
 
-    # Incluir condicionales en la impresión de resultados
+    # Incluir condicionales en la impresion de resultados
     if (!is.null(tasa_visita)) {
       cat(sprintf("%-25s %12.0f %15.1f%%\n", "Visitas Web/RRSS",
                   round(resultados$embudo$visitas),
@@ -193,25 +193,25 @@ calcular_roas <- function(audiencia_efectiva = NULL,
     cat(sprintf("%-25s %12.0f\n", "CLIENTES TOTALES",
                 round(resultados$embudo$clientes_totales)))
 
-    # 2. Métricas Financieras
-    cat("\nMÉTRICAS FINANCIERAS:\n")
-    cat(sprintf("%-25s %12s\n", "Métrica", "Valor"))
+    # 2. Metricas Financieras
+    cat("\nMETRICAS FINANCIERAS:\n")
+    cat(sprintf("%-25s %12s\n", "Metrica", "Valor"))
     cat(paste(rep("-", 40), collapse = ""), "\n")
     cat(sprintf("%-25s %12.2fx\n", "ROAS Bruto", resultados$metricas$roas_bruto))
     cat(sprintf("%-25s %12.2fx\n", "ROAS Neto", resultados$metricas$roas_neto))
     cat(sprintf("%-25s %12.2f%%\n", "ROI", resultados$metricas$roi))
-    cat(sprintf("%-25s %12.2f€\n", "CPA", resultados$metricas$cpa))
-    cat(sprintf("%-25s %12.2f€\n", "Ventas Totales", resultados$metricas$ventas_totales))
-    cat(sprintf("%-25s %12.2f€\n", "Beneficio Total", resultados$metricas$beneficio_total))
+    cat(sprintf("%-25s %12.2f EUR\n", "CPA", resultados$metricas$cpa))
+    cat(sprintf("%-25s %12.2f EUR\n", "Ventas Totales", resultados$metricas$ventas_totales))
+    cat(sprintf("%-25s %12.2f EUR\n", "Beneficio Total", resultados$metricas$beneficio_total))
 
-    # 3. Explicación de Resultados
-    cat("\nEXPLICACIÓN DE RESULTADOS:\n")
+    # 3. Explicacion de Resultados
+    cat("\nEXPLICACION DE RESULTADOS:\n")
     cat("------------------------\n")
-    cat(sprintf("1. Por cada 1€ invertido en publicidad:\n"))
-    cat(sprintf("   - Se generan %.2f€ en ventas (ROAS Bruto)\n", resultados$metricas$roas_bruto))
-    cat(sprintf("   - Se obtienen %.2f€ en beneficios (ROAS Neto)\n", resultados$metricas$roas_neto))
-    cat(sprintf("2. El coste de adquisición por cliente (CPA) es %.2f€\n", resultados$metricas$cpa))
-    cat(sprintf("3. La inversión publicitaria produce un ROI del %.1f%%\n", resultados$metricas$roi))
+    cat(sprintf("1. Por cada 1 EUR invertido en publicidad:\n"))
+    cat(sprintf("   - Se generan %.2f EUR en ventas (ROAS Bruto)\n", resultados$metricas$roas_bruto))
+    cat(sprintf("   - Se obtienen %.2f EUR en beneficios (ROAS Neto)\n", resultados$metricas$roas_neto))
+    cat(sprintf("2. El coste de adquisicion por cliente (CPA) es %.2f EUR\n", resultados$metricas$cpa))
+    cat(sprintf("3. La inversion publicitaria produce un ROI del %.1f%%\n", resultados$metricas$roi))
 
     if (!is.null(tasa_wom)) {
       cat(sprintf("4. Cada cliente directo genera %.1f clientes adicionales por WOM\n",
@@ -229,7 +229,7 @@ calcular_roas <- function(audiencia_efectiva = NULL,
       cat(sprintf("   - %.1f%% de los que prueban se convierten en clientes\n", 100 * tasa_conversion))
     }
 
-    # 4. Gráfico del embudo de conversión
+    # 4. Grafico del embudo de conversion
 
     # Crear data frame para ggplot, excluyendo etapas no utilizadas
     embudo_df <- data.frame(
@@ -250,24 +250,24 @@ calcular_roas <- function(audiencia_efectiva = NULL,
       embudo_df <- rbind(embudo_df, data.frame(Etapa = "Clientes WOM", Cantidad = resultados$embudo$clientes_wom))
     }
 
-    # Asegurarse de que el orden de los factores refleje el orden deseado en el gráfico
+    # Asegurarse de que el orden de los factores refleje el orden deseado en el grafico
     orden_etapas <- c("Audiencia", "Visitas", "Pruebas", "Clientes Directos", "Clientes WOM")
     embudo_df$Etapa <- factor(embudo_df$Etapa, levels = orden_etapas, ordered = TRUE)
 
     plot_embudo <- ggplot(embudo_df, aes(x = .data$Etapa, y = .data$Cantidad, fill = .data$Etapa)) +
       geom_bar(stat = "identity") +
       geom_text(aes(label = round(.data$Cantidad)), vjust = -0.5) +
-      labs(title = "Embudo de Conversión", x = "Etapa", y = "Cantidad") +
+      labs(title = "Embudo de Conversion", x = "Etapa", y = "Cantidad") +
       theme_minimal() +
       guides(fill = "none")
 
     print(plot_embudo)
   }
 
-  # Inicialización de resultados
+  # Inicializacion de resultados
   resultados <- NULL
 
-  # Análisis con audiencia efectiva
+  # Analisis con audiencia efectiva
   if (!is.null(audiencia_efectiva)) {
     resultados_base <- calcular_metricas(audiencia_efectiva)
     if (imprimir_resultados) {
@@ -285,7 +285,7 @@ calcular_roas <- function(audiencia_efectiva = NULL,
     )
   }
 
-  # Cálculo de audiencia necesaria para ROAS objetivo
+  # Calculo de audiencia necesaria para ROAS objetivo
   if (!is.null(roas_objetivo)) {
     # Validar tipo de ROAS
     tipo_roas_objetivo <- tolower(tipo_roas_objetivo)
@@ -293,7 +293,7 @@ calcular_roas <- function(audiencia_efectiva = NULL,
       stop("tipo_roas_objetivo debe ser 'bruto' o 'neto'")
     }
 
-    # Cálculos para ROAS objetivo
+    # Calculos para ROAS objetivo
     ingresos_necesarios <- roas_objetivo * inversion
     periodo_efectivo <- min(periodo_analisis, vida_cliente)
 
@@ -302,28 +302,28 @@ calcular_roas <- function(audiencia_efectiva = NULL,
 
     clientes_necesarios <- ingresos_necesarios / (unidades_mes * unidad_valor * periodo_efectivo)
 
-    # Ajustar el cálculo de clientes_directos_necesarios si tasa_wom es NULL
+    # Ajustar el calculo de clientes_directos_necesarios si tasa_wom es NULL
     if (is.null(tasa_wom)) {
       clientes_directos_necesarios <- clientes_necesarios
     } else {
       clientes_directos_necesarios <- clientes_necesarios / (1 + tasa_wom)
     }
 
-    # Ajustar el cálculo de pruebas_necesarias si tasa_conversion es NULL
+    # Ajustar el calculo de pruebas_necesarias si tasa_conversion es NULL
     if (is.null(tasa_conversion)) {
       pruebas_necesarias <- clientes_directos_necesarios
     } else {
       pruebas_necesarias <- clientes_directos_necesarios / tasa_conversion
     }
 
-    # Ajustar el cálculo de visitas_necesarias si tasa_prueba es NULL
+    # Ajustar el calculo de visitas_necesarias si tasa_prueba es NULL
     if (is.null(tasa_prueba)) {
       visitas_necesarias <- pruebas_necesarias
     } else {
       visitas_necesarias <- pruebas_necesarias / tasa_prueba
     }
 
-    # Ajustar el cálculo de la audiencia_necesaria si tasa_visita es NULL
+    # Ajustar el calculo de la audiencia_necesaria si tasa_visita es NULL
     if (is.null(tasa_visita)) {
       audiencia_necesaria <- visitas_necesarias
     } else {
@@ -341,9 +341,9 @@ calcular_roas <- function(audiencia_efectiva = NULL,
       cat(sprintf("Clientes directos necesarios: %.0f\n", round(clientes_directos_necesarios)))
       cat(sprintf("Clientes totales necesarios: %.0f\n", round(clientes_necesarios)))
 
-      # Verificación
+      # Verificacion
       verificacion <- calcular_metricas(audiencia_necesaria)
-      cat("\nVERIFICACIÓN:\n")
+      cat("\nVERIFICACION:\n")
       if (tipo_roas_objetivo == "bruto") {
         cat(sprintf("ROAS bruto calculado: %.2fx\n", verificacion$metricas$roas_bruto))
         cat(sprintf("(ROAS neto equivalente: %.2fx)\n", verificacion$metricas$roas_neto))
@@ -375,13 +375,13 @@ calcular_roas <- function(audiencia_efectiva = NULL,
     }
   }
 
-  # Análisis de sensibilidad si se proporcionan variaciones
+  # Analisis de sensibilidad si se proporcionan variaciones
   if (!is.null(variaciones)) {
-    # Crear un data frame para almacenar los resultados del análisis de sensibilidad
+    # Crear un data frame para almacenar los resultados del analisis de sensibilidad
     resultados_sensibilidad <- data.frame()
 
     # Entorno local de esta llamada a calcular_roas(): las variables que se
-    # modifican temporalmente a continuación (tasa_visita, tasa_prueba, ...)
+    # modifican temporalmente a continuacion (tasa_visita, tasa_prueba, ...)
     # viven aqui, nunca en el entorno global del usuario.
     env <- environment()
 
@@ -389,13 +389,13 @@ calcular_roas <- function(audiencia_efectiva = NULL,
     for (variable in names(variaciones)) {
       valor_base <- get(variable, envir = env)
 
-      # Iterar sobre cada variación para la variable actual
+      # Iterar sobre cada variacion para la variable actual
       for (i in seq_along(variaciones[[variable]])) {
 
-        # Modificar la variable (solo en el entorno local de la función)
+        # Modificar la variable (solo en el entorno local de la funcion)
         assign(variable, variaciones[[variable]][i], envir = env)
 
-        # Calcular las métricas con la variable modificada
+        # Calcular las metricas con la variable modificada
         resultados_escenario <- calcular_metricas(audiencia_efectiva)
 
         # Preparar los datos para agregar a 'resultados_sensibilidad'
@@ -420,9 +420,9 @@ calcular_roas <- function(audiencia_efectiva = NULL,
       assign(variable, valor_base, envir = env)
     }
 
-    # Imprimir el análisis de sensibilidad si se solicita
+    # Imprimir el analisis de sensibilidad si se solicita
     if (imprimir_resultados) {
-      cat("\nANÁLISIS DE SENSIBILIDAD:\n")
+      cat("\nANALISIS DE SENSIBILIDAD:\n")
       print(resultados_sensibilidad)
     }
 

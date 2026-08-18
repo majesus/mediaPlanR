@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{plot_grp_metricas}
 \alias{plot_grp_metricas}
-\title{Visualización de GRPs y métricas relacionadas por soporte}
+\title{Visualizacion de GRPs y metricas relacionadas por soporte}
 \usage{
 plot_grp_metricas(
   audiencias,
@@ -11,40 +11,40 @@ plot_grp_metricas(
   precios,
   nombres,
   pob_total,
-  titulo = "Comparación de Soportes Publicitarios"
+  titulo = "Comparacion de Soportes Publicitarios"
 )
 }
 \arguments{
-\item{audiencias}{Vector numérico con las audiencias de cada soporte}
+\item{audiencias}{Vector numerico con las audiencias de cada soporte}
 
-\item{inserciones}{Vector numérico del número de inserciones por soporte}
+\item{inserciones}{Vector numerico del numero de inserciones por soporte}
 
-\item{precios}{Vector numérico con el precio por inserción de cada soporte}
+\item{precios}{Vector numerico con el precio por insercion de cada soporte}
 
 \item{nombres}{Character vector con los nombres de los soportes}
 
-\item{pob_total}{Tamaño de la población objetivo}
+\item{pob_total}{Tamano de la poblacion objetivo}
 
-\item{titulo}{Character. Título del gráfico (opcional)}
+\item{titulo}{Character. Titulo del grafico (opcional)}
 }
 \value{
-Un objeto ggplot2 que representa el gráfico de burbujas
+Un objeto ggplot2 que representa el grafico de burbujas
 }
 \description{
-Genera un gráfico de puntos para comparar soportes publicitarios
-según GRPs y coste total, contactos y coste/GRP. El gráfico muestra la relación entre el coste por GRP,
+Genera un grafico de puntos para comparar soportes publicitarios
+segun GRPs y coste total, contactos y coste/GRP. El grafico muestra la relacion entre el coste por GRP,
 los contactos totales y el coste total de cada soporte, utilizando un sistema de
 burbujas con colores distintivos para cada soporte.
 }
 \examples{
-# Ejemplo básico con tres soportes
+# Ejemplo basico con tres soportes
 plot_grp_metricas(
   audiencias = c(300000, 400000, 200000),
   inserciones = c(3, 2, 4),
   precios = c(1000, 1500, 800),
   nombres = c("Marca", "As", "20 Minutos"),
   pob_total = 1000000,
-  titulo = "Análisis de Soportes Deportivos"
+  titulo = "Analisis de Soportes Deportivos"
 )
 
 }

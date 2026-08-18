@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{calc_nbd}
 \alias{calc_nbd}
-\title{Cálculo de la cobertura y distribución de contactos según el modelo de Distribución Binomial Negativa (NBD)}
+\title{Legacy plan wrapper for an experimental Negative-Binomial exposure approximation}
 \usage{
 calc_nbd(
   audiencias,
@@ -15,28 +15,28 @@ calc_nbd(
 )
 }
 \arguments{
-\item{audiencias}{Vector numérico con las audiencias de cada soporte}
+\item{audiencias}{Vector numerico con las audiencias de cada soporte}
 
-\item{inserciones}{Vector numérico con el número de inserciones por soporte}
+\item{inserciones}{Vector numerico con el numero de inserciones por soporte}
 
-\item{pob_total}{Tamaño de la población}
+\item{pob_total}{Tamano de la poblacion}
 
-\item{k}{Numérico. Parámetro de heterogeneidad (forma de la distribución
-Gamma) de la NBD. Valores pequeños de k indican alta heterogeneidad
-(la exposición se concentra en pocos individuos); valores grandes de k
-aproximan el caso homogéneo (modelo de Poisson puro). Debe indicarse
+\item{k}{Numerico. Parametro de heterogeneidad (forma de la distribucion
+Gamma) de la NBD. Valores pequenos de k indican alta heterogeneidad
+(la exposicion se concentra en pocos individuos); valores grandes de k
+aproximan el caso homogeneo (modelo de Poisson puro). Debe indicarse
 \code{k} o \code{reach_conocida}, pero no ambos}
 
-\item{reach_conocida}{Numérico (0-1). Cobertura del plan conocida o
-estimada por otra vía (p.ej. panel de audiencias, u otro modelo aplicado
-al mismo plan). Si se indica, \code{k} se calibra numéricamente para
+\item{reach_conocida}{Numerico (0-1). Cobertura del plan conocida o
+estimada por otra via (p.ej. panel de audiencias, u otro modelo aplicado
+al mismo plan). Si se indica, \code{k} se calibra numericamente para
 reproducir exactamente esta cobertura dada la frecuencia media del plan.
 Debe indicarse \code{k} o \code{reach_conocida}, pero no ambos}
 
-\item{max_contactos}{Entero. Número máximo de contactos a reportar en la
-distribución. Por defecto, el total de inserciones del plan
-(\code{sum(inserciones)}), ya que ningún individuo puede resultar
-expuesto más veces que el número de inserciones planificadas}
+\item{max_contactos}{Entero. Numero maximo de contactos a reportar en la
+distribucion. Por defecto, el total de inserciones del plan
+(\code{sum(inserciones)}), ya que ningun individuo puede resultar
+expuesto mas veces que el numero de inserciones planificadas}
 }
 \value{
 Una lista "reach_nbd" conteniendo:
@@ -44,56 +44,59 @@ Una lista "reach_nbd" conteniendo:
 \item reach: Lista con la cobertura:
 \itemize{
 \item porcentaje: Cobertura en porcentaje
-\item personas: Cobertura en número de personas
+\item personas: Cobertura en numero de personas
 }
-\item distribucion: Lista con la distribución de contactos (0 a max_contactos):
+\item distribucion: Lista con la distribucion de contactos (0 a max_contactos):
 \itemize{
-\item porcentaje: Vector con probabilidad de cada número de contactos
-\item personas: Vector con número de personas para cada número de contactos
+\item porcentaje: Vector con probabilidad de cada numero de contactos
+\item personas: Vector con numero de personas para cada numero de contactos
 }
-\item acumulada: Lista con la distribución acumulada (1 o más contactos, 2 o más, ...):
+\item acumulada: Lista con la distribucion acumulada (1 o mas contactos, 2 o mas, ...):
 \itemize{
 \item porcentaje: Vector con probabilidades acumuladas
-\item personas: Vector con número de personas acumuladas al menos i veces
+\item personas: Vector con numero de personas acumuladas al menos i veces
 }
 \item parametros: Lista con m (frecuencia media), k (heterogeneidad) y
 max_contactos empleados
 }
 }
 \description{
-Implementa el modelo NBD (Poisson-Gamma) como alternativa al
-modelo Beta-Binomial para estimar la distribución de contactos de un plan
-de medios. En lugar de modelar un número fijo de n inserciones discretas
-(como el Beta-Binomial), el modelo NBD asume que cada individuo tiene una
-tasa personal de exposición (Poisson) que varía entre la población según
-una distribución Gamma, dando lugar a una distribución Binomial Negativa
-para el número total de contactos.
+Applies a univariate NBD (Poisson-Gamma) approximation to the
+aggregate contact pressure of a media plan. Unlike the Beta-Binomial, it
+does not model a fixed number of discrete insertion opportunities and does
+not preserve vehicle-level dependence. It is retained for compatibility;
+use \code{\link{nbd_exposure_distribution}} for explicit scenario work or
+\code{\link{fit_nbd_exposure}} with observed person-level counts.
+The model assumes that each individual has a
+tasa personal de exposicion (Poisson) que varia entre la poblacion segun
+una distribucion Gamma, dando lugar a una distribucion Binomial Negativa
+para el numero total de contactos.
 }
 \details{
 El modelo se apoya en dos cantidades:
 \enumerate{
-\item La frecuencia media de exposición del plan,
+\item La frecuencia media de exposicion del plan,
 \eqn{m = \sum(Audiencia_i \times Inserciones_i) / Poblacion}, esto es,
-el mismo cálculo que \code{\link{calc_grps}} expresa como GRPs/100
-\item El parámetro de heterogeneidad k de la distribución Gamma que
+el mismo calculo que \code{\link{calc_grps}} expresa como GRPs/100
+\item El parametro de heterogeneidad k de la distribucion Gamma que
 mezcla con la Poisson
 }
-Dados m y k, el número de contactos X sigue una distribución Binomial
+Dados m y k, el numero de contactos X sigue una distribucion Binomial
 Negativa, \eqn{P(X = x) = dnbinom(x, size = k, mu = m)}, y la cobertura
-es \eqn{P(X \geq 1) = 1 - P(X = 0)}. Como la distribución Binomial
-Negativa tiene soporte teórico ilimitado, mientras que en la práctica
-nadie puede recibir más contactos que el total de inserciones del plan,
+es \eqn{P(X \geq 1) = 1 - P(X = 0)}. Como la distribucion Binomial
+Negativa tiene soporte teorico ilimitado, mientras que en la practica
+nadie puede recibir mas contactos que el total de inserciones del plan,
 toda la masa de probabilidad correspondiente a \code{max_contactos} o
-más contactos se acumula en el último tramo reportado (en vez de
-truncarse y renormalizarse, lo que distorsionaría la cobertura ya
-calibrada): así, \code{P(X = 0)} y, por tanto, la cobertura total,
+mas contactos se informa como una cola abierta en el ultimo tramo (en vez de
+truncarse y renormalizarse, lo que distorsionaria la cobertura ya
+calibrada): asi, \code{P(X = 0)} y, por tanto, la cobertura total,
 se reproducen de forma exacta con independencia de \code{max_contactos}.
 
-Para un mismo valor de m, la cobertura es una función creciente de k,
-acotada superiormente por el caso homogéneo (Poisson puro),
+Para un mismo valor de m, la cobertura es una funcion creciente de k,
+acotada superiormente por el caso homogeneo (Poisson puro),
 \eqn{1 - e^{-m}}. Por ello, si se indica \code{reach_conocida}, su valor
 debe ser estrictamente menor que \eqn{1 - e^{-m}}; de lo contrario no
-existe ningún k que la reproduzca y la función se detiene con un error.
+existe ningun k que la reproduzca y la funcion se detiene con un error.
 }
 \examples{
 # Indicando k directamente
@@ -117,17 +120,15 @@ resultado_calibrado$parametros$k
 
 }
 \references{
-Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. Journal of
-the Royal Statistical Society: Series C (Applied Statistics), 8(1), 26-41.
-(formulación original de la mezcla Poisson-Gamma / Binomial Negativa)
+Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. Applied
+Statistics, 8(1), 26-41. \doi{10.2307/2985810}
 
-Leckenby, J. D., & Kishi, S. (1982). Performance of exposure distribution
-models. Journal of Advertising Research, 22(2), 35-44. (aplicación y
-comparación de los modelos Beta-Binomial y Binomial Negativa como
-modelos de exposición a medios)
+Danaher, P. J. (2007). Modeling Page Views Across Multiple Websites with an
+Application to Internet Reach and Frequency Prediction. Marketing Science,
+26(3), 422-437. \doi{10.1287/mksc.1060.0226}
 }
 \seealso{
 \code{\link{calc_beta_binomial}} para el modelo alternativo de heterogeneidad Beta-Binomial
-\code{\link{calc_sainsbury}} para el supuesto de duplicación aleatoria
-\code{\link{calc_grps}} para el cálculo de la frecuencia media (GRPs)
+\code{\link{calc_sainsbury}} para el supuesto de duplicacion aleatoria
+\code{\link{calc_grps}} para el calculo de la frecuencia media (GRPs)
 }

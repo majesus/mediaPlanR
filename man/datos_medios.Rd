@@ -8,29 +8,29 @@
 \format{
 Un data frame con 60 filas y 7 variables:
 \describe{
-\item{soportes}{Carácter. Nombre del soporte}
-\item{soportes_.}{Numérico. Coeficiente de soporte (uso interno docente)}
+\item{soportes}{Caracter. Nombre del soporte}
+\item{soportes_.}{Numerico. Coeficiente de soporte (uso interno docente)}
 \item{audiencias}{Entero. Audiencia del soporte (personas)}
-\item{tarifas}{Numérico. Tarifa de una inserción en el soporte}
-\item{indices_utilidad}{Numérico. Índice de utilidad de la audiencia (0-1 aprox.)}
-\item{inserciones}{Entero. Número de inserciones consideradas}
+\item{tarifas}{Numerico. Tarifa de una insercion en el soporte}
+\item{indices_utilidad}{Numerico. Indice de utilidad de la audiencia (0-1 aprox.)}
+\item{inserciones}{Entero. Numero de inserciones consideradas}
 \item{duplicacion}{Entero. Audiencia duplicada estimada frente al resto de soportes (personas)}
 }
 }
 \source{
-Elaboración propia con fines docentes.
+Elaboracion propia con fines docentes.
 }
 \usage{
 datos_medios
 }
 \description{
-Conjunto de datos ficticio con audiencias, tarifas e índices
-de utilidad de 60 soportes de prensa española, empleado en los ejemplos
+Conjunto de datos ficticio con audiencias, tarifas e indices
+de utilidad de 60 soportes de prensa espanola, empleado en los ejemplos
 de \code{\link{calc_sainsbury}}, \code{\link{calc_binomial}},
 \code{\link{optimize_media_sb}} y \code{\link{calcular_metricas_medios}}.
 }
 \note{
-Los datos son ficticios y se emplean únicamente con fines docentes e
+Los datos son ficticios y se emplean unicamente con fines docentes e
 ilustrativos; no representan cifras reales de audiencia o tarifas.
 }
 \examples{

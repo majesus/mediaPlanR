@@ -3,14 +3,14 @@
 \encoding{UTF-8}
 \name{calc_binomial}
 \alias{calc_binomial}
-\title{Cálculo de cobertura y distribución de contactos (y acumulada) según modelo Binomial}
+\title{Calculo de cobertura y distribucion de contactos (y acumulada) segun modelo Binomial}
 \usage{
 calc_binomial(audiencias, pob_total)
 }
 \arguments{
-\item{audiencias}{Vector numérico con las audiencias individuales de cada soporte}
+\item{audiencias}{Vector numerico con las audiencias individuales de cada soporte}
 
-\item{pob_total}{Tamaño de la población}
+\item{pob_total}{Tamano de la poblacion}
 }
 \value{
 Una lista "reach_binomial" conteniendo:
@@ -18,47 +18,47 @@ Una lista "reach_binomial" conteniendo:
 \item reach: Lista con la cobertura:
 \itemize{
 \item porcentaje: Cobertura en porcentaje
-\item personas: Cobertura en número de personas
+\item personas: Cobertura en numero de personas
 }
-\item distribucion: Lista con la distribución de contactos:
+\item distribucion: Lista con la distribucion de contactos:
 \itemize{
-\item porcentaje: Vector con probabilidad de cada número de exposiciones
-\item personas: Vector con número de personas para cada número de exposiciones
+\item porcentaje: Vector con probabilidad de cada numero de exposiciones
+\item personas: Vector con numero de personas para cada numero de exposiciones
 }
-\item acumulada: Lista con la distribución acumulada:
+\item acumulada: Lista con la distribucion acumulada:
 \itemize{
 \item porcentaje: Vector con probabilidades acumuladas
-\item personas: Vector con número de personas acumuladas al menos i veces
+\item personas: Vector con numero de personas acumuladas al menos i veces
 }
 }
 }
 \description{
 Implementa el modelo Binomial, desarrollado por Chandon (1985), para calcular la cobertura y
-distribución de contactos (y acumulada) de plan de medios de n soportes y una única inserción por soporte.
-El modelo Binomial asume la duplicación aleatoria (i.e.,la exposición a un soporte no modifica
-la probabilidad de resultar expuesto a otro), y la homogeneidad de las probabilidades de exposición del soporte y
-las probabilidades individuales de exposición. Uniendo estas dos hipótesis últimas, la probabilidad de exposición de
+distribucion de contactos (y acumulada) de plan de medios de n soportes y una unica insercion por soporte.
+El modelo Binomial asume la duplicacion aleatoria (i.e.,la exposicion a un soporte no modifica
+la probabilidad de resultar expuesto a otro), y la homogeneidad de las probabilidades de exposicion del soporte y
+las probabilidades individuales de exposicion. Uniendo estas dos hipotesis ultimas, la probabilidad de exposicion de
 cualquier individuo a un soporte determinado se calcula como la media de las audiencias de cada soporte.
-Las probabilidades de exposición son estacionarias respecto al tiempo.
+Las probabilidades de exposicion son estacionarias respecto al tiempo.
 }
 \details{
 El modelo Bnomial calcula:
 \enumerate{
-\item Cobertura considerando un soporte hipotético “promedio” cuya audiencia es la media simple de las audiencias de cada soporte
-\item Distribución de contactos para cada nivel de exposición
-\item Distribución de contactos acumulada (expuestos al menos i veces)
+\item Cobertura considerando un soporte hipotetico "promedio" cuya audiencia es la media simple de las audiencias de cada soporte
+\item Distribucion de contactos para cada nivel de exposicion
+\item Distribucion de contactos acumulada (expuestos al menos i veces)
 }
 
-La metodología incluye:
+La metodologia incluye:
 \itemize{
-\item Conversión de audiencias a probabilidades individuales
-\item Cálculo de probabilidad media de exposición
-\item Aplicación del modelo Binomial para n inserciones
-\item Cálculo de distribuciones de contactos (y acumulada)
+\item Conversion de audiencias a probabilidades individuales
+\item Calculo de probabilidad media de exposicion
+\item Aplicacion del modelo Binomial para n inserciones
+\item Calculo de distribuciones de contactos (y acumulada)
 }
 }
 \examples{
-# Ejemplo básico con tres soportes
+# Ejemplo basico con tres soportes
 audiencias <- c(300000, 400000, 200000)
 pob_total <- 1000000
 resultado <- calc_binomial(audiencias, pob_total)
@@ -70,17 +70,17 @@ print(paste("Probabilidad media:", resultado$probabilidad_media))
 # Verificar que las distribuciones suman 1 (100\%)
 \dontrun{
 sum_dist <- sum(resultado$distribucion$porcentaje)/100
-print(paste("Suma distribución:", round(sum_dist, 4)))
+print(paste("Suma distribucion:", round(sum_dist, 4)))
 }
 
 }
 \references{
-Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la distribución de
-contactos en la planificación de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, España.
+Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
+contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 }
 \seealso{
-\code{\link{calc_sainsbury}} para estimaciones con la distribución Binomial
-\code{\link{calc_beta_binomial}} para estimaciones con la distribución Beta-Binomial
-\code{\link{calc_metheringham}} para estimaciones con la distribución de Metheringham
-\code{\link{calc_hofmans}} para estimaciones con la distribución de Hofmans
+\code{\link{calc_sainsbury}} para estimaciones con la distribucion Binomial
+\code{\link{calc_beta_binomial}} para estimaciones con la distribucion Beta-Binomial
+\code{\link{calc_metheringham}} para estimaciones con la distribucion de Metheringham
+\code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
 }

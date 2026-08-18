@@ -4,23 +4,25 @@
 \encoding{UTF-8}
 \name{MBBD}
 \alias{MBBD}
-\title{Datos de ejemplo para calc_MBBD()}
+\title{Historical MBBD-named example data}
 \format{
 Una lista con los componentes:
 \describe{
-\item{insertions}{Vector numérico. Número de inserciones para cada soporte}
-\item{audiences}{Vector numérico. Audiencia de cada soporte en personas}
-\item{RM}{Entero. Estimación de cobertura según Morgensztern en personas}
-\item{universe}{Entero. Tamaño del universo objetivo en personas}
-\item{A0}{Numérico. Valor inicial del parámetro A}
+\item{insertions}{Vector numerico. Numero de inserciones para cada soporte}
+\item{audiences}{Vector numerico. Audiencia de cada soporte en personas}
+\item{RM}{Entero. Estimacion de cobertura segun Morgensztern en personas}
+\item{universe}{Entero. Tamano del universo objetivo en personas}
+\item{A0}{Numerico. Valor inicial del parametro A}
 }
 }
 \usage{
 MBBD
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_MBBD}}, lista para usar con \code{do.call()}.
+Legacy name for the example now available as
+\code{mbbd_example}. It fits one BBD to external reach and is not an MSAD
+example. New code should use \code{mbbd_example} with
+\code{\link{fit_bbd_to_reach}}.
 }
 \examples{
 data(MBBD)

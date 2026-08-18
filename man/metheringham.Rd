@@ -8,9 +8,9 @@
 \format{
 Una lista con los componentes:
 \describe{
-\item{audiencias}{Vector numérico con las audiencias de cada soporte}
-\item{inserciones}{Vector numérico con el número de inserciones por soporte}
-\item{matriz_duplicacion}{Matriz simétrica con la duplicación entre soportes}
+\item{audiencias}{Vector numerico con las audiencias de cada soporte}
+\item{inserciones}{Vector numerico con el numero de inserciones por soporte}
+\item{matriz_duplicacion}{Matriz simetrica con la duplicacion entre soportes}
 }
 }
 \usage{

@@ -3,21 +3,21 @@
 \encoding{UTF-8}
 \name{matriz_a_vector}
 \alias{matriz_a_vector}
-\title{Convertir una matriz simétrica en un vector (triángulo superior)}
+\title{Convertir una matriz simetrica en un vector (triangulo superior)}
 \usage{
 matriz_a_vector(matriz)
 }
 \arguments{
-\item{matriz}{Matriz cuadrada simétrica}
+\item{matriz}{Matriz cuadrada simetrica}
 }
 \value{
-Vector numérico con los elementos del triángulo superior de \code{matriz}
+Vector numerico con los elementos del triangulo superior de \code{matriz}
 }
 \description{
-Linealiza una matriz simétrica (p.ej. de duplicaciones o de
-oportunidades de contacto) recorriendo su triángulo superior, incluyendo
+Linealiza una matriz simetrica (p.ej. de duplicaciones o de
+oportunidades de contacto) recorriendo su triangulo superior, incluyendo
 la diagonal, en el orden (1,1), (1,2), ..., (1,n), (2,2), (2,3), ....
-Función auxiliar empleada por \code{\link{calc_metheringham}}.
+Funcion auxiliar empleada por \code{\link{calc_metheringham}}.
 }
 \examples{
 m <- matrix(c(1, 2, 2, 3), nrow = 2)

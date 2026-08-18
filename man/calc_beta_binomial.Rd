@@ -3,18 +3,18 @@
 \encoding{UTF-8}
 \name{calc_beta_binomial}
 \alias{calc_beta_binomial}
-\title{Cálculo de la cobertura y distribución de contactos (y acumulada) usando modelo Beta-Binomial}
+\title{Calculo de la cobertura y distribucion de contactos (y acumulada) usando modelo Beta-Binomial}
 \usage{
 calc_beta_binomial(A1, A2, P, n)
 }
 \arguments{
-\item{A1}{Audiencia del soporte tras la primera inserción}
+\item{A1}{Audiencia del soporte tras la primera insercion}
 
-\item{A2}{Audiencia del soporte tras la segunda inserción}
+\item{A2}{Audiencia del soporte tras la segunda insercion}
 
-\item{P}{Tamaño total de la población}
+\item{P}{Tamano total de la poblacion}
 
-\item{n}{Número total de inserciones planificadas (debe ser entero positivo)}
+\item{n}{Numero total de inserciones planificadas (debe ser entero positivo)}
 }
 \value{
 Una lista "reach_beta_binomial" conteniendo:
@@ -22,67 +22,67 @@ Una lista "reach_beta_binomial" conteniendo:
 \item reach: Lista con la cobertura:
 \itemize{
 \item porcentaje: Cobertura en porcentaje
-\item personas: Cobertura en número de personas
+\item personas: Cobertura en numero de personas
 }
-\item distribucion: Lista con la distribución de contactos:
+\item distribucion: Lista con la distribucion de contactos:
 \itemize{
-\item porcentaje: Vector con probabilidad de cada número de exposiciones
-\item personas: Vector con número de personas para cada número de exposiciones
+\item porcentaje: Vector con probabilidad de cada numero de exposiciones
+\item personas: Vector con numero de personas para cada numero de exposiciones
 }
-\item acumulada: Lista con la distribución acumulada:
+\item acumulada: Lista con la distribucion acumulada:
 \itemize{
 \item porcentaje: Vector con probabilidades acumuladas
-\item personas: Vector con número de personas acumuladas al menos i veces
+\item personas: Vector con numero de personas acumuladas al menos i veces
 }
-\item parametros: Lista con parámetros del modelo:
+\item parametros: Lista con parametros del modelo:
 \itemize{
-\item alpha: Parámetro alpha estimado
-\item beta: Parámetro beta estimado
-\item prob_cero_contactos: Probabilidad de no exposición
+\item alpha: Parametro alpha estimado
+\item beta: Parametro beta estimado
+\item prob_cero_contactos: Probabilidad de no exposicion
 }
 }
 }
 \description{
 Implementa el modelo Beta-Binomial para calcular la audiencia neta acumulada
-y la distribución de contactos (y acumulada). El modelo Beta-Binomial considera la
-heterogeneidad en la probabilidad de exposición de los individuos. Combina dos pasos:
-modela la probabilidad de éxito aplicando la distribución Beta de parámetros alpha y beta -lo cual reduce a dos
-los datos necesarios para su estimación; y emplea la probabilidad en la distribución Binomial (combinada con la distribución Beta)
-para valorar la distribución de contactos (y acumulada). Es útil cuando la probabilidad de
-éxito no es conocida a priori, y puede variar entre los individuos. Los parámetros alpha y beta precisamente permiten
-ajustar la forma de la distribución para que refleje la incertidumbre en relación con la probabilidad de éxito.
+y la distribucion de contactos (y acumulada). El modelo Beta-Binomial considera la
+heterogeneidad en la probabilidad de exposicion de los individuos. Combina dos pasos:
+modela la probabilidad de exito aplicando la distribucion Beta de parametros alpha y beta -lo cual reduce a dos
+los datos necesarios para su estimacion; y emplea la probabilidad en la distribucion Binomial (combinada con la distribucion Beta)
+para valorar la distribucion de contactos (y acumulada). Es util cuando la probabilidad de
+exito no es conocida a priori, y puede variar entre los individuos. Los parametros alpha y beta precisamente permiten
+ajustar la forma de la distribucion para que refleje la incertidumbre en relacion con la probabilidad de exito.
 }
 \details{
 El modelo Beta-Binomial:
 \enumerate{
-\item Calcula los parámetros alpha y beta a partir de A1 y A2
-\item Modela la heterogeneidad en la exposición mediante la distribución Beta
-\item Combina la distribución Beta con la Binomial para la distribución de contactos
-\item Calcula probabilidades exactas para cada nivel de exposición
+\item Calcula los parametros alpha y beta a partir de A1 y A2
+\item Modela la heterogeneidad en la exposicion mediante la distribucion Beta
+\item Combina la distribucion Beta con la Binomial para la distribucion de contactos
+\item Calcula probabilidades exactas para cada nivel de exposicion
 }
 
 El proceso incluye:
 \itemize{
-\item Estimación de coeficientes de duplicación R1 y R2
-\item Cálculo de parámetros alpha y beta del modelo
-\item Generación de distribución de contactos
-\item Cálculo de la distribución de contactos (y acumuladas)
+\item Estimacion de coeficientes de duplicacion R1 y R2
+\item Calculo de parametros alpha y beta del modelo
+\item Generacion de distribucion de contactos
+\item Calculo de la distribucion de contactos (y acumuladas)
 }
 }
 \note{
 El modelo Beta-Binomial es especialmente adecuado cuando:
 \itemize{
-\item Existe heterogeneidad significativa en la población
+\item Existe heterogeneidad significativa en la poblacion
 \item Se dispone de datos de audiencias acumuladas (A1 y A2)
 }
 }
 \examples{
-# Ejemplo básico
+# Ejemplo basico
 resultado <- calc_beta_binomial(
   A1 = 500000,    # Primera audiencia
   A2 = 550000,    # Segunda audiencia
-  P = 1000000,    # Población total
-  n = 5           # Número de inserciones
+  P = 1000000,    # Poblacion total
+  n = 5           # Numero de inserciones
 )
 
 # Examinar resultados
@@ -93,19 +93,20 @@ print(paste("Beta:", round(resultado$parametros$beta, 4)))
 # Verificar consistencia de las distribuciones
 \dontrun{
 sum_dist <- sum(resultado$distribucion$porcentaje)/100
-print(paste("Suma distribución:", round(sum_dist +
+print(paste("Suma distribucion:", round(sum_dist +
             resultado$parametros$prob_cero_contactos/100, 4)))
 }
 
 }
 \references{
-Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la distribución de
-contactos en la planificación de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, España.
+Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
+contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 }
 \seealso{
-\code{\link{calc_sainsbury}} para estimaciones con la distribución Binomial
-\code{\link{calc_binomial}} para estimaciones con la distribución Beta-Binomial
-\code{\link{calc_metheringham}} para estimaciones con la distribución de Metheringham
-\code{\link{calc_hofmans}} para estimaciones con la distribución de Hofmans
-\code{\link{calc_nbd}} para el modelo alternativo de heterogeneidad Binomial Negativa (NBD)
+\code{\link{calc_sainsbury}} para estimaciones con la distribucion Binomial
+\code{\link{calc_binomial}} para estimaciones con la distribucion Beta-Binomial
+\code{\link{calc_metheringham}} para estimaciones con la distribucion de Metheringham
+\code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
+\code{\link{nbd_exposure_distribution}} para la aproximacion experimental
+de conteos de exposicion mediante Binomial Negativa (NBD)
 }

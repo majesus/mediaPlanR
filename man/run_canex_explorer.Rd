@@ -12,21 +12,21 @@ Lanza una aplicacion Shiny interactiva (efecto secundario); no
 devuelve ningun valor util para el flujo de un script.
 }
 \description{
-Aplicación Shiny para configurar una pauta multivehículo,
-calcular su distribución de contactos mediante el modelo CANEX
-(\code{\link{calc_canex}}) y visualizar la distribución de frecuencias y
+Aplicacion Shiny para configurar una pauta multivehiculo,
+calcular su distribucion de contactos mediante el modelo CANEX
+(\code{\link{calc_canex}}) y visualizar la distribucion de frecuencias y
 la cobertura acumulada.
 }
 \details{
-La aplicación permite:
+La aplicacion permite:
 \itemize{
-\item Configurar la población objetivo y el número de vehículos (2 a 5)
-\item Introducir, para cada vehículo, el número de inserciones (k) y las
-coberturas tras la primera y segunda inserción (R1, R2)
+\item Configurar la poblacion objetivo y el numero de vehiculos (2 a 5)
+\item Introducir, para cada vehiculo, el numero de inserciones (k) y las
+coberturas tras la primera y segunda insercion (R1, R2)
 \item Introducir la matriz de duplicaciones observadas entre cada par de
-vehículos
+vehiculos
 \item Cargar un ejemplo predefinido de referencia
-\item Visualizar la distribución de frecuencias y la cobertura acumulada
+\item Visualizar la distribucion de frecuencias y la cobertura acumulada
 }
 }
 \examples{

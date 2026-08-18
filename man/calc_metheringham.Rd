@@ -3,68 +3,68 @@
 \encoding{UTF-8}
 \name{calc_metheringham}
 \alias{calc_metheringham}
-\title{Cálculo de métricas según el modelo de Metheringham}
+\title{Calculo de metricas segun el modelo de Metheringham}
 \usage{
 calc_metheringham(audiencias, inserciones, matriz_duplicacion)
 }
 \arguments{
-\item{audiencias}{Vector numérico con las audiencias de cada soporte}
+\item{audiencias}{Vector numerico con las audiencias de cada soporte}
 
-\item{inserciones}{Vector numérico con el número de inserciones por soporte}
+\item{inserciones}{Vector numerico con el numero de inserciones por soporte}
 
-\item{matriz_duplicacion}{Matriz simétrica con los valores de duplicación entre soportes}
+\item{matriz_duplicacion}{Matriz simetrica con los valores de duplicacion entre soportes}
 }
 \value{
 Un objeto de clase 'reach_metheringham' conteniendo:
 \itemize{
 \item audiencia_media: Media ponderada de audiencias (A1)
 \item duplicacion_media: Media ponderada de duplicaciones (D)
-\item audiencia_segunda: Audiencia tras la segunda inserción (A2)
-\item matriz_oportunidades: Matriz que contiene el número de oportunidades de contacto
+\item audiencia_segunda: Audiencia tras la segunda insercion (A2)
+\item matriz_oportunidades: Matriz que contiene el numero de oportunidades de contacto
 entre pares de inserciones
-\item vector_oportunidades: Versión linealizada de la matriz de oportunidades
-\item vector_duplicacion: Versión linealizada de la matriz de duplicación
+\item vector_oportunidades: Version linealizada de la matriz de oportunidades
+\item vector_duplicacion: Version linealizada de la matriz de duplicacion
 }
 }
 \description{
-Calcula métricas fundamentales para la aplicación del modelo de Metheringham,
-incluyendo la audiencia media (A1), duplicación media (D) y audiencia tras la segunda exposición en
-el hipotético soporte promedio (A2). El modelo de Metheringham (1964) se basa en que
-los individuos tienen probabilidades heterogéneas que se distribuyen como una distribución Beta para el conjunto.
-Los soportes son homogéneos (a saber, todos los soportes acaban con la misma distribución Beta de probabilidades de exposición).
-La acumulación y duplicación de audiencias se promedian entre los soportes para diseñar un soporte hipotético promedio.
+Calcula metricas fundamentales para la aplicacion del modelo de Metheringham,
+incluyendo la audiencia media (A1), duplicacion media (D) y audiencia tras la segunda exposicion en
+el hipotetico soporte promedio (A2). El modelo de Metheringham (1964) se basa en que
+los individuos tienen probabilidades heterogeneas que se distribuyen como una distribucion Beta para el conjunto.
+Los soportes son homogeneos (a saber, todos los soportes acaban con la misma distribucion Beta de probabilidades de exposicion).
+La acumulacion y duplicacion de audiencias se promedian entre los soportes para disenar un soporte hipotetico promedio.
 }
 \details{
-La función realiza los siguientes cálculos principales:
+La funcion realiza los siguientes calculos principales:
 \enumerate{
-\item Audiencia media tras la primera inserción (A1):
+\item Audiencia media tras la primera insercion (A1):
 \itemize{
-\item Calcula la media ponderada de audiencias por número de inserciones
-\item Fórmula: A1 = SUMATORIO(Audiencia_i × Inserciones_i) / SUMATORIO(Inserciones_i)
+\item Calcula la media ponderada de audiencias por numero de inserciones
+\item Formula: A1 = SUMATORIO(Audiencia_i ? Inserciones_i) / SUMATORIO(Inserciones_i)
 }
-\item Duplicación media (D):
+\item Duplicacion media (D):
 \itemize{
 \item Calcula la media ponderada de duplicaciones por oportunidades de contacto
 \item Considera todas las combinaciones posibles entre soportes ii, ij
 }
-\item Audiencia tras la segunda inserción (A2):
+\item Audiencia tras la segunda insercion (A2):
 \itemize{
-\item Calcula la audiencia que se expone al menos una vez tras la segunda inserción
-\item Fórmula: A2 = 2 × A1 - D
+\item Calcula la audiencia que se expone al menos una vez tras la segunda insercion
+\item Formula: A2 = 2 ? A1 - D
 }
 }
 }
 \note{
-La matriz de duplicación debe ser simétrica donde:
+La matriz de duplicacion debe ser simetrica donde:
 \itemize{
-\item La diagonal contiene la duplicación de cada soporte consigo mismo
-\item El elemento \verb{[i,j]} contiene la duplicación entre los soportes i y j
+\item La diagonal contiene la duplicacion de cada soporte consigo mismo
+\item El elemento \verb{[i,j]} contiene la duplicacion entre los soportes i y j
 \item Se debe cumplir que \code{matriz[i,j] = matriz[j,i]}
 \item Para n soportes, la matriz debe ser de dimensiones n x n
 }
 }
 \examples{
-# Ejemplo básico con tres soportes
+# Ejemplo basico con tres soportes
 matriz_dup <- matrix(c(
   150000, 200000, 180000,
   200000, 120000, 140000,
@@ -79,12 +79,12 @@ metricas <- calc_metheringham(
 
 }
 \references{
-Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la distribución de
-contactos en la planificación de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, España.
+Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
+contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 }
 \seealso{
-\code{\link{calc_sainsbury}} para estimaciones con la distribución Binomial
-\code{\link{calc_binomial}} para estimaciones con la distribución Beta-Binomial
-\code{\link{calc_beta_binomial}} para estimaciones con la distribución de Metheringham
-\code{\link{calc_hofmans}} para estimaciones con la distribución de Hofmans
+\code{\link{calc_sainsbury}} para estimaciones con la distribucion Binomial
+\code{\link{calc_binomial}} para estimaciones con la distribucion Beta-Binomial
+\code{\link{calc_beta_binomial}} para estimaciones con la distribucion de Metheringham
+\code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
 }

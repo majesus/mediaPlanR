@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{run_beta_binomial_explorer}
 \alias{run_beta_binomial_explorer}
-\title{Explorador de la Distribución Beta-Binomial}
+\title{Explorador de la Distribucion Beta-Binomial}
 \usage{
 run_beta_binomial_explorer()
 }
@@ -12,9 +12,9 @@ Lanza una aplicacion Shiny interactiva (efecto secundario); no
 devuelve ningun valor util para el flujo de un script.
 }
 \description{
-Aplicación Shiny para visualizar la función de masa de
-probabilidad de la distribución beta-binomial y sus estadísticos
-(media, varianza, moda) a partir de los parámetros P, A1, A2 y n.
+Aplicacion Shiny para visualizar la funcion de masa de
+probabilidad de la distribucion beta-binomial y sus estadisticos
+(media, varianza, moda) a partir de los parametros P, A1, A2 y n.
 }
 \examples{
 if (interactive()) {

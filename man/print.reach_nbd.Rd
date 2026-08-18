@@ -13,10 +13,10 @@
 \item{...}{Argumentos adicionales (no usados)}
 }
 \value{
-Invisible \code{x}. La función se invoca por su efecto de impresión.
+Invisible \code{x}. La funcion se invoca por su efecto de impresion.
 }
 \description{
-Genera un informe formateado con las métricas del modelo NBD.
+Genera un informe formateado con las metricas del modelo NBD.
 }
 \examples{
 resultado <- calc_nbd(c(300000, 400000, 200000), c(3, 2, 4), 1000000, k = 1.7)

@@ -8,9 +8,9 @@
 \format{
 Una lista con los componentes:
 \describe{
-\item{audiencias}{Vector numérico con las audiencias de cada soporte}
-\item{pob_total}{Tamaño de la población}
-\item{k}{Coeficiente empírico de duplicación de Agostini}
+\item{audiencias}{Vector numerico con las audiencias de cada soporte}
+\item{pob_total}{Tamano de la poblacion}
+\item{k}{Coeficiente empirico de duplicacion de Agostini}
 }
 }
 \usage{

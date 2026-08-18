@@ -17,6 +17,8 @@ Lista con los componentes:
 \itemize{
 \item alpha: Parametro alpha de la BBD
 \item beta: Parametro beta de la BBD
+\item p: Probabilidad media de exposicion
+\item type: \code{beta_binomial}, \code{binomial_limit} o \code{polarized_limit}
 }
 }
 \description{
@@ -25,11 +27,10 @@ el metodo de los momentos a partir de las coberturas tras la primera y segunda
 insercion (R1, R2).
 }
 \details{
-Cuando el denominador de la formula de alpha es proximo a cero (situacion
-degenerada en la que R1 y R2 son casi indistinguibles), se devuelve
-alpha = beta = 1 (equivalente a una distribucion uniforme) en lugar de
-un valor no finito, replicando el criterio adoptado en la implementacion
-de referencia del modelo.
+La implementacion representa explicitamente dos limites. Si R2 coincide con
+el alcance bajo independencia, devuelve el limite binomial
+(\code{alpha = beta = Inf}). Si R2 coincide con R1, devuelve el limite polarizado
+(\code{alpha = beta = 0}), donde cada persona tiene propension cero o uno.
 }
 \examples{
 params <- calculate_bbd_params(0.4902, 0.5805)

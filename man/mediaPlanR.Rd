@@ -4,15 +4,18 @@
 \name{mediaPlanR}
 \alias{mediaPlanR}
 \alias{mediaPlanR-package}
-\title{Herramientas para Planificación de Medios}
+\title{Reliable Cross-Media Reach and Frequency Planning}
 \description{
-Conjunto de funciones y aplicaciones para planificación de medios.
+Validated plans, reproducible reach and contact-frequency
+distributions, target-audience metrics, and budget allocation.
 }
 \details{
-mediaPlanR: Herramientas para Planificación de Medios
+mediaPlanR: Reliable Cross-Media Reach and Frequency Planning
 }
 \references{
 \href{https://github.com/majesus/mediaPlanR}{Repositorio en GitHub}
+The package DOI is pending. Verified DOIs are included for individual
+model references where available.
 }
 \seealso{
 Useful links:
@@ -23,5 +26,5 @@ Useful links:
 
 }
 \author{
-Manuel J. Sánchez-Franco \email{majesus@us.es}
+Manuel J. Sanchez-Franco \email{majesus@us.es}
 }

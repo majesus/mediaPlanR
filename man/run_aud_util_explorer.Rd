@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{run_aud_util_explorer}
 \alias{run_aud_util_explorer}
-\title{Explorador de Audiencia Útil}
+\title{Explorador de Audiencia Util}
 \usage{
 run_aud_util_explorer()
 }
@@ -12,25 +12,25 @@ Lanza una aplicacion Shiny interactiva (efecto secundario); no
 devuelve ningun valor util para el flujo de un script.
 }
 \description{
-Aplicación Shiny para el análisis de audiencias brutas y útiles
-con diferentes criterios demográficos.
+Aplicacion Shiny para el analisis de audiencias brutas y utiles
+con diferentes criterios demograficos.
 }
 \details{
-La aplicación permite:
+La aplicacion permite:
 \itemize{
-\item Configurar una audiencia bruta con distribuciones de sexo, edad y nivel socioeconómico
-\item Analizar la audiencia útil mediante filtros demográficos
-\item Visualizar distribuciones mediante gráficos de barras
-\item Calcular estadísticas relevantes de la audiencia
+\item Configurar una audiencia bruta con distribuciones de sexo, edad y nivel socioeconomico
+\item Analizar la audiencia util mediante filtros demograficos
+\item Visualizar distribuciones mediante graficos de barras
+\item Calcular estadisticas relevantes de la audiencia
 }
 }
-\section{Parámetros de Configuración}{
+\section{Parametros de Configuracion}{
 
 \itemize{
-\item Tamaño de audiencia
-\item Distribución por sexo (porcentajes)
+\item Tamano de audiencia
+\item Distribucion por sexo (porcentajes)
 \item Grupos de edad seleccionables
-\item Niveles socioeconómicos (porcentajes)
+\item Niveles socioeconomicos (porcentajes)
 }
 }
 

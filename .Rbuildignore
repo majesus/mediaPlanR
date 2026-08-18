@@ -8,3 +8,6 @@
 ^docs$
 ^pkgdown$
 ^README\.md$
+^mediaPlanR_manual\.pdf$
+^mediaPlanR_manual_v2\.pdf$
+^tmp$

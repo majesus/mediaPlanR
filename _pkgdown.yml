@@ -2,11 +2,31 @@ template:
   bootstrap: 5
   
 reference:
-- title: "Funciones principales"
-  desc: "Funciones para análisis de reach y frecuencia"
+- title: "Version 2 planning workflow"
+  desc: "Validated plans, metrics, reach and optimization"
+  contents:
+  - media_plan
+  - plan_metrics
+  - estimate_reach
+  - compare_reach_models
+  - optimize_media_plan
+  - audience_metrics
+- title: "Classical reach models"
+  desc: "Historical models retained for reproducibility"
   contents:
   - starts_with("calc_")
-  - reach_frequency
+- title: "Statistical exposure models"
+  desc: "Explicit fitting, continuous-count approximation, and sequential aggregation"
+  contents:
+  - fit_bbd_to_reach
+  - fit_nbd_exposure
+  - nbd_exposure_distribution
+  - evaluate_exposure_model
+- title: "Compatibility and interactive tools"
+  contents:
   - starts_with("optimizar_")
+  - optimize_media_sb
+  - calcular_metricas_medios
+  - calcular_roas
   - imprimir_resultados
-
+  - starts_with("run_")

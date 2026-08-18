@@ -1,24 +1,24 @@
 
 #' @encoding UTF-8
-#' @title Explorador de Audiencia Útil
-#' @description Aplicación Shiny para el análisis de audiencias brutas y útiles
-#' con diferentes criterios demográficos.
+#' @title Explorador de Audiencia Util
+#' @description Aplicacion Shiny para el analisis de audiencias brutas y utiles
+#' con diferentes criterios demograficos.
 #'
 #' @details
-#' La aplicación permite:
+#' La aplicacion permite:
 #' \itemize{
-#'   \item Configurar una audiencia bruta con distribuciones de sexo, edad y nivel socioeconómico
-#'   \item Analizar la audiencia útil mediante filtros demográficos
-#'   \item Visualizar distribuciones mediante gráficos de barras
-#'   \item Calcular estadísticas relevantes de la audiencia
+#'   \item Configurar una audiencia bruta con distribuciones de sexo, edad y nivel socioeconomico
+#'   \item Analizar la audiencia util mediante filtros demograficos
+#'   \item Visualizar distribuciones mediante graficos de barras
+#'   \item Calcular estadisticas relevantes de la audiencia
 #' }
 #'
-#' @section Parámetros de Configuración:
+#' @section Parametros de Configuracion:
 #' \itemize{
-#'   \item Tamaño de audiencia
-#'   \item Distribución por sexo (porcentajes)
+#'   \item Tamano de audiencia
+#'   \item Distribucion por sexo (porcentajes)
 #'   \item Grupos de edad seleccionables
-#'   \item Niveles socioeconómicos (porcentajes)
+#'   \item Niveles socioeconomicos (porcentajes)
 #' }
 #'
 #' @return Lanza una aplicacion Shiny interactiva (efecto secundario); no
@@ -31,28 +31,27 @@
 #'
 #' @import shiny
 #' @import bslib
-#' @import dplyr
 #' @export
 run_aud_util_explorer <- function() {
 
   ui <- bslib::page_fluid(
     theme = bslib::bs_theme(version = 5, bootswatch = "flatly"),
 
-    titlePanel("Explorador de la Audiencia Útil"),
+    titlePanel("Explorador de la Audiencia Util"),
 
     layout_sidebar(
       sidebar = sidebar(
         width = 350,
 
-        # Panel de configuración
+        # Panel de configuracion
         card(
-          card_header("Configuración"),
+          card_header("Configuracion"),
 
-          numericInput("n_registros", "Tamaño de Audiencia:",
+          numericInput("n_registros", "Tamano de Audiencia:",
                        value = 1000000, min = 1000, max = 10000000),
 
-          # Distribución por Sexo
-          h4("Distribución por Sexo"),
+          # Distribucion por Sexo
+          h4("Distribucion por Sexo"),
           fluidRow(
             column(6, numericInput("prop_mujer", "Mujeres (%)",
                                    value = 60, min = 0, max = 100)),
@@ -60,8 +59,8 @@ run_aud_util_explorer <- function() {
                                    value = 40, min = 0, max = 100))
           ),
 
-          # Distribución por Edad (modificado para usar porcentajes)
-          h4("Distribución por Edad"),
+          # Distribucion por Edad (modificado para usar porcentajes)
+          h4("Distribucion por Edad"),
           fluidRow(
             column(6,
                    numericInput("prop_14_19", "14-19 %", value = 10, min = 0, max = 100),
@@ -77,8 +76,8 @@ run_aud_util_explorer <- function() {
             )
           ),
 
-          # Distribución por NSE
-          h4("Distribución por NSE"),
+          # Distribucion por NSE
+          h4("Distribucion por NSE"),
           fluidRow(
             column(6,
                    numericInput("prop_ia1", "IA1 %", value = 10, min = 0, max = 100),
@@ -96,16 +95,16 @@ run_aud_util_explorer <- function() {
 
         # Panel de filtros
         card(
-          card_header("Filtros para Audiencia Útil"),
+          card_header("Filtros para Audiencia Util"),
 
-          radioButtons("method", "Método:",
+          radioButtons("method", "Metodo:",
                        choices = c("Directo" = "direct",
                                    "Muestreo" = "sampling"),
                        selected = "direct"),
 
           conditionalPanel(
             condition = "input.method == 'sampling'",
-            sliderInput("sample_size", "Tamaño de Muestra (%):",
+            sliderInput("sample_size", "Tamano de Muestra (%):",
                         min = 1, max = 100, value = 10, step = 1)
           ),
 
@@ -136,7 +135,7 @@ run_aud_util_explorer <- function() {
           )
         ),
         accordion_panel(
-          "Audiencia Útil",
+          "Audiencia Util",
           layout_column_wrap(
             width = 1/3,
             card(plotOutput("util_sexo", height = "300px")),
@@ -144,7 +143,7 @@ run_aud_util_explorer <- function() {
             card(plotOutput("util_nse", height = "300px"))
           ),
           card(
-            card_header("Estadísticas"),
+            card_header("Estadisticas"),
             tableOutput("stats_table")
           )
         ),
@@ -197,7 +196,7 @@ run_aud_util_explorer <- function() {
       )
     })
 
-    # Audiencia útil
+    # Audiencia util
     audiencia_util <- reactive({
       req(audiencia_bruta())
 
@@ -218,29 +217,33 @@ run_aud_util_explorer <- function() {
       if (length(input$nse_filter) > 0)
         datos_filtrados <- datos_filtrados[datos_filtrados$nivel_socioeconomico %in% input$nse_filter,]
 
+      # Sampling changes only the number of rows used to estimate the profile;
+      # it must not mechanically reduce the estimated target audience.
+      target_size <- nrow(datos_filtrados)
       if (input$method == "sampling") {
         sample_size <- floor(nrow(datos_filtrados) * (input$sample_size/100))
         datos_filtrados <- datos_filtrados[sample(nrow(datos_filtrados),
                                                   min(sample_size, nrow(datos_filtrados))),]
       }
+      attr(datos_filtrados, "estimated_target_size") <- target_size
 
       datos_filtrados
     })
 
-    # Función genérica para crear gráficos de barras
+    # Funcion generica para crear graficos de barras
     crear_grafico_barras <- function(data, variable, titulo) {
       ggplot(data, aes(x = .data[[variable]], fill = .data[[variable]])) +
-        geom_bar(aes(y = after_stat(count)/nrow(data))) +
+        geom_bar(aes(y = ggplot2::after_stat(.data$count)/nrow(data))) +
         scale_y_continuous(labels = scales::percent_format()) +
         theme_minimal() +
         theme(
           legend.position = "none",
           axis.text.x = element_text(angle = 90, hjust = 1)
         ) +
-        labs(title = titulo, y = "Proporción", x = NULL)
+        labs(title = titulo, y = "Proporcion", x = NULL)
     }
 
-    # Gráficos de audiencia bruta
+    # Graficos de audiencia bruta
     output$bruta_sexo <- renderPlot({
       req(audiencia_bruta())
       crear_grafico_barras(audiencia_bruta(), "sexo", "Por Sexo")
@@ -256,7 +259,7 @@ run_aud_util_explorer <- function() {
       crear_grafico_barras(audiencia_bruta(), "nivel_socioeconomico", "Por NSE")
     })
 
-    # Gráficos de audiencia útil
+    # Graficos de audiencia util
     output$util_sexo <- renderPlot({
       req(audiencia_util())
       crear_grafico_barras(audiencia_util(), "sexo", "Por Sexo")
@@ -272,27 +275,29 @@ run_aud_util_explorer <- function() {
       crear_grafico_barras(audiencia_util(), "nivel_socioeconomico", "Por NSE")
     })
 
-    # Estadísticas
+    # Estadisticas
     output$stats_table <- renderTable({
       req(audiencia_util())
+      target_size <- attr(audiencia_util(), "estimated_target_size")
+      if (is.null(target_size)) target_size <- nrow(audiencia_util())
       data.frame(
-        Métrica = c(
+        Metrica = c(
           "Audiencia Bruta",
-          "Audiencia Útil",
-          "Tasa de Conversión",
-          "Método de Cálculo"
+          "Audiencia Util",
+          "Proporcion de Audiencia Objetivo",
+          "Metodo de Calculo"
         ),
         Valor = c(
           format(nrow(audiencia_bruta()), big.mark = ","),
-          format(nrow(audiencia_util()), big.mark = ","),
-          sprintf("%.1f%%", 100 * nrow(audiencia_util()) / nrow(audiencia_bruta())),
+          format(target_size, big.mark = ","),
+          sprintf("%.1f%%", 100 * target_size / nrow(audiencia_bruta())),
           ifelse(input$method == "direct", "Directo",
                  sprintf("Muestreo (%d%%)", input$sample_size))
         )
       )
     })
 
-    # Observadores para validación
+    # Observadores para validacion
     observe({
       if (input$prop_mujer + input$prop_hombre != 100) {
         showNotification("Las proporciones de sexo deben sumar 100%", type = "warning")
@@ -314,6 +319,6 @@ run_aud_util_explorer <- function() {
     })
   }
 
-  # Ejecutar la aplicación Shiny
+  # Ejecutar la aplicacion Shiny
   shinyApp(ui = ui, server = server)
 }

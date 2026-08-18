@@ -12,24 +12,24 @@ Lanza una aplicacion Shiny interactiva (efecto secundario); no
 devuelve ningun valor util para el flujo de un script.
 }
 \description{
-Aplicación Shiny para el análisis de la convergencia de la cobertura.
+Aplicacion Shiny para el analisis de la convergencia de la cobertura.
 }
 \details{
-La aplicación permite:
+La aplicacion permite:
 \itemize{
 \item Configurar un plan de medios aplicando el modelo Beta-Binomial
-\item Analizar la evolución de la cobertura acumulada e incremental
-\item Analizar la distribución de contactos (y acumulada)
-\item Visualizar distribuciones mediante gráficos de líneas
-\item Calcular estadísticas relevantes de la audiencia
+\item Analizar la evolucion de la cobertura acumulada e incremental
+\item Analizar la distribucion de contactos (y acumulada)
+\item Visualizar distribuciones mediante graficos de lineas
+\item Calcular estadisticas relevantes de la audiencia
 }
 }
-\section{Parámetros de Configuración}{
+\section{Parametros de Configuracion}{
 
 \itemize{
-\item Tamaño de población
-\item Parámetros de forma de la distribución Beta-Binomial
-\item Máximo número de contactos a mostrar
+\item Tamano de poblacion
+\item Parametros de forma de la distribucion Beta-Binomial
+\item Maximo numero de contactos a mostrar
 \item Umbral de convergencia
 }
 }

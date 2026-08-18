@@ -8,16 +8,16 @@
 crear_matriz_oportunidades(inserciones)
 }
 \arguments{
-\item{inserciones}{Vector numérico con el número de inserciones de cada soporte}
+\item{inserciones}{Vector numerico con el numero de inserciones de cada soporte}
 }
 \value{
-Matriz cuadrada simétrica de oportunidades de contacto
+Matriz cuadrada simetrica de oportunidades de contacto
 }
 \description{
-A partir del número de inserciones de cada soporte, calcula
-el número de pares de oportunidades de contacto entre cada par de
+A partir del numero de inserciones de cada soporte, calcula
+el numero de pares de oportunidades de contacto entre cada par de
 soportes (fuera de la diagonal) y dentro de un mismo soporte (en la
-diagonal, como combinaciones de 2 entre sus propias inserciones). Función
+diagonal, como combinaciones de 2 entre sus propias inserciones). Funcion
 auxiliar empleada por \code{\link{calc_metheringham}}.
 }
 \examples{

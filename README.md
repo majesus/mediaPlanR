@@ -1,91 +1,170 @@
-# mediaPlanR
+# mediaPlanR 2.0.0
 
 [![R-CMD-check](https://github.com/majesus/mediaPlanR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/majesus/mediaPlanR/actions/workflows/R-CMD-check.yaml)
 
-Herramientas en R para la planificación de medios publicitarios: modelos
-clásicos de cobertura y distribución de contactos, indicadores de eficiencia
-de un plan y aplicaciones Shiny para explorarlos de forma interactiva.
+`mediaPlanR` provides reproducible cross-media reach, frequency and budget
+allocation in R. Version 2 introduces a validated planning object, complete
+contact distributions, explicit metric units and optimization results that say
+whether a global optimum was actually verified.
 
-## Instalación
+## Installation
 
 ```r
-# install.packages("devtools")
-devtools::install_github("majesus/mediaPlanR")
+# install.packages("pak")
+pak::pak("majesus/mediaPlanR")
 ```
 
-## Qué incluye
-
-**Modelos de cobertura y distribución de contactos**
-
-- `calc_sainsbury()` — duplicación aleatoria, soportes heterogéneos
-- `calc_binomial()` — duplicación aleatoria, soporte promedio homogéneo
-- `calc_beta_binomial()` — heterogeneidad individual (un soporte, n inserciones)
-- `calc_nbd()` — heterogeneidad vía mezcla Poisson-Gamma (Binomial Negativa), alternativa al Beta-Binomial
-- `calc_metheringham()` — duplicación media observada entre soportes
-- `calc_hofmans()` — curva empírica de audiencia acumulada
-- `calc_agostini()` — duplicación aleatoria corregida con un coeficiente empírico k
-- `calc_MBBD()` — Beta-Binomial calibrado contra una estimación de Morgensztern
-- `calc_canex()` — expansión canónica multivariante (Danaher, 1991), con
-  matriz de correlaciones entre vehículos
-
-**Indicadores y optimización**
-
-- `calc_grps()`, `calc_cpm()`, `calcular_metricas_medios()`
-- `calcular_roas()` — ROAS/ROI a partir de un embudo de conversión
-- `optimizar_d()`, `optimizar_dc()`, `optimize_media_sb()` — optimización de
-  planes de medios sujetos a restricciones presupuestarias y de frecuencia
-  efectiva
-
-**Aplicaciones interactivas (Shiny)**
-
-- `run_canex_explorer()`, `run_beta_binomial_explorer()`,
-  `run_reach_converg_explorer()`, `run_aud_util_explorer()`
-
-## Uso rápido
+## A complete v2 workflow
 
 ```r
 library(mediaPlanR)
 
-audiencias <- c(300000, 400000, 200000)
-resultado <- calc_sainsbury(audiencias, pob_total = 1000000)
-resultado
+plan <- media_plan(
+  data.frame(
+    channel = c("TV", "Radio", "Digital"),
+    audience = c(300000, 180000, 120000),
+    insertions = c(4, 6, 10),
+    cost_per_insertion = c(18000, 3500, 1200),
+    target_audience = c(180000, 90000, 84000)
+  ),
+  population = 1000000,
+  target_audience = "target_audience"
+)
+
+metrics <- plan_metrics(plan)
+reach <- estimate_reach(plan, model = "independent")
+comparison <- compare_reach_models(plan, c("independent", "binomial"))
 ```
 
-Cada modelo trae además un dataset de ejemplo con el mismo nombre (sin el
-prefijo `calc_`), listo para usar con `do.call()` sin construir los datos
-a mano: `sainsbury`, `binomial_plan`, `beta_binomial`, `metheringham`,
-`hofmans`, `agostini`, `MBBD`, `canex`, `nbd`, `grps`, `cpm`, `roas`.
+All v2 reach results contain:
+
+- zero-to-N contact probabilities;
+- cumulative N+ reach;
+- reach in probability, percent and people;
+- average frequency among reached people;
+- model parameters and diagnostics.
+
+## Budget allocation
 
 ```r
-data(canex)
-do.call(calc_canex, canex)
+optimized <- optimize_media_plan(
+  plan,
+  budget = 60000,
+  objective = "min_cost",
+  target_reach = 0.55,
+  effective_frequency = 2,
+  max_insertions = c(4, 8, 12),
+  method = "auto"
+)
+
+optimized$global_optimum
+optimized$allocation
+optimized$effective_reach
 ```
 
-Para una introducción más completa, con ejemplos de todos los modelos:
+For manageable search spaces, `method = "exact"` evaluates every feasible
+integer allocation and certifies the global optimum. For larger spaces,
+`method = "greedy"` is explicitly reported as a heuristic; it is never
+presented as an exact optimum.
+
+## Target-audience metrics
 
 ```r
-vignette("mediaPlanR-intro", package = "mediaPlanR")
+audience_metrics(
+  gross_audience = c(300000, 180000),
+  target_audience = c(180000, 90000),
+  gross_universe = 1000000,
+  target_universe = 400000
+)
 ```
 
-## Referencias principales
+Target composition and affinity are different quantities. Version 2 never
+multiplies gross audience by an affinity index, which could otherwise create a
+target audience larger than the gross audience.
 
-- Aldás Manzano, J. (1998). *Modelos de determinación de la cobertura y la
-  distribución de contactos en la planificación de medios publicitarios
-  impresos*. Tesis doctoral, Universidad de Valencia.
-- Agostini, J. M. (1961). How to estimate unduplicated audiences. *Journal
-  of Advertising Research*, 1(3), 11-14.
-- Danaher, P. J. (1991). A canonical expansion model for multivariate media
-  exposure distributions. *Journal of Marketing Research*, 28(3), 361-367.
-- Metheringham, R. A. (1964). Measuring the net cumulative coverage of a
-  print campaign. *Journal of Advertising Research*, 4(4), 23-28.
-- Leckenby, J. D., & Kishi, S. (1982). Performance of exposure distribution
-  models. *Journal of Advertising Research*, 22(2), 35-44.
+## Classical models
 
-## Autoría
+The package distinguishes historical finite-opportunity models from continuous
+exposure-count approximations:
 
-Manuel J. Sánchez-Franco, Universidad de Sevilla ([majesus@us.es](mailto:majesus@us.es))
-— [ORCID 0000-0002-8042-3550](https://orcid.org/0000-0002-8042-3550)
+- `calc_sainsbury()`, `calc_binomial()`, `calc_beta_binomial()`;
+- `calc_metheringham()`, `calc_hofmans()`, `calc_agostini()`;
+- `calc_canex()`, Kim's `calc_csd()`, and the Leckenby-Rice `calc_msad()`;
+- `fit_bbd_to_reach()` for fitting one BBD to an external reach estimate;
+- `fit_nbd_exposure()` and `nbd_exposure_distribution()` for unbounded
+  exposure-count processes.
 
-## Licencia
+The historical `calc_MBBD()` and `calc_nbd()` entry points remain supported,
+but their documentation now states their actual scope. `calc_MBBD()` is not a
+full MSAD implementation, and a univariate NBD is not a finite-insertion or
+cross-vehicle dependence model.
 
-MIT © Manuel J. Sánchez-Franco (ver [LICENSE](LICENSE.md))
+```r
+data(csd_example)
+csd <- do.call(calc_csd, csd_example)
+
+data(msad_example)
+msad <- do.call(calc_msad, msad_example)
+
+counts <- c(rep(0, 40), rep(1, 25), rep(2, 15), rep(3, 8), 5, 7)
+nbd_fit <- fit_nbd_exposure(counts)
+```
+
+## Validation against observed data
+
+Observed distributions are supplied by the analyst; they are never inferred
+from model inputs. The table must contain `contacts` and `observed`, including
+the zero-contact cell, and its scale must be declared explicitly:
+
+```r
+observed <- data.frame(
+  contacts = 0:6,
+  observed = c(38.41, 17.89, 39.66, 2.67, 1.36, 0, 0)
+)
+
+data(csd_example)
+csd <- do.call(calc_csd, csd_example)
+
+evaluation <- evaluate_exposure_model(
+  observed = observed,
+  predicted = csd,
+  observed_scale = "percent"
+)
+
+evaluation$summary
+```
+
+For a predicted data frame, columns must be named `contacts` and `predicted`
+and `predicted_scale` must also be declared. Exact support equality is required;
+open-tail NBD cells are rejected unless observed and predicted tails have first
+been collapsed identically.
+
+Descriptive example objects are available as `canex_example`, `csd_example`,
+`nbd_example`, `mbbd_example`, and `msad_example`. `csd_example` reproduces
+Kim's complete three-vehicle worked example; `msad_example` reuses those inputs
+but does not claim that its MSAD output was published by Kim. Historical shorter
+names remain available for compatibility.
+
+## Reproducibility guarantees
+
+- Inputs are checked for units, bounds and logical compatibility.
+- Contact distributions are normalized and include zero contacts.
+- Exact optimization never exceeds the declared budget.
+- Model boundary cases have regression tests.
+- Observed-versus-predicted evaluations require declared scales and identical
+  contact support.
+- Compatibility outputs are tested against the v2 core.
+
+## References
+
+The package documentation lists the original publications for each classical
+model. Verified identifiers are included for MSAD, CANEX, and the NBD exposure
+literature; remaining identifiers will be added only after verification.
+
+## Author and license
+
+Manuel J. Sanchez-Franco, Universidad de Sevilla
+
+[ORCID 0000-0002-8042-3550](https://orcid.org/0000-0002-8042-3550)
+
+MIT License.

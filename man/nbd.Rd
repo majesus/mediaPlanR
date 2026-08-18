@@ -4,22 +4,22 @@
 \encoding{UTF-8}
 \name{nbd}
 \alias{nbd}
-\title{Datos de ejemplo para calc_nbd()}
+\title{Historical NBD example data name}
 \format{
 Una lista con los componentes:
 \describe{
-\item{audiencias}{Vector numérico con las audiencias de cada soporte}
-\item{inserciones}{Vector numérico con el número de inserciones por soporte}
-\item{pob_total}{Tamaño de la población}
-\item{k}{Parámetro de heterogeneidad (forma de la distribución Gamma)}
+\item{audiencias}{Vector numerico con las audiencias de cada soporte}
+\item{inserciones}{Vector numerico con el numero de inserciones por soporte}
+\item{pob_total}{Tamano de la poblacion}
+\item{k}{Parametro de heterogeneidad (forma de la distribucion Gamma)}
 }
 }
 \usage{
 nbd
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_nbd}}, lista para usar con \code{do.call()}.
+Legacy name for \code{nbd_example}. New statistical work
+should normally use \code{\link{fit_nbd_exposure}} with observed counts.
 }
 \examples{
 data(nbd)

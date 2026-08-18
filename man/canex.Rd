@@ -4,21 +4,21 @@
 \encoding{UTF-8}
 \name{canex}
 \alias{canex}
-\title{Datos de ejemplo para calc_canex()}
+\title{Historical CANEX example data name}
 \format{
 Una lista con los componentes:
 \describe{
-\item{vehicles_data}{Data frame con columnas k, R1 y R2 por vehículo}
-\item{duplications}{Matriz cuadrada de duplicaciones brutas entre vehículos}
-\item{poblacion}{Tamaño de la población objetivo}
+\item{vehicles_data}{Data frame con columnas k, R1 y R2 por vehiculo}
+\item{duplications}{Matriz cuadrada de duplicaciones brutas entre vehiculos}
+\item{poblacion}{Tamano de la poblacion objetivo}
 }
 }
 \usage{
 canex
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_canex}}, lista para usar con \code{do.call()}.
+Legacy name for \code{canex_example}. New code should prefer
+the descriptive name.
 }
 \examples{
 data(canex)

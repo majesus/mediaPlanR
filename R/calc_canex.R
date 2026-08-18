@@ -8,16 +8,17 @@
 #' @param R2 Numerico. Cobertura tras la segunda insercion (0-1)
 #'
 #' @details
-#' Cuando el denominador de la formula de alpha es proximo a cero (situacion
-#' degenerada en la que R1 y R2 son casi indistinguibles), se devuelve
-#' alpha = beta = 1 (equivalente a una distribucion uniforme) en lugar de
-#' un valor no finito, replicando el criterio adoptado en la implementacion
-#' de referencia del modelo.
+#' La implementacion representa explicitamente dos limites. Si R2 coincide con
+#' el alcance bajo independencia, devuelve el limite binomial
+#' (`alpha = beta = Inf`). Si R2 coincide con R1, devuelve el limite polarizado
+#' (`alpha = beta = 0`), donde cada persona tiene propension cero o uno.
 #'
 #' @return Lista con los componentes:
 #' \itemize{
 #'   \item alpha: Parametro alpha de la BBD
 #'   \item beta: Parametro beta de la BBD
+#'   \item p: Probabilidad media de exposicion
+#'   \item type: `beta_binomial`, `binomial_limit` o `polarized_limit`
 #' }
 #'
 #' @examples
@@ -25,21 +26,34 @@
 #'
 #' @export
 calculate_bbd_params <- function(R1, R2) {
-  if (!is.numeric(R1) || !is.numeric(R2) || R1 <= 0 || R1 > 1 || R2 <= 0 || R2 > 1) {
+  if (!is.numeric(R1) || !is.numeric(R2) || length(R1) != 1L ||
+      length(R2) != 1L || !is.finite(R1) || !is.finite(R2) ||
+      R1 <= 0 || R1 > 1 || R2 <= 0 || R2 > 1) {
     stop("R1 y R2 deben ser numericos y estar en el intervalo (0, 1]")
   }
   if (R2 < R1) {
     stop("R2 no puede ser menor que R1 (la cobertura debe ser no decreciente)")
   }
 
+  independence_limit <- 2 * R1 - R1^2
+  if (R2 > independence_limit + 1e-10) {
+    stop("R2 is incompatible with a Beta-Binomial exposure model: it exceeds the independence limit")
+  }
+
   denom <- 2 * R1 - R2 - R1^2
   if (abs(denom) < 1e-9) {
-    return(list(alpha = 1, beta = 1))
+    return(list(alpha = Inf, beta = Inf, p = R1, type = "binomial_limit"))
+  }
+  if (abs(R2 - R1) < 1e-10) {
+    return(list(alpha = 0, beta = 0, p = R1, type = "polarized_limit"))
   }
 
   alpha <- R1 * (R2 - R1) / denom
   beta <- alpha * (1 - R1) / R1
-  list(alpha = alpha, beta = beta)
+  if (!is.finite(alpha) || !is.finite(beta) || alpha <= 0 || beta <= 0) {
+    stop("R1 and R2 do not imply valid Beta-Binomial parameters")
+  }
+  list(alpha = alpha, beta = beta, p = R1, type = "beta_binomial")
 }
 
 #' @encoding UTF-8
@@ -202,6 +216,27 @@ validate_canex_inputs <- function(vehicles_data, duplications, poblacion) {
     stop("poblacion debe ser un unico numero positivo")
   }
 
+  if (m >= 2L) {
+    for (i in seq_len(m - 1L)) {
+      for (j in (i + 1L):m) {
+        pij <- duplications[i, j]
+        lower <- max(0, vehicles_data$R1[i] + vehicles_data$R1[j] - 1)
+        upper <- min(vehicles_data$R1[i], vehicles_data$R1[j])
+        if (pij < lower - 1e-10 || pij > upper + 1e-10) {
+          stop(sprintf("Duplication [%d,%d] is outside its feasible Frechet bounds [%.6f, %.6f]",
+                       i, j, lower, upper), call. = FALSE)
+        }
+      }
+    }
+    corr <- transform_duplications(duplications, vehicles_data)
+    corr[lower.tri(corr)] <- t(corr)[lower.tri(corr)]
+    min_eigenvalue <- min(eigen(corr, symmetric = TRUE, only.values = TRUE)$values)
+    if (min_eigenvalue < -1e-8) {
+      stop(sprintf("Pairwise duplications imply a non-positive-semidefinite correlation matrix (minimum eigenvalue %.6g)",
+                   min_eigenvalue), call. = FALSE)
+    }
+  }
+
   total_combinations <- prod(vehicles_data$k + 1)
   if (total_combinations > 2e6) {
     stop(sprintf(
@@ -264,6 +299,9 @@ validate_canex_inputs <- function(vehicles_data, duplications, poblacion) {
 #'   \item cumulative: Data frame con columnas min_contacts, percentage, people
 #'   \item stats: Lista con avg_contacts (contactos medios entre alcanzados)
 #'   y zero_contacts_prob (probabilidad de cero contactos)
+#'   \item diagnostics: Masa negativa truncada, masa previa a la
+#'   renormalizacion y menor autovalor de la matriz de correlaciones. Estos
+#'   valores permiten evaluar cuanto corrigio la aproximacion de segundo orden.
 #' }
 #'
 #' @examples
@@ -314,17 +352,38 @@ calc_canex <- function(vehicles_data, duplications, poblacion = 1000000) {
 
   m <- nrow(vehicles_data)
   correlations <- transform_duplications(duplications, vehicles_data)
+  correlation_matrix <- correlations
+  correlation_matrix[lower.tri(correlation_matrix)] <-
+    t(correlation_matrix)[lower.tri(correlation_matrix)]
+  min_eigenvalue <- min(eigen(correlation_matrix, symmetric = TRUE,
+                              only.values = TRUE)$values)
 
   bbd_params <- lapply(seq_len(m), function(i) {
     calculate_bbd_params(vehicles_data$R1[i], vehicles_data$R2[i])
   })
   mv_params <- lapply(seq_len(m), function(i) {
-    calculate_mean_variance(vehicles_data$k[i], bbd_params[[i]]$alpha, bbd_params[[i]]$beta)
+    params <- bbd_params[[i]]
+    if (params$type == "binomial_limit") {
+      list(mean = vehicles_data$k[i] * params$p,
+           variance = vehicles_data$k[i] * params$p * (1 - params$p))
+    } else if (params$type == "polarized_limit") {
+      list(mean = vehicles_data$k[i] * params$p,
+           variance = vehicles_data$k[i]^2 * params$p * (1 - params$p))
+    } else {
+      calculate_mean_variance(vehicles_data$k[i], params$alpha, params$beta)
+    }
   })
 
   precalculated_marginals <- lapply(seq_len(m), function(i) {
+    params <- bbd_params[[i]]
     vapply(0:vehicles_data$k[i], function(x) {
-      calculate_marginal_prob(x, vehicles_data$k[i], bbd_params[[i]]$alpha, bbd_params[[i]]$beta)
+      if (params$type == "binomial_limit") {
+        stats::dbinom(x, vehicles_data$k[i], params$p)
+      } else if (params$type == "polarized_limit") {
+        if (x == 0) 1 - params$p else if (x == vehicles_data$k[i]) params$p else 0
+      } else {
+        calculate_marginal_prob(x, vehicles_data$k[i], params$alpha, params$beta)
+      }
     }, numeric(1))
   })
 
@@ -343,7 +402,7 @@ calc_canex <- function(vehicles_data, duplications, poblacion = 1000000) {
   base_prob <- rep(1, nrow(exposure_grid))
   for (i in seq_len(m)) base_prob <- base_prob * marginals_matrix[, i]
 
-  # Termino de ajuste por duplicaciones (interacciones canonicas de 2º orden)
+  # Termino de ajuste por duplicaciones (interacciones canonicas de 2o orden)
   z_scores <- matrix(0, nrow = nrow(exposure_grid), ncol = m)
   for (i in seq_len(m)) {
     z_scores[, i] <- (exposure_grid[, i] - means[i]) * var_sqrt_inv[i]
@@ -363,14 +422,23 @@ calc_canex <- function(vehicles_data, duplications, poblacion = 1000000) {
   base_prob[!is.finite(base_prob)] <- 0
   dup_term[!is.finite(dup_term)] <- 0
 
-  # Probabilidad conjunta ajustada, truncada a 0 (ver @details)
-  joint_prob <- pmax(0, base_prob * (1 + dup_term))
+  # Probabilidad conjunta ajustada, truncada a 0 (ver @details). Diagnostics
+  # expose how much the second-order approximation had to be corrected.
+  raw_joint_prob <- base_prob * (1 + dup_term)
+  negative_mass <- -sum(pmin(raw_joint_prob, 0))
+  joint_prob <- pmax(0, raw_joint_prob)
 
   total_exposures <- rowSums(exposure_grid)
   agg <- stats::aggregate(joint_prob, by = list(exposures = total_exposures), FUN = sum)
   names(agg) <- c("exposures", "probability")
 
-  calculate_metrics(agg, poblacion)
+  report <- calculate_metrics(agg, poblacion)
+  report$diagnostics <- list(
+    negative_mass_truncated = negative_mass,
+    mass_before_renormalization = sum(joint_prob),
+    correlation_min_eigenvalue = if (m >= 2L) min_eigenvalue else 1
+  )
+  report
 }
 
 #' @encoding UTF-8
@@ -392,6 +460,17 @@ calc_canex <- function(vehicles_data, duplications, poblacion = 1000000) {
 #'
 #' @export
 calculate_metrics <- function(distribution, poblacion = 1000000) {
+  if (!is.data.frame(distribution) ||
+      !all(c("exposures", "probability") %in% names(distribution)) ||
+      anyNA(distribution[c("exposures", "probability")]) ||
+      any(distribution$probability < 0) || !0 %in% distribution$exposures) {
+    stop("distribution must contain non-negative probabilities and an explicit zero-contact row",
+         call. = FALSE)
+  }
+  if (!is.numeric(poblacion) || length(poblacion) != 1L ||
+      !is.finite(poblacion) || poblacion <= 0) {
+    stop("poblacion must be one positive finite number", call. = FALSE)
+  }
   distribution <- distribution[order(distribution$exposures), ]
 
   # La expansion canonica truncada puede dejar la masa de probabilidad total

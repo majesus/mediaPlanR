@@ -8,9 +8,9 @@
 \format{
 Una lista con los componentes:
 \describe{
-\item{audiencias}{Vector numérico con las audiencias de cada soporte}
-\item{inserciones}{Vector numérico del número de inserciones por soporte}
-\item{pob_total}{Tamaño de la población}
+\item{audiencias}{Vector numerico con las audiencias de cada soporte}
+\item{inserciones}{Vector numerico del numero de inserciones por soporte}
+\item{pob_total}{Tamano de la poblacion}
 }
 }
 \usage{

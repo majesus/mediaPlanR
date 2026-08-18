@@ -8,10 +8,10 @@
 \format{
 Una lista con los componentes:
 \describe{
-\item{audiencia_efectiva}{Número total de personas alcanzadas por la campaña}
+\item{audiencia_efectiva}{Numero total de personas alcanzadas por la campana}
 \item{precio_unidad}{Precio de venta por unidad}
 \item{margen_unidad}{Beneficio neto por unidad vendida}
-\item{inversion}{Inversión total en publicidad}
+\item{inversion}{Inversion total en publicidad}
 }
 }
 \usage{

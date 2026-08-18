@@ -30,6 +30,9 @@ componentes:
 \item cumulative: Data frame con columnas min_contacts, percentage, people
 \item stats: Lista con avg_contacts (contactos medios entre alcanzados)
 y zero_contacts_prob (probabilidad de cero contactos)
+\item diagnostics: Masa negativa truncada, masa previa a la
+renormalizacion y menor autovalor de la matriz de correlaciones. Estos
+valores permiten evaluar cuanto corrigio la aproximacion de segundo orden.
 }
 }
 \description{
