@@ -226,27 +226,70 @@
 "mbbd_example"
 
 #' @encoding UTF-8
-#' @title Derived example inputs for the Morgensztern MSAD model
-#' @description The three-vehicle inputs published in Kim's worked CSD example,
-#' reused to illustrate MSAD with the same TD forward order. Kim does not
-#' publish the resulting MSAD distribution; this dataset is therefore an input
-#' benchmark, not a claim that the MSAD output appears in the thesis.
+#' @title Illustrative example inputs for the Morgensztern MSAD model
+#' @description A small, self-contained two-vehicle scenario. This is original
+#' illustrative data (not derived from any published source), ready for
+#' `do.call(calc_msad, msad_example)`. For a dataset that instead reproduces a
+#' published worked example for literature validation, see [msad_kim2005].
+#' @format A list with \code{vehicles_data}, \code{duplications}, and
+#' \code{aggregation_order}.
+#' @examples
+#' data(msad_example)
+#' do.call(calc_msad, msad_example)
+#' @seealso [calc_msad()], [msad_kim2005]
+"msad_example"
+
+#' @encoding UTF-8
+#' @title Kim's (2005) worked inputs for the Morgensztern MSAD model
+#' @description Minimal factual inputs (insertion counts, reach, and pairwise
+#' duplication figures) reproduced from Kim (2005), included solely so users
+#' can verify that \code{calc_msad()} reproduces the published worked example.
+#' These are bare numeric values reused for validation, not a creative or
+#' substantial reproduction of the dissertation. Kim's dissertation publishes
+#' these as the CSD example inputs and does not itself publish a resulting
+#' MSAD distribution; this dataset is therefore an input benchmark, not a
+#' claim that an MSAD output appears in the thesis.
 #' @format A list with \code{vehicles_data}, \code{duplications}, and
 #' \code{aggregation_order}.
 #' @references Kim, H. G. (2005). A Canonical Sequential Aggregation Media
 #' Model. Doctoral dissertation, The University of Texas at Austin, pp. 65-71
 #' and 80-97.
 #' @examples
-#' data(msad_example)
-#' do.call(calc_msad, msad_example)
-"msad_example"
+#' data(msad_kim2005)
+#' do.call(calc_msad, msad_kim2005)
+#' @seealso [calc_msad()], [msad_example], [csd_kim2005]
+"msad_kim2005"
 
-#' @title Kim's complete worked example for the CSD model
-#' @description Inputs from Kim (2005), Tables 4.2.2.1-4.2.2.10, for the
-#' three-vehicle Canonical Sequential Aggregation example using the published
-#' TD forward aggregation order. Exact calculations retain more precision than
-#' the intermediate values rounded in the thesis.
+#' @encoding UTF-8
+#' @title Illustrative example inputs for the CSD model
+#' @description A small, self-contained three-vehicle scenario. This is
+#' original illustrative data (not derived from any published source), ready
+#' for `do.call(calc_csd, csd_example)`. For a dataset that instead reproduces
+#' a published worked example for literature validation, see [csd_kim2005].
 #' @format A list ready for `do.call(calc_csd, csd_example)` with components:
+#' \describe{
+#'   \item{vehicles_data}{Three rows containing `insertions`, `R1`, and `R2`.}
+#'   \item{duplications}{Symmetric matrix of one-insertion pair duplication.}
+#'   \item{aggregation_order}{The illustrative order, `1:3`.}
+#' }
+#' @examples
+#' data(csd_example)
+#' result <- do.call(calc_csd, csd_example)
+#' result$distribution
+#' @seealso [calc_csd()], [csd_kim2005], [msad_example]
+"csd_example"
+
+#' @encoding UTF-8
+#' @title Kim's (2005) complete worked example for the CSD model
+#' @description Minimal factual inputs (insertion counts, reach, and pairwise
+#' duplication figures) reproduced from Kim (2005), Tables 4.2.2.1-4.2.2.10,
+#' for the three-vehicle Canonical Sequential Aggregation example, using the
+#' published TD forward aggregation order. Included solely so users can verify
+#' that \code{calc_csd()} reproduces the published result; exact calculations
+#' retain more precision than the intermediate values rounded in the thesis.
+#' These are bare numeric values reused for validation, not a creative or
+#' substantial reproduction of the dissertation.
+#' @format A list ready for `do.call(calc_csd, csd_kim2005)` with components:
 #' \describe{
 #'   \item{vehicles_data}{Three rows containing `insertions`, `R1`, and `R2`.}
 #'   \item{duplications}{Symmetric matrix of one-insertion pair duplication.}
@@ -255,21 +298,45 @@
 #' @references Kim, H. G. (2005). A Canonical Sequential Aggregation Media
 #' Model. Doctoral dissertation, The University of Texas at Austin, pp. 80-97.
 #' @examples
-#' data(csd_example)
-#' result <- do.call(calc_csd, csd_example)
+#' data(csd_kim2005)
+#' result <- do.call(calc_csd, csd_kim2005)
 #' result$distribution
-#' @seealso [calc_csd()], [msad_example]
-"csd_example"
+#' @seealso [calc_csd()], [csd_example], [msad_kim2005]
+"csd_kim2005"
 
-#' Cheong's (2007) complete worked example for the MBD model
-#'
-#' Inputs from Cheong (2007), Chapter 4.2, for the three-vehicle conceptual
-#' example: vehicle A (2 insertions), vehicle B (1 insertion), vehicle C (3
-#' insertions), with their pairwise audience duplications. This is the only
-#' example in Cheong's dissertation that is fully specified and internally
-#' consistent without relying on the negative-probability safety net.
-#'
+#' @encoding UTF-8
+#' @title Illustrative example inputs for the MBD model
+#' @description A small, self-contained two-vehicle scenario. This is original
+#' illustrative data (not derived from any published source), ready for
+#' `do.call(calc_mbd, mbd_example)`. Two vehicles avoid the Beta-Binomial
+#' co-exposure imputation that three or more vehicles require. For a fully
+#' worked three-vehicle literature-validation benchmark instead, see
+#' [mbd_cheong2007].
 #' @format A list ready for `do.call(calc_mbd, mbd_example)` with components:
+#' \describe{
+#'   \item{vehicles_data}{Two rows containing `insertions`, `R1`, and `R2`.}
+#'   \item{duplications}{Symmetric matrix of one-insertion pair duplication.}
+#'   \item{aggregation_order}{The illustrative order, `1:2`.}
+#' }
+#' @examples
+#' data(mbd_example)
+#' result <- do.call(calc_mbd, mbd_example)
+#' result$distribution
+#' @seealso [calc_mbd()], [mbd_cheong2007]
+"mbd_example"
+
+#' @encoding UTF-8
+#' @title Cheong's (2007) complete worked example for the MBD model
+#' @description Minimal factual inputs (insertion counts, reach, and pairwise
+#' duplication figures) reproduced from Cheong (2007), Chapter 4.2, for the
+#' three-vehicle conceptual example: vehicle A (2 insertions), vehicle B (1
+#' insertion), vehicle C (3 insertions). Included solely so users can verify
+#' that \code{calc_mbd()} reproduces the published result; this is the only
+#' example in Cheong's dissertation that is fully specified and internally
+#' consistent without relying on the negative-probability safety net. These
+#' are bare numeric values reused for validation, not a creative or
+#' substantial reproduction of the dissertation.
+#' @format A list ready for `do.call(calc_mbd, mbd_cheong2007)` with components:
 #' \describe{
 #'   \item{vehicles_data}{Three rows containing `insertions`, `R1`, and `R2`.}
 #'   \item{duplications}{Symmetric matrix of one-insertion pair duplication.}
@@ -279,11 +346,11 @@
 #' Model as a Web Media Exposure Model. Doctoral dissertation, The University
 #' of Texas at Austin, Ch. 4.2.
 #' @examples
-#' data(mbd_example)
-#' result <- do.call(calc_mbd, mbd_example)
+#' data(mbd_cheong2007)
+#' result <- do.call(calc_mbd, mbd_cheong2007)
 #' result$distribution
-#' @seealso [calc_mbd()]
-"mbd_example"
+#' @seealso [calc_mbd()], [mbd_example]
+"mbd_cheong2007"
 
 #' @encoding UTF-8
 #' @title Datos de ejemplo para calc_grps()

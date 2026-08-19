@@ -38,9 +38,9 @@
 #'   \item Comportamiento no lineal de la acumulacion para N > 3
 #' }
 #'
-#' @return Una lista "hofmans_reach" conteniendo:
+#' @return Una lista "reach_hofmans" conteniendo:
 #' \itemize{
-#'   \item resultados: Data frame con:
+#'   \item results: Data frame con:
 #'     \itemize{
 #'       \item N: Numero de insercion
 #'       \item RN: Cobertura acumulada (proporcion)
@@ -61,7 +61,7 @@
 #' resultado <- calc_hofmans(R1, R2, N = 5)
 #'
 #' # Examinar los resultados
-#' print(resultado$resultados)
+#' print(resultado$results)
 #' print(resultado$parametros)
 #'
 #' # Ejemplo con validacion de datos

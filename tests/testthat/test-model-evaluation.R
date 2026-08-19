@@ -30,8 +30,8 @@ test_that("Kim's published example reproduces AER and APE", {
 })
 
 test_that("observations can be evaluated directly against a CSD result", {
-  data(csd_example)
-  fit <- do.call(calc_csd, csd_example)
+  data(csd_kim2005)
+  fit <- do.call(calc_csd, csd_kim2005)
   evaluation <- evaluate_exposure_model(
     kim_observed_distribution(), fit, observed_scale = "percent"
   )

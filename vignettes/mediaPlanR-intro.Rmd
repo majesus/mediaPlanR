@@ -172,8 +172,8 @@ vehículos, marginales BBD, reach por expansión canónica de segundo orden y
 convolución no aleatoria con conservación de márgenes.
 
 ```{r}
-data(csd_example)
-resultado_csd <- do.call(calc_csd, csd_example)
+data(csd_kim2005)
+resultado_csd <- do.call(calc_csd, csd_kim2005)
 resultado_csd$reach
 resultado_csd$distribution
 resultado_csd$steps
@@ -191,8 +191,8 @@ subpauta y convolución no aleatoria que preserva las marginales y fija la
 probabilidad de cero contactos en `1 - reach`.
 
 ```{r}
-data(msad_example)
-resultado_msad <- do.call(calc_msad, msad_example)
+data(msad_kim2005)
+resultado_msad <- do.call(calc_msad, msad_kim2005)
 resultado_msad$reach
 resultado_msad$steps
 resultado_msad$diagnostics
@@ -204,7 +204,7 @@ analizar sensibilidad al orden. La función se detiene si las duplicaciones o
 el reach de Morgensztern violan límites probabilísticos.
 
 Kim especifica MSAD, pero remite a Lee (1988) para el ejemplo numérico completo.
-Por ello `msad_example` reutiliza las entradas del ejemplo CSD de Kim y etiqueta
+Por ello `msad_kim2005` reutiliza las entradas del ejemplo CSD de Kim y etiqueta
 su salida como cálculo derivado, no como resultado MSAD publicado en la tesis.
 
 ## Validación frente a datos observados
@@ -281,8 +281,17 @@ str(canex_example)
 do.call(calc_canex, canex_example)$total_reach
 ```
 
-También están disponibles `csd_example`, `nbd_example`, `mbbd_example` y
-`msad_example`.
+Para CSD, MSAD y MBD hay dos datasets de ejemplo por modelo. `csd_example`,
+`msad_example` y `mbd_example` son escenarios propios, ilustrativos y
+autocontenidos, pensados para experimentar rápido con `do.call()`.
+`csd_kim2005`, `msad_kim2005` y `mbd_cheong2007` reproducen en cambio los
+valores numéricos mínimos (audiencias e índices de duplicación) publicados
+por Kim (2005) y Cheong (2007) en sus tesis doctorales, incluidos únicamente
+para que cualquiera pueda verificar que `calc_csd()`, `calc_msad()` y
+`calc_mbd()` reproducen sus respectivos ejemplos publicados: son datos
+factuales puntuales reutilizados con fines de validación, no una reproducción
+creativa ni sustancial de esas tesis. También están disponibles `nbd_example`
+y `mbbd_example`.
 Los nombres históricos `canex`, `nbd` y `MBBD` permanecen por compatibilidad.
 El dataset de `calc_binomial()` se llama `binomial_plan` para no enmascarar
 `stats::binomial`.
@@ -298,8 +307,8 @@ expandiendo cada patrón restante con una asignación condicional
 Beta-Binomial.
 
 ```{r}
-data(mbd_example)
-resultado_mbd <- do.call(calc_mbd, mbd_example)
+data(mbd_cheong2007)
+resultado_mbd <- do.call(calc_mbd, mbd_cheong2007)
 resultado_mbd$reach
 resultado_mbd$distribution
 ```

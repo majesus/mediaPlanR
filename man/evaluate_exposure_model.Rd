@@ -80,8 +80,8 @@ evaluation <- evaluate_exposure_model(
 evaluation$summary[c("kim_aer", "kim_ape")]
 
 # A fitted model object can be passed directly as the prediction.
-data(csd_example)
-csd <- do.call(calc_csd, csd_example)
+data(csd_kim2005)
+csd <- do.call(calc_csd, csd_kim2005)
 evaluate_exposure_model(observed, csd, observed_scale = "percent")
 
 }

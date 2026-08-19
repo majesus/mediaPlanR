@@ -17,9 +17,9 @@ calc_hofmans(R1, R2, N, show_steps = TRUE)
 \item{show_steps}{Logico. Si TRUE muestra los pasos intermedios del calculo}
 }
 \value{
-Una lista "hofmans_reach" conteniendo:
+Una lista "reach_hofmans" conteniendo:
 \itemize{
-\item resultados: Data frame con:
+\item results: Data frame con:
 \itemize{
 \item N: Numero de insercion
 \item RN: Cobertura acumulada (proporcion)
@@ -69,7 +69,7 @@ R2 <- 0.103   # 10.3\% de cobertura segunda insercion
 resultado <- calc_hofmans(R1, R2, N = 5)
 
 # Examinar los resultados
-print(resultado$resultados)
+print(resultado$results)
 print(resultado$parametros)
 
 # Ejemplo con validacion de datos

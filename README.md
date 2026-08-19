@@ -100,11 +100,11 @@ full MSAD implementation, and a univariate NBD is not a finite-insertion or
 cross-vehicle dependence model.
 
 ```r
-data(csd_example)
-csd <- do.call(calc_csd, csd_example)
+data(csd_kim2005)
+csd <- do.call(calc_csd, csd_kim2005)
 
-data(msad_example)
-msad <- do.call(calc_msad, msad_example)
+data(msad_kim2005)
+msad <- do.call(calc_msad, msad_kim2005)
 
 counts <- c(rep(0, 40), rep(1, 25), rep(2, 15), rep(3, 8), 5, 7)
 nbd_fit <- fit_nbd_exposure(counts)
@@ -122,8 +122,8 @@ observed <- data.frame(
   observed = c(38.41, 17.89, 39.66, 2.67, 1.36, 0, 0)
 )
 
-data(csd_example)
-csd <- do.call(calc_csd, csd_example)
+data(csd_kim2005)
+csd <- do.call(calc_csd, csd_kim2005)
 
 evaluation <- evaluate_exposure_model(
   observed = observed,
@@ -140,10 +140,15 @@ open-tail NBD cells are rejected unless observed and predicted tails have first
 been collapsed identically.
 
 Descriptive example objects are available as `canex_example`, `csd_example`,
-`nbd_example`, `mbbd_example`, and `msad_example`. `csd_example` reproduces
-Kim's complete three-vehicle worked example; `msad_example` reuses those inputs
-but does not claim that its MSAD output was published by Kim. Historical shorter
-names remain available for compatibility.
+`nbd_example`, `mbbd_example`, and `msad_example`. `csd_example`, `msad_example`
+and `mbd_example` are original illustrative data, not derived from any
+published source. `csd_kim2005`, `msad_kim2005` and `mbd_cheong2007` instead
+reproduce the minimal factual inputs (reach and duplication figures) published
+by Kim (2005) and Cheong (2007), included solely so users can verify that
+`calc_csd()`, `calc_msad()` and `calc_mbd()` reproduce their published worked
+examples; `msad_kim2005` reuses Kim's CSD inputs but does not claim that its
+MSAD output was published by Kim. Historical shorter names remain available
+for compatibility.
 
 ## Reproducibility guarantees
 

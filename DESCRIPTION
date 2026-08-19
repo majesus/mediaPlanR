@@ -9,7 +9,10 @@ Description: Reproducible tools for cross-media reach, contact-frequency
     Binomial, Beta-Binomial, canonical-expansion, Canonical Sequential and
     Morgensztern Sequential models, plus an explicitly scoped Negative-Binomial count approximation,
     effective-reach optimization with explicit optimality diagnostics, and
-    compatibility functions for established planning workflows.
+    compatibility functions for established planning workflows. Methods follow
+    Danaher (1991) <doi:10.1177/002224379102800311>, Leckenby & Rice (1986)
+    <doi:10.1080/00913367.1986.10673014>, and Ehrenberg (1959)
+    <doi:10.2307/2985810>.
 Authors@R: person(
     given = "Manuel J.",
     family = "Sánchez-Franco",
@@ -29,7 +32,7 @@ Imports:
     stats,
     extraDistr,
     shiny (>= 1.7.0),
-    bslib (>= 0.4.0),
+    bslib (>= 0.5.0),
     ggplot2 (>= 3.4.0),
     ggrepel,
     scales

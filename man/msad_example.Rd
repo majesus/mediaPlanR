@@ -4,7 +4,7 @@
 \encoding{UTF-8}
 \name{msad_example}
 \alias{msad_example}
-\title{Derived example inputs for the Morgensztern MSAD model}
+\title{Illustrative example inputs for the Morgensztern MSAD model}
 \format{
 A list with \code{vehicles_data}, \code{duplications}, and
 \code{aggregation_order}.
@@ -13,18 +13,16 @@ A list with \code{vehicles_data}, \code{duplications}, and
 msad_example
 }
 \description{
-The three-vehicle inputs published in Kim's worked CSD example,
-reused to illustrate MSAD with the same TD forward order. Kim does not
-publish the resulting MSAD distribution; this dataset is therefore an input
-benchmark, not a claim that the MSAD output appears in the thesis.
+A small, self-contained two-vehicle scenario. This is original
+illustrative data (not derived from any published source), ready for
+\code{do.call(calc_msad, msad_example)}. For a dataset that instead reproduces a
+published worked example for literature validation, see \link{msad_kim2005}.
 }
 \examples{
 data(msad_example)
 do.call(calc_msad, msad_example)
 }
-\references{
-Kim, H. G. (2005). A Canonical Sequential Aggregation Media
-Model. Doctoral dissertation, The University of Texas at Austin, pp. 65-71
-and 80-97.
+\seealso{
+\code{\link[=calc_msad]{calc_msad()}}, \link{msad_kim2005}
 }
 \keyword{datasets}
