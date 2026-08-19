@@ -287,6 +287,48 @@ Los nombres históricos `canex`, `nbd` y `MBBD` permanecen por compatibilidad.
 El dataset de `calc_binomial()` se llama `binomial_plan` para no enmascarar
 `stats::binomial`.
 
+## MBD: modelo Beta-Binomial multivariante
+
+`calc_mbd()` implementa el modelo MBD de Cheong (2007): las probabilidades de
+co-exposición observadas (pares) o imputadas (tres o más vehículos, vía una
+Beta-Binomial ajustada a la audiencia y duplicación medias del subconjunto)
+se combinan mediante el teorema de inclusión-exclusión de Waring (1792). Los
+vehículos se van retirando uno a uno, en orden inverso al de agregación,
+expandiendo cada patrón restante con una asignación condicional
+Beta-Binomial.
+
+```{r}
+data(mbd_example)
+resultado_mbd <- do.call(calc_mbd, mbd_example)
+resultado_mbd$reach
+resultado_mbd$distribution
+```
+
+A diferencia de CSD/MSAD, Cheong documenta que el modelo puede producir
+probabilidades negativas al combinar cuatro o más vehículos, porque la
+co-exposición de tres o más se imputa, no se observa. Su propio ejemplo de
+cuatro vehículos se corrige con una comprobación de consistencia de primer
+orden; el de cinco vehículos, explícitamente, no — Cheong identifica que
+haría falta un chequeo de orden superior que nunca llegó a implementar, y
+propone (sin desarrollar) el ajuste proporcional iterativo de Deming como
+trabajo futuro. `calc_mbd()` aplica exactamente las comprobaciones que Cheong
+especifica (solo de primer orden) y, igual que su propia variante MBD-ADJ,
+pone a cero cualquier celda que siga siendo negativa y redistribuye esa masa
+proporcionalmente — exactamente el mismo patrón que ya usa `calc_canex()`.
+Esto se refleja en los diagnósticos:
+
+```{r}
+resultado_mbd$diagnostics$negative_mass_adjusted
+resultado_mbd$diagnostics$cells_adjusted
+```
+
+Con cuatro vehículos o más, `calc_mbd()` avisa explícitamente de esta
+limitación. El orden de agregación también puede alterar el resultado
+(Cheong no lo investigó sistemáticamente), y el modelo está limitado a 12
+vehículos por el coste computacional exponencial de la rejilla de exposición
+— el mismo límite práctico que Cheong aplicó en su propia evaluación
+empírica.
+
 ## Cobertura de la literatura y próximos modelos
 
 La tesis de Kim no ofrece el mismo nivel de reproducibilidad para todos los
@@ -300,9 +342,11 @@ una prueba de regresión independiente.
 | MSAD | Algoritmo en Kim; ejemplo detallado remitido a Lee (1988) | Implementado con invariantes; benchmark externo pendiente |
 | CANEX | Fórmula primaria de Danaher y ejemplo CSD que usa su reach | Implementado; mantiene diagnósticos de aproximación |
 | BBD y Binomial | Fórmulas cerradas y marginales publicados por Kim | Implementados y probados en sus límites |
+| MBD | Especificación y ejemplo completo (3 vehículos) de Cheong (2007); ejemplos de 4-5 vehículos muestran los límites del propio modelo | Implementado, con red de seguridad y avisos documentados para 4+ vehículos |
 | HBBD | Kim remite los pasos detallados a Boyd (1985) y Kim (1994) | Candidato prioritario; no afirmar equivalencia hasta obtener esas fuentes |
 | CBD | Kim remite el ejemplo numérico a Kim (1994) | Pendiente de la fuente primaria |
 | DMD | Kim remite pasos y ejemplos a Boyd (1985) y Kim (1994) | Pendiente; requiere validar toda la matriz multivariante |
+| HBD | Aproximación de MBD descrita por Cheong (2007), sin ejemplo numérico propio verificado | Pendiente; requeriría el mismo nivel de contraste que MBD |
 | NBD multivariante | No es el ejemplo de Kim; requiere la formulación de Danaher para procesos online | Línea futura separada de la NBD experimental univariante |
 
 El Apéndice B de Kim publica distribuciones observadas y estimadas para 560

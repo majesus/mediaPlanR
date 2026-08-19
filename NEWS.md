@@ -8,6 +8,18 @@
   modes. Exact results report a verifiable global optimum.
 - Added `audience_metrics()` to separate target composition, rating, affinity
   and selectivity.
+- Added `calc_mbd()`, implementing Cheong's (2007) Multivariate Beta Binomial
+  Distribution model: vehicle co-exposure via Waring's (1792) inclusion-
+  exclusion, imputed from a Beta-Binomial fit to each subset's own mean
+  audience and duplication for three or more vehicles, and a row-specific
+  conditional Beta-Binomial expansion as vehicles are peeled off in reverse
+  aggregation order. Reproduces Cheong's complete three-vehicle worked
+  example; the first-order consistency check and the final negative-
+  probability safety net ("MBD-ADJ") are unit-tested against Cheong's own
+  intermediate numbers for four- and five-vehicle schedules. `calc_mbd()`
+  warns for four or more vehicles and stops above 12, matching the scope
+  Cheong's own dissertation verified; see `vignette("mediaPlanR-intro")` for
+  what is, and is not, guaranteed beyond the three-vehicle case.
 
 ## Correctness
 

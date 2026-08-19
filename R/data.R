@@ -261,6 +261,30 @@
 #' @seealso [calc_csd()], [msad_example]
 "csd_example"
 
+#' Cheong's (2007) complete worked example for the MBD model
+#'
+#' Inputs from Cheong (2007), Chapter 4.2, for the three-vehicle conceptual
+#' example: vehicle A (2 insertions), vehicle B (1 insertion), vehicle C (3
+#' insertions), with their pairwise audience duplications. This is the only
+#' example in Cheong's dissertation that is fully specified and internally
+#' consistent without relying on the negative-probability safety net.
+#'
+#' @format A list ready for `do.call(calc_mbd, mbd_example)` with components:
+#' \describe{
+#'   \item{vehicles_data}{Three rows containing `insertions`, `R1`, and `R2`.}
+#'   \item{duplications}{Symmetric matrix of one-insertion pair duplication.}
+#'   \item{aggregation_order}{`1:3`, matching Cheong's own worked order.}
+#' }
+#' @references Cheong, Y. (2007). Multivariate Beta Binomial Distribution
+#' Model as a Web Media Exposure Model. Doctoral dissertation, The University
+#' of Texas at Austin, Ch. 4.2.
+#' @examples
+#' data(mbd_example)
+#' result <- do.call(calc_mbd, mbd_example)
+#' result$distribution
+#' @seealso [calc_mbd()]
+"mbd_example"
+
 #' @encoding UTF-8
 #' @title Datos de ejemplo para calc_grps()
 #' @description Lista con los argumentos de ejemplo para

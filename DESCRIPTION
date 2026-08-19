@@ -1,7 +1,7 @@
 Package: mediaPlanR
 Type: Package
 Version: 2.0.0
-Date: 2026-08-18
+Date: 2026-08-19
 Title: Reliable Cross-Media Reach and Frequency Planning
 Description: Reproducible tools for cross-media reach, contact-frequency
     distributions, target-audience metrics and budget allocation. Provides a
