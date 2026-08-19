@@ -2,25 +2,26 @@
 % Please edit documentation in R/data.R
 \docType{data}
 \encoding{UTF-8}
-\name{sainsbury}
-\alias{sainsbury}
-\title{Datos de ejemplo para calc_sainsbury()}
+\name{grps_example}
+\alias{grps_example}
+\title{Datos de ejemplo para calc_grps()}
 \format{
 Una lista con los componentes:
 \describe{
 \item{audiencias}{Vector numerico con las audiencias de cada soporte}
+\item{inserciones}{Vector numerico del numero de inserciones por soporte}
 \item{pob_total}{Tamano de la poblacion}
 }
 }
 \usage{
-sainsbury
+grps_example
 }
 \description{
 Lista con los argumentos de ejemplo para
-\code{\link{calc_sainsbury}}, lista para usar con \code{do.call()}.
+\code{\link{calc_grps}}, lista para usar con \code{do.call()}.
 }
 \examples{
-data(sainsbury)
-do.call(calc_sainsbury, sainsbury)
+data(grps_example)
+do.call(calc_grps, grps_example)
 }
 \keyword{datasets}

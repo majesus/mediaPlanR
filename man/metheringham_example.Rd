@@ -2,8 +2,8 @@
 % Please edit documentation in R/data.R
 \docType{data}
 \encoding{UTF-8}
-\name{metheringham}
-\alias{metheringham}
+\name{metheringham_example}
+\alias{metheringham_example}
 \title{Datos de ejemplo para calc_metheringham()}
 \format{
 Una lista con los componentes:
@@ -14,14 +14,14 @@ Una lista con los componentes:
 }
 }
 \usage{
-metheringham
+metheringham_example
 }
 \description{
 Lista con los argumentos de ejemplo para
 \code{\link{calc_metheringham}}, lista para usar con \code{do.call()}.
 }
 \examples{
-data(metheringham)
-do.call(calc_metheringham, metheringham)
+data(metheringham_example)
+do.call(calc_metheringham, metheringham_example)
 }
 \keyword{datasets}

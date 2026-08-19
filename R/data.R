@@ -35,13 +35,17 @@
 # modo que se pueden pasar directamente con do.call() sin tener que
 # construir a mano los datos de entrada:
 #
-#   do.call(calc_canex, canex)
-#   do.call(calc_sainsbury, sainsbury)
+#   do.call(calc_canex, canex_example)
+#   do.call(calc_sainsbury, sainsbury_example)
 #
 # El dataset de calc_binomial() se llama 'binomial_plan' y no 'binomial'
 # porque 'binomial' ya existe en stats (la familia de calc_binomial()
 # para modelos lineales generalizados); usar ese nombre lo enmascararia
-# tras cargar mediaPlanR.
+# tras cargar mediaPlanR. El resto de datasets heredados de la version 0.2.0
+# (sainsbury, beta_binomial, metheringham, hofmans, agostini, grps, cpm,
+# roas) se renombraron con el sufijo '_example' para seguir la misma
+# convencion que los datasets nuevos de v2 y no confundirse con el nombre
+# de su funcion modelo (p. ej. metheringham_example vs. calc_metheringham()).
 #__________________________________________________________#
 
 #' @encoding UTF-8
@@ -54,9 +58,9 @@
 #'   \item{pob_total}{Tamano de la poblacion}
 #' }
 #' @examples
-#' data(sainsbury)
-#' do.call(calc_sainsbury, sainsbury)
-"sainsbury"
+#' data(sainsbury_example)
+#' do.call(calc_sainsbury, sainsbury_example)
+"sainsbury_example"
 
 #' @encoding UTF-8
 #' @title Datos de ejemplo para calc_binomial()
@@ -86,9 +90,9 @@
 #'   \item{n}{Numero total de inserciones planificadas}
 #' }
 #' @examples
-#' data(beta_binomial)
-#' do.call(calc_beta_binomial, beta_binomial)
-"beta_binomial"
+#' data(beta_binomial_example)
+#' do.call(calc_beta_binomial, beta_binomial_example)
+"beta_binomial_example"
 
 #' @encoding UTF-8
 #' @title Datos de ejemplo para calc_metheringham()
@@ -101,9 +105,9 @@
 #'   \item{matriz_duplicacion}{Matriz simetrica con la duplicacion entre soportes}
 #' }
 #' @examples
-#' data(metheringham)
-#' do.call(calc_metheringham, metheringham)
-"metheringham"
+#' data(metheringham_example)
+#' do.call(calc_metheringham, metheringham_example)
+"metheringham_example"
 
 #' @encoding UTF-8
 #' @title Datos de ejemplo para calc_hofmans()
@@ -116,9 +120,9 @@
 #'   \item{N}{Numero de inserciones para las que calcular la audiencia acumulada}
 #' }
 #' @examples
-#' data(hofmans)
-#' do.call(calc_hofmans, hofmans)
-"hofmans"
+#' data(hofmans_example)
+#' do.call(calc_hofmans, hofmans_example)
+"hofmans_example"
 
 #' @encoding UTF-8
 #' @title Datos de ejemplo para calc_agostini()
@@ -131,9 +135,9 @@
 #'   \item{k}{Coeficiente empirico de duplicacion de Agostini}
 #' }
 #' @examples
-#' data(agostini)
-#' do.call(calc_agostini, agostini)
-"agostini"
+#' data(agostini_example)
+#' do.call(calc_agostini, agostini_example)
+"agostini_example"
 
 #' @encoding UTF-8
 #' @title Historical MBBD-named example data
@@ -268,9 +272,9 @@
 #'   \item{pob_total}{Tamano de la poblacion}
 #' }
 #' @examples
-#' data(grps)
-#' do.call(calc_grps, grps)
-"grps"
+#' data(grps_example)
+#' do.call(calc_grps, grps_example)
+"grps_example"
 
 #' @encoding UTF-8
 #' @title Datos de ejemplo para calc_cpm()
@@ -282,9 +286,9 @@
 #'   \item{audiencias}{Vector numerico con audiencias de cada soporte}
 #' }
 #' @examples
-#' data(cpm)
-#' do.call(calc_cpm, cpm)
-"cpm"
+#' data(cpm_example)
+#' do.call(calc_cpm, cpm_example)
+"cpm_example"
 
 #' @encoding UTF-8
 #' @title Datos de ejemplo para calcular_roas()
@@ -298,6 +302,6 @@
 #'   \item{inversion}{Inversion total en publicidad}
 #' }
 #' @examples
-#' data(roas)
-#' do.call(calcular_roas, roas)
-"roas"
+#' data(roas_example)
+#' do.call(calcular_roas, roas_example)
+"roas_example"

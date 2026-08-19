@@ -2,8 +2,8 @@
 % Please edit documentation in R/data.R
 \docType{data}
 \encoding{UTF-8}
-\name{roas}
-\alias{roas}
+\name{roas_example}
+\alias{roas_example}
 \title{Datos de ejemplo para calcular_roas()}
 \format{
 Una lista con los componentes:
@@ -15,14 +15,14 @@ Una lista con los componentes:
 }
 }
 \usage{
-roas
+roas_example
 }
 \description{
 Lista con los argumentos de ejemplo para
 \code{\link{calcular_roas}}, lista para usar con \code{do.call()}.
 }
 \examples{
-data(roas)
-do.call(calcular_roas, roas)
+data(roas_example)
+do.call(calcular_roas, roas_example)
 }
 \keyword{datasets}

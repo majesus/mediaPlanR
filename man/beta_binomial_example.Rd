@@ -2,8 +2,8 @@
 % Please edit documentation in R/data.R
 \docType{data}
 \encoding{UTF-8}
-\name{beta_binomial}
-\alias{beta_binomial}
+\name{beta_binomial_example}
+\alias{beta_binomial_example}
 \title{Datos de ejemplo para calc_beta_binomial()}
 \format{
 Una lista con los componentes:
@@ -15,14 +15,14 @@ Una lista con los componentes:
 }
 }
 \usage{
-beta_binomial
+beta_binomial_example
 }
 \description{
 Lista con los argumentos de ejemplo para
 \code{\link{calc_beta_binomial}}, lista para usar con \code{do.call()}.
 }
 \examples{
-data(beta_binomial)
-do.call(calc_beta_binomial, beta_binomial)
+data(beta_binomial_example)
+do.call(calc_beta_binomial, beta_binomial_example)
 }
 \keyword{datasets}

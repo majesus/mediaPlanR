@@ -2,8 +2,8 @@
 % Please edit documentation in R/data.R
 \docType{data}
 \encoding{UTF-8}
-\name{cpm}
-\alias{cpm}
+\name{cpm_example}
+\alias{cpm_example}
 \title{Datos de ejemplo para calc_cpm()}
 \format{
 Una lista con los componentes:
@@ -13,14 +13,14 @@ Una lista con los componentes:
 }
 }
 \usage{
-cpm
+cpm_example
 }
 \description{
 Lista con los argumentos de ejemplo para
 \code{\link{calc_cpm}}, lista para usar con \code{do.call()}.
 }
 \examples{
-data(cpm)
-do.call(calc_cpm, cpm)
+data(cpm_example)
+do.call(calc_cpm, cpm_example)
 }
 \keyword{datasets}

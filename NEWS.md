@@ -54,6 +54,18 @@
   instead of the corrected v2-backed implementation actually exported by the
   package. Documentation for all four functions has been rewritten to match
   their real behaviour.
+- Renamed the example datasets inherited from 0.2.0 (`sainsbury`, `beta_binomial`,
+  `metheringham`, `hofmans`, `agostini`, `grps`, `cpm`, `roas`) to
+  `sainsbury_example`, `beta_binomial_example`, `metheringham_example`,
+  `hofmans_example`, `agostini_example`, `grps_example`, `cpm_example`, and
+  `roas_example`. Each bare name was indistinguishable at a glance from its
+  model function (e.g. `metheringham` next to `calc_metheringham()`); the
+  `_example` suffix matches the convention already used for the datasets v2
+  introduced (`canex_example`, `csd_example`, `msad_example`, `nbd_example`,
+  `mbbd_example`) and the reasoning already applied to `binomial_plan` (named
+  to avoid masking `stats::binomial`). `binomial_plan`, and the three
+  intentionally dual-named legacy/`_example` pairs (`canex`/`canex_example`,
+  `nbd`/`nbd_example`, `MBBD`/`mbbd_example`), are unaffected.
 
 ## Compatibility
 

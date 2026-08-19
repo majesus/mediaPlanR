@@ -2,8 +2,8 @@
 % Please edit documentation in R/data.R
 \docType{data}
 \encoding{UTF-8}
-\name{hofmans}
-\alias{hofmans}
+\name{hofmans_example}
+\alias{hofmans_example}
 \title{Datos de ejemplo para calc_hofmans()}
 \format{
 Una lista con los componentes:
@@ -14,14 +14,14 @@ Una lista con los componentes:
 }
 }
 \usage{
-hofmans
+hofmans_example
 }
 \description{
 Lista con los argumentos de ejemplo para
 \code{\link{calc_hofmans}}, lista para usar con \code{do.call()}.
 }
 \examples{
-data(hofmans)
-do.call(calc_hofmans, hofmans)
+data(hofmans_example)
+do.call(calc_hofmans, hofmans_example)
 }
 \keyword{datasets}

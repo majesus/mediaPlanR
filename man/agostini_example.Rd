@@ -2,8 +2,8 @@
 % Please edit documentation in R/data.R
 \docType{data}
 \encoding{UTF-8}
-\name{agostini}
-\alias{agostini}
+\name{agostini_example}
+\alias{agostini_example}
 \title{Datos de ejemplo para calc_agostini()}
 \format{
 Una lista con los componentes:
@@ -14,14 +14,14 @@ Una lista con los componentes:
 }
 }
 \usage{
-agostini
+agostini_example
 }
 \description{
 Lista con los argumentos de ejemplo para
 \code{\link{calc_agostini}}, lista para usar con \code{do.call()}.
 }
 \examples{
-data(agostini)
-do.call(calc_agostini, agostini)
+data(agostini_example)
+do.call(calc_agostini, agostini_example)
 }
 \keyword{datasets}
