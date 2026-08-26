@@ -25,7 +25,7 @@ test_that("CSD reproduces Kim's complete three-vehicle example", {
   expect_equal(fit$steps$target_reach, c(0.6022075, 0.6180583),
                tolerance = 1e-7)
   expect_equal(
-    fit$distribution$percentage,
+    fit$distribution$percent,
     c(38.20, 18.57, 39.18, 2.49, 1.51, 0.05, 0.01),
     tolerance = 0.03
   )

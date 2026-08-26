@@ -3,25 +3,25 @@
 \encoding{UTF-8}
 \name{print.reach_canex}
 \alias{print.reach_canex}
-\title{Imprimir un objeto reach_canex}
+\title{Print a reach_canex object}
 \usage{
 \method{print}{reach_canex}(x, ...)
 }
 \arguments{
-\item{x}{Objeto de clase \code{"reach_canex"}, resultado de \code{\link{calc_canex}}}
+\item{x}{Object of class \code{"reach_canex"}, the result of \code{\link{calc_canex}}}
 
-\item{...}{Argumentos adicionales (no usados)}
+\item{...}{Additional arguments (unused)}
 }
 \value{
-Invisible \code{x}. La funcion se invoca por su efecto de impresion.
+Invisibly returns \code{x}. Called for its printing side effect.
 }
 \description{
-Genera un informe formateado con las metricas del modelo CANEX.
+Produces a formatted report of the CANEX model metrics.
 }
 \examples{
-resultado <- calc_canex(
+result <- calc_canex(
   data.frame(k = 2, R1 = 0.2, R2 = 0.36), matrix(1, 1, 1), 1000
 )
-print(resultado)
+print(result)
 
 }

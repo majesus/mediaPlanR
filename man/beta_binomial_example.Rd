@@ -4,22 +4,22 @@
 \encoding{UTF-8}
 \name{beta_binomial_example}
 \alias{beta_binomial_example}
-\title{Datos de ejemplo para calc_beta_binomial()}
+\title{Example inputs for calc_beta_binomial()}
 \format{
-Una lista con los componentes:
+A list with the components:
 \describe{
-\item{A1}{Audiencia del soporte tras la primera insercion}
-\item{A2}{Audiencia del soporte tras la segunda insercion}
-\item{P}{Tamano total de la poblacion}
-\item{n}{Numero total de inserciones planificadas}
+\item{A1}{Vehicle audience after the first insertion}
+\item{A2}{Vehicle audience after the second insertion}
+\item{P}{Total population size}
+\item{n}{Total number of planned insertions}
 }
 }
 \usage{
 beta_binomial_example
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_beta_binomial}}, lista para usar con \code{do.call()}.
+List of arguments for \code{\link{calc_beta_binomial}}, ready
+for \code{do.call()}.
 }
 \examples{
 data(beta_binomial_example)

@@ -20,8 +20,9 @@ its maximum. For several schedules, also include the column named by
 \code{schedule_col}.}
 
 \item{predicted}{Either a supported model result whose \code{distribution}
-contains \code{contacts} and \code{probability}/\code{percentage}, or a data frame with
-columns \code{contacts} and \code{predicted}. Data-frame predictions must use the
+contains \code{contacts} and \code{probability}/\code{percent} (the legacy \code{percentage}
+column name is also accepted), or a data frame with columns \code{contacts}
+and \code{predicted}. Data-frame predictions must use the
 same schedule column when \code{schedule_col} is supplied.}
 
 \item{observed_scale}{Required declaration of the \code{observed} column:

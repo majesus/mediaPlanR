@@ -4,21 +4,21 @@
 \encoding{UTF-8}
 \name{hofmans_example}
 \alias{hofmans_example}
-\title{Datos de ejemplo para calc_hofmans()}
+\title{Example inputs for calc_hofmans()}
 \format{
-Una lista con los componentes:
+A list with the components:
 \describe{
-\item{R1}{Cobertura tras la primera insercion (0-1)}
-\item{R2}{Cobertura tras la segunda insercion (0-1)}
-\item{N}{Numero de inserciones para las que calcular la audiencia acumulada}
+\item{R1}{Reach after the first insertion (0-1)}
+\item{R2}{Reach after the second insertion (0-1)}
+\item{N}{Number of insertions for which to calculate cumulative audience}
 }
 }
 \usage{
 hofmans_example
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_hofmans}}, lista para usar con \code{do.call()}.
+List of arguments for \code{\link{calc_hofmans}}, ready for
+\code{do.call()}.
 }
 \examples{
 data(hofmans_example)

@@ -3,78 +3,80 @@
 \encoding{UTF-8}
 \name{calc_metheringham}
 \alias{calc_metheringham}
-\title{Calculo de metricas segun el modelo de Metheringham}
+\title{Metrics under the Metheringham model}
 \usage{
-calc_metheringham(audiencias, inserciones, matriz_duplicacion)
+calc_metheringham(audiences, insertions, duplication_matrix)
 }
 \arguments{
-\item{audiencias}{Vector numerico con las audiencias de cada soporte}
+\item{audiences}{Numeric vector with the audience of each vehicle}
 
-\item{inserciones}{Vector numerico con el numero de inserciones por soporte}
+\item{insertions}{Numeric vector with the number of insertions per vehicle}
 
-\item{matriz_duplicacion}{Matriz simetrica con los valores de duplicacion entre soportes}
+\item{duplication_matrix}{Symmetric matrix with the duplication values between vehicles}
 }
 \value{
-Un objeto de clase 'reach_metheringham' conteniendo:
+An object of class 'reach_metheringham' containing:
 \itemize{
-\item audiencia_media: Media ponderada de audiencias (A1)
-\item duplicacion_media: Media ponderada de duplicaciones (D)
-\item audiencia_segunda: Audiencia tras la segunda insercion (A2)
-\item matriz_oportunidades: Matriz que contiene el numero de oportunidades de contacto
-entre pares de inserciones
-\item vector_oportunidades: Version linealizada de la matriz de oportunidades
-\item vector_duplicacion: Version linealizada de la matriz de duplicacion
+\item mean_audience: Insertion-weighted mean audience (A1)
+\item mean_duplication: Opportunity-weighted mean duplication (D)
+\item second_audience: Audience after the second insertion (A2)
+\item opportunity_matrix: Matrix with the number of contact opportunities
+between pairs of insertions
+\item opportunity_vector: Linearized version of the opportunity matrix
+\item duplication_vector: Linearized version of the duplication matrix
 }
 }
 \description{
-Calcula metricas fundamentales para la aplicacion del modelo de Metheringham,
-incluyendo la audiencia media (A1), duplicacion media (D) y audiencia tras la segunda exposicion en
-el hipotetico soporte promedio (A2). El modelo de Metheringham (1964) se basa en que
-los individuos tienen probabilidades heterogeneas que se distribuyen como una distribucion Beta para el conjunto.
-Los soportes son homogeneos (a saber, todos los soportes acaban con la misma distribucion Beta de probabilidades de exposicion).
-La acumulacion y duplicacion de audiencias se promedian entre los soportes para disenar un soporte hipotetico promedio.
+Calculates the core metrics for the Metheringham model, namely
+mean audience (A1), mean duplication (D), and the audience after the second
+exposure for the hypothetical average vehicle (A2). Metheringham's (1964)
+model assumes individuals have heterogeneous probabilities that are Beta
+distributed across the population. Vehicles are homogeneous (i.e. every
+vehicle shares the same Beta distribution of exposure probabilities).
+Cumulative audience and duplication are averaged across vehicles to design
+one hypothetical average vehicle.
 }
 \details{
-La funcion realiza los siguientes calculos principales:
+The function performs the following core calculations:
 \enumerate{
-\item Audiencia media tras la primera insercion (A1):
+\item Mean audience after the first insertion (A1):
 \itemize{
-\item Calcula la media ponderada de audiencias por numero de inserciones
-\item Formula: A1 = SUMATORIO(Audiencia_i ? Inserciones_i) / SUMATORIO(Inserciones_i)
+\item Computes the insertion-weighted mean of the audiences
+\item Formula: A1 = SUM(Audience_i x Insertions_i) / SUM(Insertions_i)
 }
-\item Duplicacion media (D):
+\item Mean duplication (D):
 \itemize{
-\item Calcula la media ponderada de duplicaciones por oportunidades de contacto
-\item Considera todas las combinaciones posibles entre soportes ii, ij
+\item Computes the opportunity-weighted mean of the duplications
+\item Considers every possible combination between vehicles ii, ij
 }
-\item Audiencia tras la segunda insercion (A2):
+\item Audience after the second insertion (A2):
 \itemize{
-\item Calcula la audiencia que se expone al menos una vez tras la segunda insercion
-\item Formula: A2 = 2 ? A1 - D
+\item Computes the audience exposed at least once after the second insertion
+\item Formula: A2 = 2 x A1 - D
 }
 }
 }
 \note{
-La matriz de duplicacion debe ser simetrica donde:
+The duplication matrix must be symmetric, where:
 \itemize{
-\item La diagonal contiene la duplicacion de cada soporte consigo mismo
-\item El elemento \verb{[i,j]} contiene la duplicacion entre los soportes i y j
-\item Se debe cumplir que \code{matriz[i,j] = matriz[j,i]}
-\item Para n soportes, la matriz debe ser de dimensiones n x n
+\item The diagonal holds each vehicle's duplication with itself
+\item Element \verb{[i,j]} holds the duplication between vehicles i and j
+\item \code{matrix[i,j] = matrix[j,i]} must hold
+\item For n vehicles, the matrix must be n x n
 }
 }
 \examples{
-# Ejemplo basico con tres soportes
-matriz_dup <- matrix(c(
+# Basic example with three vehicles
+duplication_matrix <- matrix(c(
   150000, 200000, 180000,
   200000, 120000, 140000,
   180000, 140000, 170000
 ), nrow = 3, byrow = TRUE)
 
-metricas <- calc_metheringham(
-  audiencias = c(1500000, 800000, 1200000),
-  inserciones = c(4, 3, 5),
-  matriz_duplicacion = matriz_dup
+metrics <- calc_metheringham(
+  audiences = c(1500000, 800000, 1200000),
+  insertions = c(4, 3, 5),
+  duplication_matrix = duplication_matrix
 )
 
 }
@@ -83,8 +85,8 @@ Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribu
 contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 }
 \seealso{
-\code{\link{calc_sainsbury}} para estimaciones con la distribucion Binomial
-\code{\link{calc_binomial}} para estimaciones con la distribucion Beta-Binomial
-\code{\link{calc_beta_binomial}} para estimaciones con la distribucion de Metheringham
-\code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
+\code{\link{calc_sainsbury}} for estimates under the Sainsbury distribution
+\code{\link{calc_binomial}} for estimates under the Binomial distribution
+\code{\link{calc_beta_binomial}} for estimates under the Beta-Binomial distribution
+\code{\link{calc_hofmans}} for estimates under the Hofmans distribution
 }

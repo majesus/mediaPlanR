@@ -1,32 +1,31 @@
 #__________________________________________________________#
-# Coleccion de datasets de ejemplo, uno por funcion modelo.
+# Collection of example datasets, one per model function.
 #
-# Cada dataset es una lista cuyos elementos coinciden EXACTAMENTE, en
-# nombre, con los argumentos formales de su funcion correspondiente, de
-# modo que se pueden pasar directamente con do.call() sin tener que
-# construir a mano los datos de entrada:
+# Each dataset is a list whose elements match EXACTLY, by name, the formal
+# arguments of its corresponding function, so they can be passed directly
+# with do.call() without having to build the input data by hand:
 #
 #   do.call(calc_canex, canex_example)
 #   do.call(calc_sainsbury, sainsbury_example)
 #
-# El dataset de calc_binomial() se llama 'binomial_plan' y no 'binomial'
-# porque 'binomial' ya existe en stats (la familia de calc_binomial()
-# para modelos lineales generalizados); usar ese nombre lo enmascararia
-# tras cargar mediaPlanR. El resto de datasets heredados de la version 0.2.0
-# (sainsbury, beta_binomial, metheringham, hofmans, agostini) se renombraron
-# con el sufijo '_example' para seguir la misma convencion que los datasets
-# nuevos de v2 y no confundirse con el nombre de su funcion modelo (p. ej.
-# metheringham_example vs. calc_metheringham()).
+# The dataset for calc_binomial() is called 'binomial_plan' rather than
+# 'binomial' because 'binomial' already exists in stats (the family used by
+# generalized linear models); using that name would mask it once mediaPlanR
+# is loaded. The remaining datasets inherited from version 0.2.0
+# (sainsbury, beta_binomial, metheringham, hofmans, agostini) were renamed
+# with the '_example' suffix to follow the same convention as the newer v2
+# datasets and to avoid being confused with their model function's own name
+# (e.g. metheringham_example vs. calc_metheringham()).
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_sainsbury()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_sainsbury}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_sainsbury()
+#' @description List of arguments for \code{\link{calc_sainsbury}}, ready for
+#' \code{do.call()}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
+#'   \item{audiences}{Numeric vector with the audience of each vehicle}
+#'   \item{population}{Population size}
 #' }
 #' @examples
 #' data(sainsbury_example)
@@ -34,15 +33,14 @@
 "sainsbury_example"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_binomial()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_binomial}}, lista para usar con \code{do.call()}.
-#' Se llama \code{binomial_plan} y no \code{binomial} para no enmascarar
-#' \code{stats::binomial} tras cargar el paquete.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_binomial()
+#' @description List of arguments for \code{\link{calc_binomial}}, ready for
+#' \code{do.call()}. Called \code{binomial_plan} rather than \code{binomial}
+#' to avoid masking \code{stats::binomial} once the package is loaded.
+#' @format A list with the components:
 #' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
+#'   \item{audiences}{Numeric vector with the audience of each vehicle}
+#'   \item{population}{Population size}
 #' }
 #' @examples
 #' data(binomial_plan)
@@ -50,15 +48,15 @@
 "binomial_plan"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_beta_binomial()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_beta_binomial}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_beta_binomial()
+#' @description List of arguments for \code{\link{calc_beta_binomial}}, ready
+#' for \code{do.call()}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{A1}{Audiencia del soporte tras la primera insercion}
-#'   \item{A2}{Audiencia del soporte tras la segunda insercion}
-#'   \item{P}{Tamano total de la poblacion}
-#'   \item{n}{Numero total de inserciones planificadas}
+#'   \item{A1}{Vehicle audience after the first insertion}
+#'   \item{A2}{Vehicle audience after the second insertion}
+#'   \item{P}{Total population size}
+#'   \item{n}{Total number of planned insertions}
 #' }
 #' @examples
 #' data(beta_binomial_example)
@@ -66,14 +64,14 @@
 "beta_binomial_example"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_metheringham()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_metheringham}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_metheringham()
+#' @description List of arguments for \code{\link{calc_metheringham}}, ready
+#' for \code{do.call()}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{inserciones}{Vector numerico con el numero de inserciones por soporte}
-#'   \item{matriz_duplicacion}{Matriz simetrica con la duplicacion entre soportes}
+#'   \item{audiences}{Numeric vector with the audience of each vehicle}
+#'   \item{insertions}{Numeric vector with the number of insertions per vehicle}
+#'   \item{duplication_matrix}{Symmetric matrix with the duplication between vehicles}
 #' }
 #' @examples
 #' data(metheringham_example)
@@ -81,14 +79,14 @@
 "metheringham_example"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_hofmans()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_hofmans}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_hofmans()
+#' @description List of arguments for \code{\link{calc_hofmans}}, ready for
+#' \code{do.call()}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{R1}{Cobertura tras la primera insercion (0-1)}
-#'   \item{R2}{Cobertura tras la segunda insercion (0-1)}
-#'   \item{N}{Numero de inserciones para las que calcular la audiencia acumulada}
+#'   \item{R1}{Reach after the first insertion (0-1)}
+#'   \item{R2}{Reach after the second insertion (0-1)}
+#'   \item{N}{Number of insertions for which to calculate cumulative audience}
 #' }
 #' @examples
 #' data(hofmans_example)
@@ -96,14 +94,14 @@
 "hofmans_example"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_agostini()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_agostini}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_agostini()
+#' @description List of arguments for \code{\link{calc_agostini}}, ready for
+#' \code{do.call()}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
-#'   \item{k}{Coeficiente empirico de duplicacion de Agostini}
+#'   \item{audiences}{Numeric vector with the audience of each vehicle}
+#'   \item{population}{Population size}
+#'   \item{k}{Agostini's empirical duplication coefficient}
 #' }
 #' @examples
 #' data(agostini_example)
@@ -115,7 +113,7 @@
 #' @description List of arguments for \code{\link{calc_canex}}, ready for
 #' \code{do.call()}.
 #' @format A list with \code{vehicles_data}, \code{duplications}, and
-#' \code{poblacion}.
+#' \code{population}.
 #' @examples
 #' data(canex_example)
 #' do.call(calc_canex, canex_example)

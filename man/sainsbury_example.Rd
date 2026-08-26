@@ -4,20 +4,20 @@
 \encoding{UTF-8}
 \name{sainsbury_example}
 \alias{sainsbury_example}
-\title{Datos de ejemplo para calc_sainsbury()}
+\title{Example inputs for calc_sainsbury()}
 \format{
-Una lista con los componentes:
+A list with the components:
 \describe{
-\item{audiencias}{Vector numerico con las audiencias de cada soporte}
-\item{pob_total}{Tamano de la poblacion}
+\item{audiences}{Numeric vector with the audience of each vehicle}
+\item{population}{Population size}
 }
 }
 \usage{
 sainsbury_example
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_sainsbury}}, lista para usar con \code{do.call()}.
+List of arguments for \code{\link{calc_sainsbury}}, ready for
+\code{do.call()}.
 }
 \examples{
 data(sainsbury_example)

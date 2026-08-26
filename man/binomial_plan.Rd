@@ -4,22 +4,21 @@
 \encoding{UTF-8}
 \name{binomial_plan}
 \alias{binomial_plan}
-\title{Datos de ejemplo para calc_binomial()}
+\title{Example inputs for calc_binomial()}
 \format{
-Una lista con los componentes:
+A list with the components:
 \describe{
-\item{audiencias}{Vector numerico con las audiencias de cada soporte}
-\item{pob_total}{Tamano de la poblacion}
+\item{audiences}{Numeric vector with the audience of each vehicle}
+\item{population}{Population size}
 }
 }
 \usage{
 binomial_plan
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_binomial}}, lista para usar con \code{do.call()}.
-Se llama \code{binomial_plan} y no \code{binomial} para no enmascarar
-\code{stats::binomial} tras cargar el paquete.
+List of arguments for \code{\link{calc_binomial}}, ready for
+\code{do.call()}. Called \code{binomial_plan} rather than \code{binomial}
+to avoid masking \code{stats::binomial} once the package is loaded.
 }
 \examples{
 data(binomial_plan)

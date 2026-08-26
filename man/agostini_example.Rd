@@ -4,21 +4,21 @@
 \encoding{UTF-8}
 \name{agostini_example}
 \alias{agostini_example}
-\title{Datos de ejemplo para calc_agostini()}
+\title{Example inputs for calc_agostini()}
 \format{
-Una lista con los componentes:
+A list with the components:
 \describe{
-\item{audiencias}{Vector numerico con las audiencias de cada soporte}
-\item{pob_total}{Tamano de la poblacion}
-\item{k}{Coeficiente empirico de duplicacion de Agostini}
+\item{audiences}{Numeric vector with the audience of each vehicle}
+\item{population}{Population size}
+\item{k}{Agostini's empirical duplication coefficient}
 }
 }
 \usage{
 agostini_example
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_agostini}}, lista para usar con \code{do.call()}.
+List of arguments for \code{\link{calc_agostini}}, ready for
+\code{do.call()}.
 }
 \examples{
 data(agostini_example)

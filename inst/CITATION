@@ -1,0 +1,26 @@
+year <- sub("-.*", "", meta$Date)
+
+bibentry(
+  bibtype  = "Manual",
+  title    = "{mediaPlanR}: Reliable Cross-Media Reach and Frequency Planning",
+  author   = person("Manuel J.", "Sanchez-Franco",
+                     email = "majesus@us.es",
+                     comment = c(ORCID = "0000-0002-8042-3550")),
+  year     = year,
+  note     = sprintf("R package version %s", meta$Version),
+  url      = "https://github.com/majesus/mediaPlanR",
+  textVersion = paste0(
+    "Sanchez-Franco, M. J. (", year, "). ",
+    "mediaPlanR: Reliable Cross-Media Reach and Frequency Planning. ",
+    "R package version ", meta$Version, ". ",
+    "https://github.com/majesus/mediaPlanR"
+  )
+)
+
+citFooter(
+  "mediaPlanR implements published reach/frequency models. When you use a",
+  "specific model, please also cite its original source alongside the",
+  "package: Danaher (1991) for calc_canex(), Kim (2005) for calc_csd() and",
+  "calc_msad(), and Cheong (2007) for calc_mbd(). Full references are listed",
+  "in each function's help page and in vignette(\"mediaPlanR-intro\")."
+)

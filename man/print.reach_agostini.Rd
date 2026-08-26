@@ -3,23 +3,23 @@
 \encoding{UTF-8}
 \name{print.reach_agostini}
 \alias{print.reach_agostini}
-\title{Imprimir un objeto reach_agostini}
+\title{Print a reach_agostini object}
 \usage{
 \method{print}{reach_agostini}(x, ...)
 }
 \arguments{
-\item{x}{Objeto de clase \code{"reach_agostini"}, resultado de \code{\link{calc_agostini}}}
+\item{x}{Object of class \code{"reach_agostini"}, the result of \code{\link{calc_agostini}}}
 
-\item{...}{Argumentos adicionales (no usados)}
+\item{...}{Additional arguments (unused)}
 }
 \value{
-Invisible \code{x}. La funcion se invoca por su efecto de impresion.
+Invisibly returns \code{x}. Called for its printing side effect.
 }
 \description{
-Genera un informe formateado con las metricas del modelo de Agostini.
+Produces a formatted report of the Agostini model metrics.
 }
 \examples{
-resultado <- calc_agostini(c(300000, 400000, 200000), pob_total = 1000000)
-print(resultado)
+result <- calc_agostini(c(300000, 400000, 200000), population = 1000000)
+print(result)
 
 }

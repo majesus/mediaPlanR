@@ -1,4 +1,4 @@
-test_that("cada dataset de ejemplo funciona con do.call() sobre su función correspondiente", {
+test_that("every example dataset works with do.call() on its matching function", {
   data(sainsbury_example); data(binomial_plan); data(beta_binomial_example)
   data(metheringham_example); data(hofmans_example); data(agostini_example)
 
@@ -10,7 +10,7 @@ test_that("cada dataset de ejemplo funciona con do.call() sobre su función corr
   expect_s3_class(do.call(calc_agostini, agostini_example), "reach_agostini")
 })
 
-test_that("'binomial_plan' no se llama 'binomial' (evita enmascarar stats::binomial)", {
+test_that("'binomial_plan' is not called 'binomial' (avoids masking stats::binomial)", {
   expect_false(exists("binomial", where = asNamespace("mediaPlanR"), inherits = FALSE))
   data(binomial_plan)
   expect_true(is.function(stats::binomial))

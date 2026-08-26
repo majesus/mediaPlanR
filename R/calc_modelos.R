@@ -1,99 +1,104 @@
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Calculo de cobertura y distribucion de contactos (y acumulada) segun modelo de Sainsbury
-#' @description Implementa el modelo de Sainsbury, desarrollado por E. J. Sansbury en la London Press Exchange,
-#' para calcular la cobertura y la distribucion de contactos para un conjunto de soportes publicitarios y una unica insercion por soporte.
-#' El modelo considera la duplicacion aleatoria, las probabilidades individuales de exposicion homogeneas, y las probabilidades de
-#' exposicion del soporte heterogeneas para una estimacion mas precisa de la cobertura y la distribucion de contactos (y acumulada).
-#' De las dos ultimas hipotesis se deriva que la probabilidad de que un individuo resulte expuesto al soporte i vendra dado por
-#' el cociente entre la audiencia del soporte i (casos favorables) y la poblacion (casos totales). Por su parte, de la asuncion de la duplicacion aleatoria se deriva que
-#' la probabilidad de exposicion continuara siendo una variable Bernouilli con diferentes probabilidadades de exposicion en cada soporte.
+#' @title Reach and contact distribution (and cumulative) under the Sainsbury model
+#' @description Implements the Sainsbury model, developed by E. J. Sainsbury at the
+#' London Press Exchange, to calculate reach and the contact distribution for a set
+#' of advertising vehicles with a single insertion per vehicle. The model assumes
+#' random duplication, homogeneous individual exposure probabilities, and
+#' heterogeneous vehicle exposure probabilities for a more precise estimate of
+#' reach and the contact distribution (and cumulative distribution). From the last
+#' two assumptions it follows that the probability of an individual being exposed
+#' to vehicle i is the ratio between vehicle i's audience (favourable cases) and
+#' the population (total cases). From the random-duplication assumption it follows
+#' that exposure remains a Bernoulli variable with a different exposure probability
+#' for each vehicle.
 #'
 #' @references
 #' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 #' contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 #'
-#' @param audiencias Vector numerico con las audiencias individuales de cada soporte
-#' @param pob_total Tamano de la poblacion
+#' @param audiences Numeric vector with the individual audience of each vehicle
+#' @param population Population size
 #'
 #' @details
-#' El modelo de Sainsbury simplificado calcula:
+#' The simplified Sainsbury model calculates:
 #' \enumerate{
-#'   \item Cobertura considerando la duplicacion entre soportes como el producto de las probabilidades individuales
-#'   \item Distribucion de contactos para cada nivel de exposicion i
-#'   \item Distribucion de contactos acumulada (expuestos al menos i veces)
+#'   \item Reach, treating duplication between vehicles as the product of the
+#'   individual probabilities
+#'   \item The contact distribution for each exposure level i
+#'   \item The cumulative contact distribution (exposed at least i times)
 #' }
 #'
-#' El proceso incluye:
+#' The process includes:
 #' \itemize{
-#'   \item Conversion de audiencias a probabilidades
-#'   \item Calculo de las posibles combinaciones de soportes
-#'   \item Estimacion de probabilidades conjuntas
-#'   \item Agregacion de resultados: distribucion de contactos (y acumulada)
+#'   \item Converting audiences to probabilities
+#'   \item Computing every possible combination of vehicles
+#'   \item Estimating joint probabilities
+#'   \item Aggregating results: contact distribution (and cumulative)
 #' }
 #'
-#' @return Una lista "reach_sainsbury" conteniendo:
+#' @return A list of class "reach_sainsbury" containing:
 #' \itemize{
-#'   \item reach: Lista con la cobertura:
+#'   \item reach: List with reach:
 #'     \itemize{
-#'       \item porcentaje: Cobertura en porcentaje
-#'       \item personas: Cobertura en numero de personas
+#'       \item percent: Reach as a percentage
+#'       \item people: Reach in number of people
 #'     }
-#'   \item distribucion: Lista con la distribucion de contactos:
+#'   \item distribution: List with the contact distribution:
 #'     \itemize{
-#'       \item porcentaje: Vector con probabilidad de cada numero de exposiciones
-#'       \item personas: Vector con numero de personas para cada numero de exposiciones
+#'       \item percent: Vector with the probability of each number of exposures
+#'       \item people: Vector with the number of people for each number of exposures
 #'     }
-#'   \item acumulada: Lista con la distribucion acumulada:
+#'   \item cumulative: List with the cumulative distribution:
 #'     \itemize{
-#'       \item porcentaje: Vector con probabilidades acumuladas
-#'       \item personas: Vector con numero de personas acumuladas al menos i veces
+#'       \item percent: Vector with cumulative probabilities
+#'       \item people: Vector with the number of people exposed at least i times
 #'     }
 #' }
 #'
 #' @examples
-#' # Ejemplo basico con tres soportes
-#' audiencias <- c(300000, 400000, 200000)
-#' pob_total <- 1000000
-#' resultado <- calc_sainsbury(audiencias, pob_total)
+#' # Basic example with three vehicles
+#' audiences <- c(300000, 400000, 200000)
+#' population <- 1000000
+#' result <- calc_sainsbury(audiences, population)
 #'
-#' # Examinar los resultados
-#' print(resultado$reach$porcentaje)  # Cobertura en porcentaje
-#' print(resultado$distribucion$personas)  # Personas por numero de contactos
+#' # Inspect the results
+#' print(result$reach$percent)  # Reach as a percentage
+#' print(result$distribution$people)  # People by number of contacts
 #'
-#' # Ejemplo con validacion de datos
+#' # Example with input validation
 #' \dontrun{
-#' audiencias_invalidas <- c(300000, -400000, 200000)
-#' resultado <- calc_sainsbury(audiencias_invalidas, pob_total)
-#' # Generara un error por audiencia negativa
+#' invalid_audiences <- c(300000, -400000, 200000)
+#' result <- calc_sainsbury(invalid_audiences, population)
+#' # Raises an error due to the negative audience
 #' }
 #'
 #' @export
 #' @seealso
-#' \code{\link{calc_binomial}} para estimaciones con la distribucion Binomial
-#' \code{\link{calc_beta_binomial}} para estimaciones con la distribucion Beta-Binomial
-#' \code{\link{calc_metheringham}} para estimaciones con la distribucion de Metheringham
-#' \code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
+#' \code{\link{calc_binomial}} for estimates under the Binomial distribution
+#' \code{\link{calc_beta_binomial}} for estimates under the Beta-Binomial distribution
+#' \code{\link{calc_metheringham}} for estimates under the Metheringham distribution
+#' \code{\link{calc_hofmans}} for estimates under the Hofmans distribution
 #' @importFrom utils combn
-calc_sainsbury <- function(audiencias, pob_total) {
-  # Validacion de inputs
-  if (!is.numeric(audiencias) || !is.numeric(pob_total)) {
-    stop("Los argumentos deben ser numericos")
+calc_sainsbury <- function(audiences, population) {
+  # Input validation
+  if (!is.numeric(audiences) || !is.numeric(population)) {
+    stop("audiences and population must be numeric")
   }
-  if (length(audiencias) < 1L || anyNA(audiencias) || any(!is.finite(audiencias))) {
-    stop("audiencias must contain at least one finite value")
+  if (length(audiences) < 1L || anyNA(audiences) || any(!is.finite(audiences))) {
+    stop("audiences must contain at least one finite value")
   }
-  if (length(pob_total) != 1L || !is.finite(pob_total) ||
-      any(audiencias < 0) || any(audiencias > pob_total)) {
-    stop("Las audiencias deben ser positivas y menores que la poblacion")
+  if (length(population) != 1L || !is.finite(population) ||
+      any(audiences < 0) || any(audiences > population)) {
+    stop("audiences must be positive and smaller than the population")
   }
-  if (pob_total <= 0) {
-    stop("La poblacion debe ser positiva")
+  if (population <= 0) {
+    stop("population must be positive")
   }
 
-  # Convertir audiencias a probabilidades
-  probs <- audiencias / pob_total
+  # Convert audiences to probabilities
+  probs <- audiences / population
   n <- length(probs)
 
   # Exact Poisson-binomial distribution using dynamic convolution. This is
@@ -102,21 +107,21 @@ calc_sainsbury <- function(audiencias, pob_total) {
   P <- full_distribution[-1L]
   R <- rev(cumsum(rev(P)))
 
-  # Calculo del reach total
+  # Total reach
   reach <- 1 - prod(1 - probs)
 
   return(structure(list(
     reach = list(
-      porcentaje = reach * 100,
-      personas = reach * pob_total
+      percent = reach * 100,
+      people = reach * population
     ),
-    distribucion = list(
-      porcentaje = P * 100,
-      personas = P * pob_total
+    distribution = list(
+      percent = P * 100,
+      people = P * population
     ),
-    acumulada = list(
-      porcentaje = R * 100,
-      personas = R * pob_total
+    cumulative = list(
+      percent = R * 100,
+      people = R * population
     )
   ), class = "reach_sainsbury"))
 }
@@ -124,294 +129,300 @@ calc_sainsbury <- function(audiencias, pob_total) {
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Calculo de cobertura y distribucion de contactos (y acumulada) segun modelo Binomial
-#' @description Implementa el modelo Binomial, desarrollado por Chandon (1985), para calcular la cobertura y
-#' distribucion de contactos (y acumulada) de plan de medios de n soportes y una unica insercion por soporte.
-#' El modelo Binomial asume la duplicacion aleatoria (i.e.,la exposicion a un soporte no modifica
-#' la probabilidad de resultar expuesto a otro), y la homogeneidad de las probabilidades de exposicion del soporte y
-#' las probabilidades individuales de exposicion. Uniendo estas dos hipotesis ultimas, la probabilidad de exposicion de
-#' cualquier individuo a un soporte determinado se calcula como la media de las audiencias de cada soporte.
-#' Las probabilidades de exposicion son estacionarias respecto al tiempo.
+#' @title Reach and contact distribution (and cumulative) under the Binomial model
+#' @description Implements the Binomial model, developed by Chandon (1985), to
+#' calculate the reach and contact distribution (and cumulative distribution) of
+#' a media plan with n vehicles and a single insertion per vehicle. The Binomial
+#' model assumes random duplication (i.e. exposure to one vehicle does not change
+#' the probability of being exposed to another), and homogeneity of both the
+#' vehicle exposure probabilities and the individual exposure probabilities.
+#' Combining these last two assumptions, the exposure probability of any
+#' individual to a given vehicle is computed as the mean of every vehicle's
+#' audience. Exposure probabilities are assumed stationary over time.
 #'
 #' @references
 #' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 #' contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 #'
-#' @param audiencias Vector numerico con las audiencias individuales de cada soporte
-#' @param pob_total Tamano de la poblacion
+#' @param audiences Numeric vector with the individual audience of each vehicle
+#' @param population Population size
 #'
 #' @details
-#' El modelo Bnomial calcula:
+#' The Binomial model calculates:
 #' \enumerate{
-#'   \item Cobertura considerando un soporte hipotetico "promedio" cuya audiencia es la media simple de las audiencias de cada soporte
-#'   \item Distribucion de contactos para cada nivel de exposicion
-#'   \item Distribucion de contactos acumulada (expuestos al menos i veces)
+#'   \item Reach, treating the plan as one hypothetical "average" vehicle whose
+#'   audience is the simple mean of every vehicle's audience
+#'   \item The contact distribution for each exposure level
+#'   \item The cumulative contact distribution (exposed at least i times)
 #' }
 #'
-#' La metodologia incluye:
+#' The methodology includes:
 #' \itemize{
-#'   \item Conversion de audiencias a probabilidades individuales
-#'   \item Calculo de probabilidad media de exposicion
-#'   \item Aplicacion del modelo Binomial para n inserciones
-#'   \item Calculo de distribuciones de contactos (y acumulada)
+#'   \item Converting audiences to individual probabilities
+#'   \item Computing the mean exposure probability
+#'   \item Applying the Binomial model for n insertions
+#'   \item Computing the contact distributions (and cumulative)
 #' }
 #'
-#' @return Una lista "reach_binomial" conteniendo:
+#' @return A list of class "reach_binomial" containing:
 #' \itemize{
-#'   \item reach: Lista con la cobertura:
+#'   \item reach: List with reach:
 #'     \itemize{
-#'       \item porcentaje: Cobertura en porcentaje
-#'       \item personas: Cobertura en numero de personas
+#'       \item percent: Reach as a percentage
+#'       \item people: Reach in number of people
 #'     }
-#'   \item distribucion: Lista con la distribucion de contactos:
+#'   \item distribution: List with the contact distribution:
 #'     \itemize{
-#'       \item porcentaje: Vector con probabilidad de cada numero de exposiciones
-#'       \item personas: Vector con numero de personas para cada numero de exposiciones
+#'       \item percent: Vector with the probability of each number of exposures
+#'       \item people: Vector with the number of people for each number of exposures
 #'     }
-#'   \item acumulada: Lista con la distribucion acumulada:
+#'   \item cumulative: List with the cumulative distribution:
 #'     \itemize{
-#'       \item porcentaje: Vector con probabilidades acumuladas
-#'       \item personas: Vector con numero de personas acumuladas al menos i veces
+#'       \item percent: Vector with cumulative probabilities
+#'       \item people: Vector with the number of people exposed at least i times
 #'     }
 #' }
 #'
 #' @examples
-#' # Ejemplo basico con tres soportes
-#' audiencias <- c(300000, 400000, 200000)
-#' pob_total <- 1000000
-#' resultado <- calc_binomial(audiencias, pob_total)
+#' # Basic example with three vehicles
+#' audiences <- c(300000, 400000, 200000)
+#' population <- 1000000
+#' result <- calc_binomial(audiences, population)
 #'
-#' # Examinar los resultados
-#' print(paste("Cobertura total:", resultado$reach$porcentaje, "%"))
-#' print(paste("Probabilidad media:", resultado$probabilidad_media))
+#' # Inspect the results
+#' print(paste("Total reach:", result$reach$percent, "%"))
+#' print(paste("Mean probability:", result$mean_probability))
 #'
-#' # Verificar que las distribuciones suman 1 (100%)
+#' # Check that the distributions sum to 1 (100%)
 #' \dontrun{
-#' sum_dist <- sum(resultado$distribucion$porcentaje)/100
-#' print(paste("Suma distribucion:", round(sum_dist, 4)))
+#' sum_dist <- sum(result$distribution$percent) / 100
+#' print(paste("Distribution sum:", round(sum_dist, 4)))
 #' }
 #'
 #' @export
 #' @seealso
-#' \code{\link{calc_sainsbury}} para estimaciones con la distribucion Binomial
-#' \code{\link{calc_beta_binomial}} para estimaciones con la distribucion Beta-Binomial
-#' \code{\link{calc_metheringham}} para estimaciones con la distribucion de Metheringham
-#' \code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
-calc_binomial <- function(audiencias, pob_total) {
-  # Validacion de inputs
-  if (!is.numeric(audiencias) || !is.numeric(pob_total)) {
-    stop("Los argumentos deben ser numericos")
+#' \code{\link{calc_sainsbury}} for estimates under the Sainsbury distribution
+#' \code{\link{calc_beta_binomial}} for estimates under the Beta-Binomial distribution
+#' \code{\link{calc_metheringham}} for estimates under the Metheringham distribution
+#' \code{\link{calc_hofmans}} for estimates under the Hofmans distribution
+calc_binomial <- function(audiences, population) {
+  # Input validation
+  if (!is.numeric(audiences) || !is.numeric(population)) {
+    stop("audiences and population must be numeric")
   }
-  if (length(audiencias) < 1L || anyNA(audiencias) || any(!is.finite(audiencias))) {
-    stop("audiencias must contain at least one finite value")
+  if (length(audiences) < 1L || anyNA(audiences) || any(!is.finite(audiences))) {
+    stop("audiences must contain at least one finite value")
   }
-  if (length(pob_total) != 1L || !is.finite(pob_total) ||
-      any(audiencias < 0) || any(audiencias > pob_total)) {
-    stop("Las audiencias deben ser positivas y menores que la poblacion total")
+  if (length(population) != 1L || !is.finite(population) ||
+      any(audiences < 0) || any(audiences > population)) {
+    stop("audiences must be positive and smaller than the total population")
   }
-  if (pob_total <= 0) {
-    stop("La poblacion total debe ser positiva")
+  if (population <= 0) {
+    stop("population must be positive")
   }
 
-  # Convertir audiencias a probabilidad media
-  probs <- audiencias / pob_total
+  # Convert audiences to a mean probability
+  probs <- audiences / population
   p <- mean(probs)
-  n <- length(audiencias)
+  n <- length(audiences)
 
-  P <- numeric(n) # Distribucion de contactos
-  R <- numeric(n) # Distribucion acumulada
+  P <- numeric(n) # Contact distribution
+  R <- numeric(n) # Cumulative distribution
 
-  # Calculo de la distribucion de contactos (P)
-  for(i in 1:n) {
-    P[i] <- choose(n, i) * p^i * (1-p)^(n-i)
+  # Compute the contact distribution (P)
+  for (i in 1:n) {
+    P[i] <- choose(n, i) * p^i * (1 - p)^(n - i)
   }
 
-  # Calculo de la distribucion acumulada (R)
-  for(i in 1:n) {
+  # Compute the cumulative distribution (R)
+  for (i in 1:n) {
     R[i] <- sum(P[i:n])
   }
 
-  # Calculo del reach total
-  reach <- 1 - (1-p)^n
+  # Total reach
+  reach <- 1 - (1 - p)^n
 
   return(structure(list(
     reach = list(
-      porcentaje = reach * 100,
-      personas = reach * pob_total
+      percent = reach * 100,
+      people = reach * population
     ),
-    distribucion = list(
-      porcentaje = P * 100,
-      personas = P * pob_total
+    distribution = list(
+      percent = P * 100,
+      people = P * population
     ),
-    acumulada = list(
-      porcentaje = R * 100,
-      personas = R * pob_total
+    cumulative = list(
+      percent = R * 100,
+      people = R * population
     ),
-    probabilidad_media = p
+    mean_probability = p
   ), class = "reach_binomial"))
 }
 
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Calculo de la cobertura y distribucion de contactos (y acumulada) usando modelo Beta-Binomial
-#' @description Implementa el modelo Beta-Binomial para calcular la audiencia neta acumulada
-#' y la distribucion de contactos (y acumulada). El modelo Beta-Binomial considera la
-#' heterogeneidad en la probabilidad de exposicion de los individuos. Combina dos pasos:
-#' modela la probabilidad de exito aplicando la distribucion Beta de parametros alpha y beta -lo cual reduce a dos
-#' los datos necesarios para su estimacion; y emplea la probabilidad en la distribucion Binomial (combinada con la distribucion Beta)
-#' para valorar la distribucion de contactos (y acumulada). Es util cuando la probabilidad de
-#' exito no es conocida a priori, y puede variar entre los individuos. Los parametros alpha y beta precisamente permiten
-#' ajustar la forma de la distribucion para que refleje la incertidumbre en relacion con la probabilidad de exito.
+#' @title Reach and contact distribution (and cumulative) under the Beta-Binomial model
+#' @description Implements the Beta-Binomial model to calculate net cumulative
+#' audience and the contact distribution (and cumulative distribution). The
+#' Beta-Binomial model accounts for heterogeneity in individuals' exposure
+#' probability. It combines two steps: it models the success probability with a
+#' Beta distribution of shape parameters alpha and beta -- which reduces the data
+#' required for estimation to just two numbers -- and uses that probability in the
+#' Binomial distribution (mixed with the Beta distribution) to obtain the contact
+#' distribution (and cumulative distribution). It is useful when the success
+#' probability is not known a priori and can vary across individuals. The alpha
+#' and beta parameters let the shape of the distribution reflect the uncertainty
+#' about the success probability.
 #'
 #' @references
 #' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 #' contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 #'
-#' @param A1 Audiencia del soporte tras la primera insercion
-#' @param A2 Audiencia del soporte tras la segunda insercion
-#' @param P Tamano total de la poblacion
-#' @param n Numero total de inserciones planificadas (debe ser entero positivo)
+#' @param A1 Vehicle audience after the first insertion
+#' @param A2 Vehicle audience after the second insertion
+#' @param P Total population size
+#' @param n Total number of planned insertions (must be a positive integer)
 #'
 #' @details
-#' El modelo Beta-Binomial:
+#' The Beta-Binomial model:
 #' \enumerate{
-#'   \item Calcula los parametros alpha y beta a partir de A1 y A2
-#'   \item Modela la heterogeneidad en la exposicion mediante la distribucion Beta
-#'   \item Combina la distribucion Beta con la Binomial para la distribucion de contactos
-#'   \item Calcula probabilidades exactas para cada nivel de exposicion
+#'   \item Computes the alpha and beta parameters from A1 and A2
+#'   \item Models exposure heterogeneity with the Beta distribution
+#'   \item Combines the Beta distribution with the Binomial for the contact distribution
+#'   \item Computes exact probabilities for each exposure level
 #' }
 #'
-#' El proceso incluye:
+#' The process includes:
 #' \itemize{
-#'   \item Estimacion de coeficientes de duplicacion R1 y R2
-#'   \item Calculo de parametros alpha y beta del modelo
-#'   \item Generacion de distribucion de contactos
-#'   \item Calculo de la distribucion de contactos (y acumuladas)
+#'   \item Estimating the duplication coefficients R1 and R2
+#'   \item Computing the model's alpha and beta parameters
+#'   \item Generating the contact distribution
+#'   \item Computing the contact distribution (and cumulative)
 #' }
 #'
-#' @return Una lista "reach_beta_binomial" conteniendo:
+#' @return A list of class "reach_beta_binomial" containing:
 #' \itemize{
-#'   \item reach: Lista con la cobertura:
+#'   \item reach: List with reach:
 #'     \itemize{
-#'       \item porcentaje: Cobertura en porcentaje
-#'       \item personas: Cobertura en numero de personas
+#'       \item percent: Reach as a percentage
+#'       \item people: Reach in number of people
 #'     }
-#'   \item distribucion: Lista con la distribucion de contactos:
+#'   \item distribution: List with the contact distribution:
 #'     \itemize{
-#'       \item porcentaje: Vector con probabilidad de cada numero de exposiciones
-#'       \item personas: Vector con numero de personas para cada numero de exposiciones
+#'       \item percent: Vector with the probability of each number of exposures
+#'       \item people: Vector with the number of people for each number of exposures
 #'     }
-#'   \item acumulada: Lista con la distribucion acumulada:
+#'   \item cumulative: List with the cumulative distribution:
 #'     \itemize{
-#'       \item porcentaje: Vector con probabilidades acumuladas
-#'       \item personas: Vector con numero de personas acumuladas al menos i veces
+#'       \item percent: Vector with cumulative probabilities
+#'       \item people: Vector with the number of people exposed at least i times
 #'     }
-#'   \item parametros: Lista con parametros del modelo:
+#'   \item parameters: List with the model parameters:
 #'     \itemize{
-#'       \item alpha: Parametro alpha estimado
-#'       \item beta: Parametro beta estimado
-#'       \item prob_cero_contactos: Probabilidad de no exposicion
+#'       \item alpha: Estimated alpha parameter
+#'       \item beta: Estimated beta parameter
+#'       \item zero_contact_probability: Probability of no exposure
 #'     }
 #' }
 #'
 #' @note
-#' El modelo Beta-Binomial es especialmente adecuado cuando:
+#' The Beta-Binomial model is especially well suited when:
 #' \itemize{
-#'   \item Existe heterogeneidad significativa en la poblacion
-#'   \item Se dispone de datos de audiencias acumuladas (A1 y A2)
+#'   \item There is significant heterogeneity in the population
+#'   \item Cumulative audience data are available (A1 and A2)
 #' }
 #'
 #' @examples
-#' # Ejemplo basico
-#' resultado <- calc_beta_binomial(
-#'   A1 = 500000,    # Primera audiencia
-#'   A2 = 550000,    # Segunda audiencia
-#'   P = 1000000,    # Poblacion total
-#'   n = 5           # Numero de inserciones
+#' # Basic example
+#' result <- calc_beta_binomial(
+#'   A1 = 500000,    # First audience
+#'   A2 = 550000,    # Second audience
+#'   P = 1000000,    # Total population
+#'   n = 5           # Number of insertions
 #' )
 #'
-#' # Examinar resultados
-#' print(paste("Cobertura:", round(resultado$reach$porcentaje, 2), "%"))
-#' print(paste("Alpha:", round(resultado$parametros$alpha, 4)))
-#' print(paste("Beta:", round(resultado$parametros$beta, 4)))
+#' # Inspect the results
+#' print(paste("Reach:", round(result$reach$percent, 2), "%"))
+#' print(paste("Alpha:", round(result$parameters$alpha, 4)))
+#' print(paste("Beta:", round(result$parameters$beta, 4)))
 #'
-#' # Verificar consistencia de las distribuciones
+#' # Check consistency of the distributions
 #' \dontrun{
-#' sum_dist <- sum(resultado$distribucion$porcentaje)/100
-#' print(paste("Suma distribucion:", round(sum_dist +
-#'             resultado$parametros$prob_cero_contactos/100, 4)))
+#' sum_dist <- sum(result$distribution$percent) / 100
+#' print(paste("Distribution sum:", round(sum_dist +
+#'             result$parameters$zero_contact_probability / 100, 4)))
 #' }
 #'
 #' @export
 #' @seealso
-#' \code{\link{calc_sainsbury}} para estimaciones con la distribucion Binomial
-#' \code{\link{calc_binomial}} para estimaciones con la distribucion Beta-Binomial
-#' \code{\link{calc_metheringham}} para estimaciones con la distribucion de Metheringham
-#' \code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
-#' \code{\link{nbd_exposure_distribution}} para la aproximacion experimental
-#' de conteos de exposicion mediante Binomial Negativa (NBD)
+#' \code{\link{calc_sainsbury}} for estimates under the Sainsbury distribution
+#' \code{\link{calc_binomial}} for estimates under the Binomial distribution
+#' \code{\link{calc_metheringham}} for estimates under the Metheringham distribution
+#' \code{\link{calc_hofmans}} for estimates under the Hofmans distribution
+#' \code{\link{nbd_exposure_distribution}} for the experimental Negative-Binomial
+#' (NBD) approximation to exposure counts
 calc_beta_binomial <- function(A1, A2, P, n) {
-  # Validacion de inputs
+  # Input validation
   if (!all(is.numeric(c(A1, A2, P, n)))) {
-    stop("Todos los argumentos deben ser numericos")
+    stop("All arguments must be numeric")
   }
   if (A1 <= 0 || A2 <= 0 || P <= 0) {
-    stop("Las audiencias y poblacion deben ser positivas")
+    stop("audiences and population must be positive")
   }
   if (A1 > P || A2 > P) {
-    stop("Las audiencias no pueden ser mayores que la poblacion total")
+    stop("audiences cannot exceed the total population")
   }
   if (n <= 0 || n != round(n)) {
-    stop("El numero de inserciones debe ser un entero positivo")
+    stop("n must be a positive integer")
   }
 
-  # Asegurar que n sea entero
+  # Ensure n is an integer
   n <- as.integer(n)
 
-  # Calculo de R1 y R2
+  # Compute R1 and R2
   R1 <- A1 / P
   R2 <- A2 / P
 
-  # Calculo de alpha y beta
+  # Compute alpha and beta
   alpha <- (R1 * (R2 - R1)) / (2 * R1 - R1^2 - R2)
   beta <- (alpha * (1 - R1)) / R1
 
-  # Validar que alpha y beta sean validos
+  # Validate alpha and beta
   if (is.na(alpha) || is.na(beta) || alpha <= 0 || beta <= 0) {
-    stop("No se pudieron calcular parametros validos con los datos proporcionados")
+    stop("Could not compute valid parameters from the data provided")
   }
 
-  # Calculo de la distribucion de contactos (P)
+  # Compute the contact distribution (P)
   P_dist <- extraDistr::dbbinom(0:n, size = n, alpha = alpha, beta = beta)
 
-  # Calculo de la distribucion acumulada (R)
-  R_dist <- sapply(0:n, function(k) sum(P_dist[(k+1):length(P_dist)]))
+  # Compute the cumulative distribution (R)
+  R_dist <- sapply(0:n, function(k) sum(P_dist[(k + 1):length(P_dist)]))
 
-  # El reach total es 1 menos la probabilidad de 0 contactos
+  # Total reach is 1 minus the probability of 0 contacts
   reach <- 1 - P_dist[1]
 
-  # Eliminar el 0 de las distribuciones finales
-  P_sin_cero <- P_dist[-1]
-  R_sin_cero <- R_dist[-1]
+  # Drop the 0-contact cell from the final distributions
+  P_no_zero <- P_dist[-1]
+  R_no_zero <- R_dist[-1]
 
   return(structure(list(
     reach = list(
-      porcentaje = reach * 100,
-      personas = reach * P
+      percent = reach * 100,
+      people = reach * P
     ),
-    distribucion = list(
-      porcentaje = P_sin_cero * 100,
-      personas = P_sin_cero * P
+    distribution = list(
+      percent = P_no_zero * 100,
+      people = P_no_zero * P
     ),
-    acumulada = list(
-      porcentaje = R_sin_cero * 100,
-      personas = R_sin_cero * P
+    cumulative = list(
+      percent = R_no_zero * 100,
+      people = R_no_zero * P
     ),
-    parametros = list(
+    parameters = list(
       alpha = alpha,
       beta = beta,
-      prob_cero_contactos = P_dist[1] * 100
+      zero_contact_probability = P_dist[1] * 100
     )
   ), class = "reach_beta_binomial"))
 }
@@ -420,349 +431,351 @@ calc_beta_binomial <- function(A1, A2, P, n) {
 
 #' @export
 print.reach_sainsbury <- function(x, ...) {
-  cat("MODELO SAINSBURY\n")
-  cat("================\n")
-  cat("Descripcion: Modelo que considera independencia entre soportes y heterogeneidad de soportes\n\n")
+  cat("SAINSBURY MODEL\n")
+  cat("===============\n")
+  cat("Description: model that assumes independence between vehicles and vehicle heterogeneity\n\n")
 
-  # Metricas principales
-  cat("METRICAS PRINCIPALES:\n")
-  cat("--------------------\n")
-  cat(sprintf("Cobertura total: %.2f%% (%.0f personas)\n",
-              x$reach$porcentaje, x$reach$personas))
+  # Headline metrics
+  cat("HEADLINE METRICS:\n")
+  cat("-----------------\n")
+  cat(sprintf("Total reach: %.2f%% (%.0f people)\n",
+              x$reach$percent, x$reach$people))
 
-  # Distribucion de contactos
-  cat("\nDISTRIBUCION DE CONTACTOS:\n")
-  cat("-------------------------\n")
-  cat("(Porcentaje de poblacion que recibe exactamente N contactos)\n")
-  for(i in seq_along(x$distribucion$porcentaje)) {
-    cat(sprintf("%d contacto%s: %.2f%% (%.0f personas)\n",
-                i, ifelse(i == 1, "", "s"),
-                x$distribucion$porcentaje[i],
-                x$distribucion$personas[i]))
-  }
-
-  # Distribucion acumulada
-  cat("\nDISTRIBUCION ACUMULADA:\n")
+  # Contact distribution
+  cat("\nCONTACT DISTRIBUTION:\n")
   cat("----------------------\n")
-  cat("(Porcentaje de poblacion que recibe N o mas contactos)\n")
-  for(i in seq_along(x$acumulada$porcentaje)) {
-    cat(sprintf(">= %d contacto%s: %.2f%% (%.0f personas)\n",
+  cat("(Percentage of the population receiving exactly N contacts)\n")
+  for (i in seq_along(x$distribution$percent)) {
+    cat(sprintf("%d contact%s: %.2f%% (%.0f people)\n",
                 i, ifelse(i == 1, "", "s"),
-                x$acumulada$porcentaje[i],
-                x$acumulada$personas[i]))
+                x$distribution$percent[i],
+                x$distribution$people[i]))
   }
 
-  # Resumen estadistico
-  total_contactos <- sum(seq_along(x$distribucion$porcentaje) *
-                           x$distribucion$personas)
-  contactos_promedio <- total_contactos / sum(x$distribucion$personas)
-  cat("\nRESUMEN ESTADISTICO:\n")
-  cat("-------------------\n")
-  cat(sprintf("Promedio de contactos por individuo alcanzado: %.2f\n",
-              contactos_promedio))
+  # Cumulative distribution
+  cat("\nCUMULATIVE DISTRIBUTION:\n")
+  cat("-------------------------\n")
+  cat("(Percentage of the population receiving N or more contacts)\n")
+  for (i in seq_along(x$cumulative$percent)) {
+    cat(sprintf(">= %d contact%s: %.2f%% (%.0f people)\n",
+                i, ifelse(i == 1, "", "s"),
+                x$cumulative$percent[i],
+                x$cumulative$people[i]))
+  }
+
+  # Summary statistics
+  total_contacts <- sum(seq_along(x$distribution$percent) *
+                           x$distribution$people)
+  average_contacts <- total_contacts / sum(x$distribution$people)
+  cat("\nSUMMARY STATISTICS:\n")
+  cat("--------------------\n")
+  cat(sprintf("Average contacts per person reached: %.2f\n",
+              average_contacts))
 }
 
 #' @export
 print.reach_binomial <- function(x, ...) {
-  cat("MODELO BINOMIAL\n")
-  cat("===============\n")
-  cat("Descripcion: Modelo que asume independencia entre soportes y homogeneidad\n\n")
+  cat("BINOMIAL MODEL\n")
+  cat("==============\n")
+  cat("Description: model that assumes independence between vehicles and homogeneity\n\n")
 
-  # Metricas principales
-  cat("METRICAS PRINCIPALES:\n")
-  cat("--------------------\n")
-  cat(sprintf("Cobertura total: %.2f%% (%.0f personas)\n",
-              x$reach$porcentaje, x$reach$personas))
-  cat(sprintf("Probabilidad media de exposicion: %.3f\n", x$probabilidad_media))
+  # Headline metrics
+  cat("HEADLINE METRICS:\n")
+  cat("-----------------\n")
+  cat(sprintf("Total reach: %.2f%% (%.0f people)\n",
+              x$reach$percent, x$reach$people))
+  cat(sprintf("Mean exposure probability: %.3f\n", x$mean_probability))
 
-  # Distribucion de contactos
-  cat("\nDISTRIBUCION DE CONTACTOS:\n")
-  cat("-------------------------\n")
-  cat("(Porcentaje de poblacion que recibe exactamente N contactos)\n")
-  for(i in seq_along(x$distribucion$porcentaje)) {
-    cat(sprintf("%d contacto%s: %.2f%% (%.0f personas)\n",
-                i, ifelse(i == 1, "", "s"),
-                x$distribucion$porcentaje[i],
-                x$distribucion$personas[i]))
-  }
-
-  # Distribucion acumulada
-  cat("\nDISTRIBUCION ACUMULADA:\n")
+  # Contact distribution
+  cat("\nCONTACT DISTRIBUTION:\n")
   cat("----------------------\n")
-  cat("(Porcentaje de poblacion que recibe N o mas contactos)\n")
-  for(i in seq_along(x$acumulada$porcentaje)) {
-    cat(sprintf(">= %d contacto%s: %.2f%% (%.0f personas)\n",
+  cat("(Percentage of the population receiving exactly N contacts)\n")
+  for (i in seq_along(x$distribution$percent)) {
+    cat(sprintf("%d contact%s: %.2f%% (%.0f people)\n",
                 i, ifelse(i == 1, "", "s"),
-                x$acumulada$porcentaje[i],
-                x$acumulada$personas[i]))
+                x$distribution$percent[i],
+                x$distribution$people[i]))
   }
 
-  # Resumen estadistico
-  total_contactos <- sum(seq_along(x$distribucion$porcentaje) *
-                           x$distribucion$personas)
-  contactos_promedio <- total_contactos / sum(x$distribucion$personas)
-  cat("\nRESUMEN ESTADISTICO:\n")
-  cat("-------------------\n")
-  cat(sprintf("Promedio de contactos por individuo alcanzado: %.2f\n",
-              contactos_promedio))
+  # Cumulative distribution
+  cat("\nCUMULATIVE DISTRIBUTION:\n")
+  cat("-------------------------\n")
+  cat("(Percentage of the population receiving N or more contacts)\n")
+  for (i in seq_along(x$cumulative$percent)) {
+    cat(sprintf(">= %d contact%s: %.2f%% (%.0f people)\n",
+                i, ifelse(i == 1, "", "s"),
+                x$cumulative$percent[i],
+                x$cumulative$people[i]))
+  }
+
+  # Summary statistics
+  total_contacts <- sum(seq_along(x$distribution$percent) *
+                           x$distribution$people)
+  average_contacts <- total_contacts / sum(x$distribution$people)
+  cat("\nSUMMARY STATISTICS:\n")
+  cat("--------------------\n")
+  cat(sprintf("Average contacts per person reached: %.2f\n",
+              average_contacts))
 }
 
 #' @export
 print.reach_beta_binomial <- function(x, ...) {
-  cat("MODELO BETA-BINOMIAL\n")
+  cat("BETA-BINOMIAL MODEL\n")
   cat("===================\n")
-  cat("Descripcion: Modelo que considera heterogeneidad en la poblacion\n\n")
+  cat("Description: model that accounts for heterogeneity in the population\n\n")
 
-  # Metricas principales
-  cat("METRICAS PRINCIPALES:\n")
-  cat("--------------------\n")
-  cat(sprintf("Cobertura total: %.2f%% (%.0f personas)\n",
-              x$reach$porcentaje, x$reach$personas))
+  # Headline metrics
+  cat("HEADLINE METRICS:\n")
+  cat("-----------------\n")
+  cat(sprintf("Total reach: %.2f%% (%.0f people)\n",
+              x$reach$percent, x$reach$people))
 
-  # Parametros del modelo
-  cat("\nPARAMETROS DEL MODELO:\n")
-  cat("---------------------\n")
-  cat(sprintf("Alpha: %.3f (forma de la distribucion beta)\n", x$parametros$alpha))
-  cat(sprintf("Beta: %.3f (forma de la distribucion beta)\n", x$parametros$beta))
-  cat(sprintf("Probabilidad de 0 contactos: %.2f%%\n",
-              x$parametros$prob_cero_contactos))
-
-  # Distribucion de contactos
-  cat("\nDISTRIBUCION DE CONTACTOS:\n")
-  cat("-------------------------\n")
-  cat("(Porcentaje de poblacion que recibe exactamente N contactos)\n")
-  for(i in seq_along(x$distribucion$porcentaje)) {
-    cat(sprintf("%d contacto%s: %.2f%% (%.0f personas)\n",
-                i, ifelse(i == 1, "", "s"),
-                x$distribucion$porcentaje[i],
-                x$distribucion$personas[i]))
-  }
-
-  # Distribucion acumulada
-  cat("\nDISTRIBUCION ACUMULADA:\n")
-  cat("----------------------\n")
-  cat("(Porcentaje de poblacion que recibe N o mas contactos)\n")
-  for(i in seq_along(x$acumulada$porcentaje)) {
-    cat(sprintf(">= %d contacto%s: %.2f%% (%.0f personas)\n",
-                i, ifelse(i == 1, "", "s"),
-                x$acumulada$porcentaje[i],
-                x$acumulada$personas[i]))
-  }
-
-  # Resumen estadistico
-  total_contactos <- sum(seq_along(x$distribucion$porcentaje) *
-                           x$distribucion$personas)
-  contactos_promedio <- total_contactos / sum(x$distribucion$personas)
-  cat("\nRESUMEN ESTADISTICO:\n")
+  # Model parameters
+  cat("\nMODEL PARAMETERS:\n")
   cat("-------------------\n")
-  cat(sprintf("Promedio de contactos por individuo alcanzado: %.2f\n",
-              contactos_promedio))
-  cat(sprintf("Media teorica de la distribucion beta: %.3f\n",
-              x$parametros$alpha / (x$parametros$alpha + x$parametros$beta)))
+  cat(sprintf("Alpha: %.3f (shape of the Beta distribution)\n", x$parameters$alpha))
+  cat(sprintf("Beta: %.3f (shape of the Beta distribution)\n", x$parameters$beta))
+  cat(sprintf("Probability of 0 contacts: %.2f%%\n",
+              x$parameters$zero_contact_probability))
+
+  # Contact distribution
+  cat("\nCONTACT DISTRIBUTION:\n")
+  cat("----------------------\n")
+  cat("(Percentage of the population receiving exactly N contacts)\n")
+  for (i in seq_along(x$distribution$percent)) {
+    cat(sprintf("%d contact%s: %.2f%% (%.0f people)\n",
+                i, ifelse(i == 1, "", "s"),
+                x$distribution$percent[i],
+                x$distribution$people[i]))
+  }
+
+  # Cumulative distribution
+  cat("\nCUMULATIVE DISTRIBUTION:\n")
+  cat("-------------------------\n")
+  cat("(Percentage of the population receiving N or more contacts)\n")
+  for (i in seq_along(x$cumulative$percent)) {
+    cat(sprintf(">= %d contact%s: %.2f%% (%.0f people)\n",
+                i, ifelse(i == 1, "", "s"),
+                x$cumulative$percent[i],
+                x$cumulative$people[i]))
+  }
+
+  # Summary statistics
+  total_contacts <- sum(seq_along(x$distribution$percent) *
+                           x$distribution$people)
+  average_contacts <- total_contacts / sum(x$distribution$people)
+  cat("\nSUMMARY STATISTICS:\n")
+  cat("--------------------\n")
+  cat(sprintf("Average contacts per person reached: %.2f\n",
+              average_contacts))
+  cat(sprintf("Theoretical mean of the Beta distribution: %.3f\n",
+              x$parameters$alpha / (x$parameters$alpha + x$parameters$beta)))
 }
 
 #__________________________________________________________#
 
-# Linealiza una matriz simetrica (p.ej. de duplicaciones o de oportunidades
-# de contacto) recorriendo su triangulo superior, incluyendo la diagonal, en
-# el orden (1,1), (1,2), ..., (1,n), (2,2), (2,3), .... Uso interno de
+# Linearizes a symmetric matrix (e.g. of duplications or contact
+# opportunities) by walking its upper triangle, including the diagonal, in
+# the order (1,1), (1,2), ..., (1,n), (2,2), (2,3), .... Used internally by
 # calc_metheringham().
-matriz_a_vector <- function(matriz) {
-  n <- nrow(matriz)
-  vector <- numeric()
-  for(i in 1:n) {
-    for(j in i:n) {
-      vector <- c(vector, matriz[i,j])
+matrix_to_vector <- function(m) {
+  n <- nrow(m)
+  v <- numeric()
+  for (i in 1:n) {
+    for (j in i:n) {
+      v <- c(v, m[i, j])
     }
   }
-  return(vector)
+  return(v)
 }
 
-# A partir del numero de inserciones de cada soporte, calcula el numero de
-# pares de oportunidades de contacto entre cada par de soportes (fuera de la
-# diagonal) y dentro de un mismo soporte (en la diagonal, como combinaciones
-# de 2 entre sus propias inserciones). Uso interno de calc_metheringham().
-crear_matriz_oportunidades <- function(inserciones) {
-  n <- length(inserciones)
-  matriz <- matrix(0, nrow = n, ncol = n)
-  for(i in 1:n) {
-    for(j in i:n) {
-      if(i == j) {
-        matriz[i,j] <- choose(inserciones[i], 2)
+# From the number of insertions per vehicle, computes the number of contact
+# opportunities between each pair of vehicles (off-diagonal) and within a
+# single vehicle (on the diagonal, as choose(insertions, 2)). Used internally
+# by calc_metheringham().
+create_opportunity_matrix <- function(insertions) {
+  n <- length(insertions)
+  m <- matrix(0, nrow = n, ncol = n)
+  for (i in 1:n) {
+    for (j in i:n) {
+      if (i == j) {
+        m[i, j] <- choose(insertions[i], 2)
       } else {
-        matriz[i,j] <- inserciones[i] * inserciones[j]
-        matriz[j,i] <- matriz[i,j]  # Simetria
+        m[i, j] <- insertions[i] * insertions[j]
+        m[j, i] <- m[i, j]  # symmetric
       }
     }
   }
-  return(matriz)
+  return(m)
 }
 
 #' @encoding UTF-8
-#' @title Calculo de metricas segun el modelo de Metheringham
-#' @description Calcula metricas fundamentales para la aplicacion del modelo de Metheringham,
-#' incluyendo la audiencia media (A1), duplicacion media (D) y audiencia tras la segunda exposicion en
-#' el hipotetico soporte promedio (A2). El modelo de Metheringham (1964) se basa en que
-#' los individuos tienen probabilidades heterogeneas que se distribuyen como una distribucion Beta para el conjunto.
-#' Los soportes son homogeneos (a saber, todos los soportes acaban con la misma distribucion Beta de probabilidades de exposicion).
-#' La acumulacion y duplicacion de audiencias se promedian entre los soportes para disenar un soporte hipotetico promedio.
+#' @title Metrics under the Metheringham model
+#' @description Calculates the core metrics for the Metheringham model, namely
+#' mean audience (A1), mean duplication (D), and the audience after the second
+#' exposure for the hypothetical average vehicle (A2). Metheringham's (1964)
+#' model assumes individuals have heterogeneous probabilities that are Beta
+#' distributed across the population. Vehicles are homogeneous (i.e. every
+#' vehicle shares the same Beta distribution of exposure probabilities).
+#' Cumulative audience and duplication are averaged across vehicles to design
+#' one hypothetical average vehicle.
 #'
 #' @references
 #' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 #' contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 #'
-#' @param audiencias Vector numerico con las audiencias de cada soporte
-#' @param inserciones Vector numerico con el numero de inserciones por soporte
-#' @param matriz_duplicacion Matriz simetrica con los valores de duplicacion entre soportes
+#' @param audiences Numeric vector with the audience of each vehicle
+#' @param insertions Numeric vector with the number of insertions per vehicle
+#' @param duplication_matrix Symmetric matrix with the duplication values between vehicles
 #'
 #' @details
-#' La funcion realiza los siguientes calculos principales:
+#' The function performs the following core calculations:
 #' \enumerate{
-#'   \item Audiencia media tras la primera insercion (A1):
+#'   \item Mean audience after the first insertion (A1):
 #'     \itemize{
-#'       \item Calcula la media ponderada de audiencias por numero de inserciones
-#'       \item Formula: A1 = SUMATORIO(Audiencia_i ? Inserciones_i) / SUMATORIO(Inserciones_i)
+#'       \item Computes the insertion-weighted mean of the audiences
+#'       \item Formula: A1 = SUM(Audience_i x Insertions_i) / SUM(Insertions_i)
 #'     }
-#'   \item Duplicacion media (D):
+#'   \item Mean duplication (D):
 #'     \itemize{
-#'       \item Calcula la media ponderada de duplicaciones por oportunidades de contacto
-#'       \item Considera todas las combinaciones posibles entre soportes ii, ij
+#'       \item Computes the opportunity-weighted mean of the duplications
+#'       \item Considers every possible combination between vehicles ii, ij
 #'     }
-#'   \item Audiencia tras la segunda insercion (A2):
+#'   \item Audience after the second insertion (A2):
 #'     \itemize{
-#'       \item Calcula la audiencia que se expone al menos una vez tras la segunda insercion
-#'       \item Formula: A2 = 2 ? A1 - D
+#'       \item Computes the audience exposed at least once after the second insertion
+#'       \item Formula: A2 = 2 x A1 - D
 #'     }
 #' }
 #'
-#' @return Un objeto de clase 'reach_metheringham' conteniendo:
+#' @return An object of class 'reach_metheringham' containing:
 #' \itemize{
-#'   \item audiencia_media: Media ponderada de audiencias (A1)
-#'   \item duplicacion_media: Media ponderada de duplicaciones (D)
-#'   \item audiencia_segunda: Audiencia tras la segunda insercion (A2)
-#'   \item matriz_oportunidades: Matriz que contiene el numero de oportunidades de contacto
-#'         entre pares de inserciones
-#'   \item vector_oportunidades: Version linealizada de la matriz de oportunidades
-#'   \item vector_duplicacion: Version linealizada de la matriz de duplicacion
+#'   \item mean_audience: Insertion-weighted mean audience (A1)
+#'   \item mean_duplication: Opportunity-weighted mean duplication (D)
+#'   \item second_audience: Audience after the second insertion (A2)
+#'   \item opportunity_matrix: Matrix with the number of contact opportunities
+#'         between pairs of insertions
+#'   \item opportunity_vector: Linearized version of the opportunity matrix
+#'   \item duplication_vector: Linearized version of the duplication matrix
 #' }
 #'
 #' @note
-#' La matriz de duplicacion debe ser simetrica donde:
+#' The duplication matrix must be symmetric, where:
 #' \itemize{
-#'   \item La diagonal contiene la duplicacion de cada soporte consigo mismo
-#'   \item El elemento `[i,j]` contiene la duplicacion entre los soportes i y j
-#'   \item Se debe cumplir que `matriz[i,j] = matriz[j,i]`
-#'   \item Para n soportes, la matriz debe ser de dimensiones n x n
+#'   \item The diagonal holds each vehicle's duplication with itself
+#'   \item Element `[i,j]` holds the duplication between vehicles i and j
+#'   \item `matrix[i,j] = matrix[j,i]` must hold
+#'   \item For n vehicles, the matrix must be n x n
 #' }
 #'
 #' @examples
-#' # Ejemplo basico con tres soportes
-#' matriz_dup <- matrix(c(
+#' # Basic example with three vehicles
+#' duplication_matrix <- matrix(c(
 #'   150000, 200000, 180000,
 #'   200000, 120000, 140000,
 #'   180000, 140000, 170000
 #' ), nrow = 3, byrow = TRUE)
 #'
-#' metricas <- calc_metheringham(
-#'   audiencias = c(1500000, 800000, 1200000),
-#'   inserciones = c(4, 3, 5),
-#'   matriz_duplicacion = matriz_dup
+#' metrics <- calc_metheringham(
+#'   audiences = c(1500000, 800000, 1200000),
+#'   insertions = c(4, 3, 5),
+#'   duplication_matrix = duplication_matrix
 #' )
 #'
 #' @export
 #' @seealso
-#' \code{\link{calc_sainsbury}} para estimaciones con la distribucion Binomial
-#' \code{\link{calc_binomial}} para estimaciones con la distribucion Beta-Binomial
-#' \code{\link{calc_beta_binomial}} para estimaciones con la distribucion de Metheringham
-#' \code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
-# Funcion principal de Metheringham
-calc_metheringham <- function(audiencias, inserciones, matriz_duplicacion) {
-  if (length(audiencias) != length(inserciones)) {
-    stop("Los vectores de audiencias e inserciones deben tener la misma longitud")
+#' \code{\link{calc_sainsbury}} for estimates under the Sainsbury distribution
+#' \code{\link{calc_binomial}} for estimates under the Binomial distribution
+#' \code{\link{calc_beta_binomial}} for estimates under the Beta-Binomial distribution
+#' \code{\link{calc_hofmans}} for estimates under the Hofmans distribution
+# Main Metheringham function
+calc_metheringham <- function(audiences, insertions, duplication_matrix) {
+  if (length(audiences) != length(insertions)) {
+    stop("audiences and insertions must have the same length")
   }
-  if (any(inserciones < 0) || any(audiencias < 0)) {
-    stop("Las audiencias y las inserciones deben ser no negativas")
+  if (any(insertions < 0) || any(audiences < 0)) {
+    stop("audiences and insertions must be non-negative")
   }
-  if (sum(inserciones) <= 0) {
-    stop("El total de inserciones debe ser mayor que 0")
-  }
-
-  n_soportes <- length(audiencias)
-
-  if (!is.matrix(matriz_duplicacion)) {
-    stop("matriz_duplicacion debe ser una matriz")
+  if (sum(insertions) <= 0) {
+    stop("Total insertions must be greater than 0")
   }
 
-  if (nrow(matriz_duplicacion) != n_soportes || ncol(matriz_duplicacion) != n_soportes) {
-    stop("Las dimensiones de la matriz de duplicacion no coinciden con el numero de soportes")
+  n_vehicles <- length(audiences)
+
+  if (!is.matrix(duplication_matrix)) {
+    stop("duplication_matrix must be a matrix")
   }
 
-  if (!all(matriz_duplicacion == t(matriz_duplicacion))) {
-    warning("La matriz de duplicacion no es simetrica. Se utilizara la parte triangular superior.")
-    matriz_duplicacion[lower.tri(matriz_duplicacion)] <- t(matriz_duplicacion)[lower.tri(matriz_duplicacion)]
+  if (nrow(duplication_matrix) != n_vehicles || ncol(duplication_matrix) != n_vehicles) {
+    stop("duplication_matrix dimensions do not match the number of vehicles")
   }
 
-  matriz_oportunidades <- crear_matriz_oportunidades(inserciones)
-
-  vec_duplicacion <- matriz_a_vector(matriz_duplicacion)
-  vector_oportunidades <- matriz_a_vector(matriz_oportunidades)
-
-  if (sum(vector_oportunidades) <= 0) {
-    stop("No hay oportunidades de contacto entre soportes (revisa las inserciones)")
+  if (!all(duplication_matrix == t(duplication_matrix))) {
+    warning("duplication_matrix is not symmetric. Its upper triangle will be used.")
+    duplication_matrix[lower.tri(duplication_matrix)] <- t(duplication_matrix)[lower.tri(duplication_matrix)]
   }
 
-  A1 <- sum(audiencias * inserciones) / sum(inserciones)
-  D <- sum(vec_duplicacion * vector_oportunidades) / sum(vector_oportunidades)
+  opportunity_matrix <- create_opportunity_matrix(insertions)
+
+  duplication_vector <- matrix_to_vector(duplication_matrix)
+  opportunity_vector <- matrix_to_vector(opportunity_matrix)
+
+  if (sum(opportunity_vector) <= 0) {
+    stop("There are no contact opportunities between vehicles (check insertions)")
+  }
+
+  A1 <- sum(audiences * insertions) / sum(insertions)
+  D <- sum(duplication_vector * opportunity_vector) / sum(opportunity_vector)
   A2 <- 2 * A1 - D
 
-  resultado <- list(
-    audiencia_media = A1,
-    duplicacion_media = D,
-    audiencia_segunda = A2,
-    matriz_oportunidades = matriz_oportunidades,
-    vector_oportunidades = vector_oportunidades,
-    vector_duplicacion = vec_duplicacion,
-    total_inserciones = sum(inserciones)
+  result <- list(
+    mean_audience = A1,
+    mean_duplication = D,
+    second_audience = A2,
+    opportunity_matrix = opportunity_matrix,
+    opportunity_vector = opportunity_vector,
+    duplication_vector = duplication_vector,
+    total_insertions = sum(insertions)
   )
 
-  class(resultado) <- "reach_metheringham"
-  return(resultado)
+  class(result) <- "reach_metheringham"
+  return(result)
 }
 
 
 #' @export
 print.reach_metheringham <- function(x, ...) {
-  cat("Modelo de Metheringham\n")
-  cat("---------------------\n")
+  cat("Metheringham model\n")
+  cat("-------------------\n")
 
-  cat("\nAUDIENCIA MEDIA (A1):\n")
-  cat(sprintf("%.0f personas\n", x$audiencia_media))
-  cat("Interpretacion: Audiencia del soporte\n")
+  cat("\nMEAN AUDIENCE (A1):\n")
+  cat(sprintf("%.0f people\n", x$mean_audience))
+  cat("Interpretation: vehicle audience\n")
 
-  cat("\nDUPLICACION MEDIA (D):\n")
-  cat(sprintf("%.0f personas\n", x$duplicacion_media))
-  cat("Interpretacion: Numero medio de personas que ven dos inserciones cualesquiera\n")
+  cat("\nMEAN DUPLICATION (D):\n")
+  cat(sprintf("%.0f people\n", x$mean_duplication))
+  cat("Interpretation: average number of people who see any two insertions\n")
 
-  cat("\nAUDIENCIA SEGUNDA INSERCION (A2):\n")
-  cat(sprintf("%.0f personas\n", x$audiencia_segunda))
-  cat("Interpretacion: Audiencia acumulada tras dos inserciones (personas expuestas al menos una vez)\n")
+  cat("\nSECOND-INSERTION AUDIENCE (A2):\n")
+  cat(sprintf("%.0f people\n", x$second_audience))
+  cat("Interpretation: cumulative audience after two insertions (people exposed at least once)\n")
 
-  cat("\nMATRIZ DE OPORTUNIDADES DE CONTACTO:\n")
-  print(x$matriz_oportunidades)
-  cat("Interpretacion: Numero de pares de inserciones posibles entre soportes\n")
-  cat("- Diagonal: Oportunidades de contacto dentro del mismo soporte\n")
-  cat("- Fuera diagonal: Oportunidades de contacto entre diferentes soportes\n")
+  cat("\nCONTACT OPPORTUNITY MATRIX:\n")
+  print(x$opportunity_matrix)
+  cat("Interpretation: number of possible insertion pairs between vehicles\n")
+  cat("- Diagonal: contact opportunities within the same vehicle\n")
+  cat("- Off-diagonal: contact opportunities between different vehicles\n")
 
-  cat("\nVECTOR DE OPORTUNIDADES:\n")
-  print(x$vector_oportunidades)
-  cat("Interpretacion: Version linealizada de la matriz de oportunidades\n")
-  cat("Orden: (1,1), (1,2), (2,2), (1,3), (2,3), (3,3), ...\n")
+  cat("\nOPPORTUNITY VECTOR:\n")
+  print(x$opportunity_vector)
+  cat("Interpretation: linearized version of the opportunity matrix\n")
+  cat("Order: (1,1), (1,2), (2,2), (1,3), (2,3), (3,3), ...\n")
 
-  cat("\nHALLAZGOS CLAVE:\n")
-  cat(sprintf("- Total de inserciones: %d\n", x$total_inserciones))
-  cat(sprintf("- Audiencia promedio por insercion: %.0f personas\n", x$audiencia_media))
-  cat(sprintf("- Duplicacion promedio: %.1f%%\n",
-              (x$duplicacion_media / x$audiencia_media) * 100))
-  cat(sprintf("- Incremento en segunda insercion: %.1f%%\n",
-              ((x$audiencia_segunda - x$audiencia_media) / x$audiencia_media) * 100))
+  cat("\nKEY FINDINGS:\n")
+  cat(sprintf("- Total insertions: %d\n", x$total_insertions))
+  cat(sprintf("- Average audience per insertion: %.0f people\n", x$mean_audience))
+  cat(sprintf("- Average duplication: %.1f%%\n",
+              (x$mean_duplication / x$mean_audience) * 100))
+  cat(sprintf("- Increase on the second insertion: %.1f%%\n",
+              ((x$second_audience - x$mean_audience) / x$mean_audience) * 100))
 }

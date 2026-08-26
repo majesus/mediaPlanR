@@ -419,10 +419,10 @@ calc_mbd <- function(vehicles_data, duplications,
   steps <- do.call(rbind, steps)
 
   result <- list(
-    reach = list(probability = reach, percentage = 100 * reach, people = population * reach),
+    reach = list(probability = reach, percent = 100 * reach, people = population * reach),
     average_frequency = average_frequency,
     distribution = data.frame(
-      contacts = contacts, probability = distribution, percentage = 100 * distribution,
+      contacts = contacts, probability = distribution, percent = 100 * distribution,
       people = population * distribution, cumulative_probability = cumulative
     ),
     aggregation_order = order_index,
@@ -446,7 +446,7 @@ calc_mbd <- function(vehicles_data, duplications,
 print.reach_mbd <- function(x, ...) {
   cat("Multivariate Beta Binomial Distribution (MBD)\n")
   cat(sprintf("Reach: %.2f%% | Average frequency: %.3f\n",
-              x$reach$percentage, x$average_frequency))
+              x$reach$percent, x$average_frequency))
   cat("Aggregation order:", paste(x$aggregation_order, collapse = " -> "),
       sprintf("(%s)\n", x$aggregation_rule))
   cat(sprintf("Probability sum: %.12f | Mean error: %.3g\n",

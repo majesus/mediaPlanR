@@ -34,7 +34,7 @@ test_that("BBD-to-reach distribution and reported coverage use identical final p
 test_that("Hofmans return value matches its documented contract", {
   result <- calc_hofmans(0.06, 0.103, 5, show_steps = FALSE)
   expect_s3_class(result, "reach_hofmans")
-  expect_named(result$parametros, c("k", "d", "alpha"))
+  expect_named(result$parameters, c("k", "d", "alpha"))
 })
 
 test_that("one-dimensional BBD calibration preserves R1 and reaches its target", {

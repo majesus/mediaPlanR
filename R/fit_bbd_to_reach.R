@@ -9,80 +9,80 @@
 #' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 #' contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 #'
-#' @param insertions Vector numerico. Numero de inserciones para cada soporte (ni)
-#' @param audiences Vector numerico. Audiencia de cada soporte en personas (Ai)
-#' @param RM Numerico. External schedule reach in people. It may come from
+#' @param insertions Numeric vector. Number of insertions for each vehicle (ni)
+#' @param audiences Numeric vector. Audience of each vehicle in people (Ai)
+#' @param RM Numeric. External schedule reach in people. It may come from
 #' Morgensztern or any other independently justified reach estimator.
-#' @param universe Entero. Tamano del universo objetivo en personas
-#' @param A0 Numerico. Valor inicial historico del parametro A. Se conserva
-#' por compatibilidad y para informar B0; la calibracion v2 no depende del
-#' punto inicial.
-#' @param precision Numerico. Criterio de convergencia en personas. Por defecto 100
-#' @param max_iter Entero. Numero maximo de iteraciones permitidas. Por defecto 100
-#' @param adj_factor Argumento heredado, conservado por compatibilidad. La
-#' calibracion v2 usa busqueda de raices y no pasos multiplicativos.
+#' @param universe Integer. Target universe size in people
+#' @param A0 Numeric. Historical initial value for parameter A. Kept for
+#' compatibility and to inform B0; the v2 calibration does not depend on the
+#' starting point.
+#' @param precision Numeric. Convergence criterion in people. Defaults to 100
+#' @param max_iter Integer. Maximum number of iterations allowed. Defaults to 100
+#' @param adj_factor Legacy argument, kept for compatibility. The v2
+#' calibration uses root finding rather than multiplicative steps.
 #'
 #' @details
-#' El modelo conserva la probabilidad media ponderada por inserciones y calibra
-#' la concentracion de una distribucion Beta-Binomial hasta que su cobertura
-#' coincide con el reach externo suministrado:
+#' The model preserves the insertion-weighted mean probability and calibrates
+#' the concentration of a Beta-Binomial distribution until its coverage matches
+#' the supplied external reach:
 #' \enumerate{
-#'   \item Calcula la probabilidad media ponderada y B0:
+#'   \item Computes the weighted mean probability and B0:
 #'     \itemize{
-#'       \item B0 = A0 * (SUMATORIO ni - SUMATORIO niAi) / (SUMATORIO niAi)
+#'       \item B0 = A0 * (SUM ni - SUM niAi) / (SUM niAi)
 #'     }
-#'   \item Determina el intervalo teorico factible, desde el limite polarizado
-#'   hasta el limite binomial independiente.
-#'   \item Resuelve BBD(A) - RM = 0 mediante \code{uniroot()} en la escala
-#'   logaritmica de la concentracion.
-#'   \item Recalcula cobertura y distribucion con exactamente los mismos
-#'   parametros finales.
+#'   \item Determines the feasible theoretical interval, from the polarized
+#'   limit to the independent binomial limit.
+#'   \item Solves BBD(A) - RM = 0 via \code{uniroot()} on the log scale of the
+#'   concentration.
+#'   \item Recomputes coverage and the distribution with exactly the same
+#'   final parameters.
 #' }
 #'
-#' El modelo asume:
+#' The model assumes:
 #' \itemize{
-#'   \item A y B son positivos y mantienen constante A/(A+B)
-#'   \item La cobertura BBD se calcula como 1 - P(K=0)
-#'   \item La convergencia se alcanza cuando |BBD - RM| menor o igual que precision
+#'   \item A and B are positive and keep A/(A+B) constant
+#'   \item BBD coverage is computed as 1 - P(K=0)
+#'   \item Convergence is reached when |BBD - RM| is at most precision
 #' }
 #'
 #' @return A list of class `bbd_reach_fit` containing:
 #' \itemize{
-#'   \item parameters: Lista con parametros finales:
+#'   \item parameters: List with the final parameters:
 #'     \itemize{
-#'       \item AF: Parametro A final
-#'       \item BF: Parametro B final
-#'       \item N: Total de inserciones
-#'       \item universe: Tamano del universo
-#'       \item iterations: Numero de iteraciones realizadas
-#'       \item converged: Indicador de convergencia
+#'       \item AF: Final A parameter
+#'       \item BF: Final B parameter
+#'       \item N: Total insertions
+#'       \item universe: Universe size
+#'       \item iterations: Number of iterations performed
+#'       \item converged: Convergence indicator
 #'     }
-#'   \item coverage: Lista con coberturas:
+#'   \item coverage: List with coverage figures:
 #'     \itemize{
-#'       \item RM: Reach externo utilizado como restriccion
-#'       \item BBD: Cobertura Beta Binomial
+#'       \item RM: External reach used as the constraint
+#'       \item BBD: Beta-Binomial coverage
 #'     }
-#'   \item contact_distribution: Vector con probabilidades de 0 a N contactos
-#'   \item iteration_history: Data frame con historial de iteraciones
+#'   \item contact_distribution: Vector with the probabilities from 0 to N contacts
+#'   \item iteration_history: Data frame with the iteration history
 #' }
 #'
 #' @examples
-#' # Ejemplo basico
+#' # Basic example
 #' insertions <- c(5, 7, 4)
 #' audiences <- c(500000, 550000, 600000)
 #' RM <- 550000
 #' universe <- 1000000
-#' resultado <- fit_bbd_to_reach(insertions, audiences, RM, universe, A0 = 0.1)
+#' result <- fit_bbd_to_reach(insertions, audiences, RM, universe, A0 = 0.1)
 #'
-#' # Examinar resultados
-#' print(resultado)
+#' # Inspect the results
+#' print(result)
 #'
 #' @export
 #' @seealso
-#' \code{\link{calc_beta_binomial}} para estimaciones con la distribucion Beta-Binomial
-#' \code{\link{calc_sainsbury}} para estimaciones el modelo de Sainsbury
-#' \code{\link{calc_binomial}} para estimaciones con el modelo Binomial
-#' \code{\link{calc_metheringham}} para estimaciones con el modelo de Metheringham
+#' \code{\link{calc_beta_binomial}} for estimates under the Beta-Binomial distribution
+#' \code{\link{calc_sainsbury}} for the Sainsbury model
+#' \code{\link{calc_binomial}} for the Binomial model
+#' \code{\link{calc_metheringham}} for the Metheringham model
 
 #' @importFrom extraDistr dbbinom
 fit_bbd_to_reach <- function(insertions, audiences, RM, universe, A0,
@@ -126,8 +126,9 @@ fit_bbd_to_reach <- function(insertions, audiences, RM, universe, A0,
     stop("max_iter must be one positive integer.", call. = FALSE)
   }
 
-  # MBBD preserves the insertion-weighted mean exposure probability and
-  # calibrates the concentration of the Beta mixing distribution to RM.
+  # This calibration preserves the insertion-weighted mean exposure
+  # probability and calibrates the concentration of the Beta mixing
+  # distribution to RM.
   audience_props <- audiences / universe
   sum_ni <- sum(insertions)
   mean_probability <- sum(insertions * audience_props) / sum_ni
@@ -237,71 +238,71 @@ fit_bbd_to_reach <- function(insertions, audiences, RM, universe, A0,
 #' @description Prints the results of a Beta-Binomial distribution fitted to
 #' an external reach estimate.
 #' @param x Object of class `bbd_reach_fit`.
-#' @param ... Argumentos adicionales pasados a print
+#' @param ... Additional arguments passed to print
 #' @export
 #' @method print bbd_reach_fit
 print.bbd_reach_fit <- function(x, ...) {
-  # Funcion auxiliar para formatear numeros grandes
+  # Helper to format large numbers
   format_number <- function(x) format(x, big.mark = ",", scientific = FALSE)
 
-  # Cabecera
-  cat("\n\033[1mBeta-Binomial fit to external reach\033[0m")
+  # Header
+  cat("\nBeta-Binomial fit to external reach")
   cat("\n===============================\n")
 
-  # Informacion del universo
-  cat("\n\033[1mUNIVERSO Y SOPORTES:\033[0m")
+  # Universe information
+  cat("\nUNIVERSE AND VEHICLES:")
   cat("\n---------------------")
-  cat(sprintf("\nUniverso = %s personas", format_number(x$parameters$universe)))
-  cat(sprintf("\nSoportes = %d", x$parameters$m))  # Anadir m a los parametros
-  cat(sprintf("\nTotal inserciones = %d", x$parameters$N))
+  cat(sprintf("\nUniverse = %s people", format_number(x$parameters$universe)))
+  cat(sprintf("\nVehicles = %d", x$parameters$m))
+  cat(sprintf("\nTotal insertions = %d", x$parameters$N))
 
-  # Parametros
-  cat("\n\n\033[1mPARAMETROS BETA BINOMIAL:\033[0m")
+  # Parameters
+  cat("\n\nBETA-BINOMIAL PARAMETERS:")
   cat("\n-------------------------")
-  cat(sprintf("\nA inicial (A0) = %.4f", x$parameters$A0))  # Anadir A0 a los parametros
-  cat(sprintf("\nB inicial (B0) = %.4f", x$parameters$initial_B0))
-  cat(sprintf("\nA final (AF) = %.4f", x$parameters$AF))
-  cat(sprintf("\nB final (BF) = %.4f", x$parameters$BF))
+  cat(sprintf("\nInitial A (A0) = %.4f", x$parameters$A0))
+  cat(sprintf("\nInitial B (B0) = %.4f", x$parameters$initial_B0))
+  cat(sprintf("\nFinal A (AF) = %.4f", x$parameters$AF))
+  cat(sprintf("\nFinal B (BF) = %.4f", x$parameters$BF))
 
-  # Coberturas
-  cat("\n\n\033[1mCOBERTURAS:\033[0m")
+  # Coverage
+  cat("\n\nCOVERAGE:")
   cat("\n-----------")
-  cat(sprintf("\nExternal reach (RM) = %s personas (%.2f%%)",
+  cat(sprintf("\nExternal reach (RM) = %s people (%.2f%%)",
               format_number(x$coverage$RM),
               100*x$coverage$RM/x$parameters$universe))
-  cat(sprintf("\nBeta Binomial   = %s personas (%.2f%%)",
+  cat(sprintf("\nBeta-Binomial   = %s people (%.2f%%)",
               format_number(x$coverage$BBD),
               100*x$coverage$BBD/x$parameters$universe))
-  cat(sprintf("\nDiferencia      = %s personas (%.2f%%)",
+  cat(sprintf("\nDifference      = %s people (%.2f%%)",
               format_number(abs(x$coverage$BBD - x$coverage$RM)),
               100*abs(x$coverage$BBD - x$coverage$RM)/x$parameters$universe))
 
-  # Convergencia
-  cat("\n\n\033[1mCONVERGENCIA:\033[0m")
+  # Convergence
+  cat("\n\nCONVERGENCE:")
   cat("\n-------------")
-  cat(sprintf("\nIteraciones realizadas = %d", x$parameters$iterations))
-  cat(sprintf("\nConvergencia alcanzada = %s",
-              ifelse(x$parameters$converged, "\033[32mSi\033[0m", "\033[31mNo\033[0m")))
+  cat(sprintf("\nIterations performed = %d", x$parameters$iterations))
+  cat(sprintf("\nConverged = %s",
+              ifelse(x$parameters$converged, "Yes", "No")))
 
-  # Distribucion de contactos
-  cat("\n\n\033[1mDISTRIBUCION DE CONTACTOS:\033[0m")
+  # Contact distribution
+  cat("\n\nCONTACT DISTRIBUTION:")
   cat("\n-------------------------\n")
   dist_table <- data.frame(
-    'No Contactos' = 0:x$parameters$N,
-    'Probabilidad (%)' = sprintf("%.2f%%", x$contact_distribution * 100),
-    'Acumulado (%)' = sprintf("%.2f%%", cumsum(x$contact_distribution) * 100)
+    'Contacts' = 0:x$parameters$N,
+    'Probability (%)' = sprintf("%.2f%%", x$contact_distribution * 100),
+    'Cumulative (%)' = sprintf("%.2f%%", cumsum(x$contact_distribution) * 100)
   )
   print(dist_table)
 
-  # Estadisticas de la distribucion
-  cat("\n\033[1mESTADISTICAS DE CONTACTOS:\033[0m")
-  cat("\n--------------------------")
-  contactos <- 0:x$parameters$N
-  media <- sum(contactos * x$contact_distribution)
-  var <- sum((contactos - media)^2 * x$contact_distribution)
-  cat(sprintf("\nMedia de contactos = %.2f", media))
-  cat(sprintf("\nDesviacion tipica = %.2f", sqrt(var)))
-  cat(sprintf("\nModa = %d", which.max(x$contact_distribution) - 1))
+  # Distribution statistics
+  cat("\nCONTACT STATISTICS:")
+  cat("\n--------------------")
+  contacts <- 0:x$parameters$N
+  mean_contacts <- sum(contacts * x$contact_distribution)
+  var_contacts <- sum((contacts - mean_contacts)^2 * x$contact_distribution)
+  cat(sprintf("\nMean contacts = %.2f", mean_contacts))
+  cat(sprintf("\nStandard deviation = %.2f", sqrt(var_contacts)))
+  cat(sprintf("\nMode = %d", which.max(x$contact_distribution) - 1))
   cat("\n\n")
   invisible(x)
 }

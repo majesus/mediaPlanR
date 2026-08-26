@@ -111,7 +111,7 @@ nbd_exposure_distribution <- function(mean_contacts, size, report_max = NULL,
     nbd_upper_tail(opportunities, mean_contacts, size)
 
   result <- list(
-    reach = list(probability = reach, percentage = 100 * reach),
+    reach = list(probability = reach, percent = 100 * reach),
     mean_contacts = mean_contacts,
     average_frequency = mean_contacts / reach,
     size = size,
@@ -253,7 +253,7 @@ print.nbd_exposure <- function(x, ...) {
   cat(sprintf("Mean=%.4f | size=%s | reach=%.2f%% | average frequency=%.3f\n",
               x$mean_contacts,
               if (is.infinite(x$size)) "Inf (Poisson)" else sprintf("%.4f", x$size),
-              x$reach$percentage, x$average_frequency))
+              x$reach$percent, x$average_frequency))
   cat("Scope:", x$diagnostics$scope, "\n")
   invisible(x)
 }

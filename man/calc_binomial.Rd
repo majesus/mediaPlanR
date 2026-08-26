@@ -3,74 +3,77 @@
 \encoding{UTF-8}
 \name{calc_binomial}
 \alias{calc_binomial}
-\title{Calculo de cobertura y distribucion de contactos (y acumulada) segun modelo Binomial}
+\title{Reach and contact distribution (and cumulative) under the Binomial model}
 \usage{
-calc_binomial(audiencias, pob_total)
+calc_binomial(audiences, population)
 }
 \arguments{
-\item{audiencias}{Vector numerico con las audiencias individuales de cada soporte}
+\item{audiences}{Numeric vector with the individual audience of each vehicle}
 
-\item{pob_total}{Tamano de la poblacion}
+\item{population}{Population size}
 }
 \value{
-Una lista "reach_binomial" conteniendo:
+A list of class "reach_binomial" containing:
 \itemize{
-\item reach: Lista con la cobertura:
+\item reach: List with reach:
 \itemize{
-\item porcentaje: Cobertura en porcentaje
-\item personas: Cobertura en numero de personas
+\item percent: Reach as a percentage
+\item people: Reach in number of people
 }
-\item distribucion: Lista con la distribucion de contactos:
+\item distribution: List with the contact distribution:
 \itemize{
-\item porcentaje: Vector con probabilidad de cada numero de exposiciones
-\item personas: Vector con numero de personas para cada numero de exposiciones
+\item percent: Vector with the probability of each number of exposures
+\item people: Vector with the number of people for each number of exposures
 }
-\item acumulada: Lista con la distribucion acumulada:
+\item cumulative: List with the cumulative distribution:
 \itemize{
-\item porcentaje: Vector con probabilidades acumuladas
-\item personas: Vector con numero de personas acumuladas al menos i veces
+\item percent: Vector with cumulative probabilities
+\item people: Vector with the number of people exposed at least i times
 }
 }
 }
 \description{
-Implementa el modelo Binomial, desarrollado por Chandon (1985), para calcular la cobertura y
-distribucion de contactos (y acumulada) de plan de medios de n soportes y una unica insercion por soporte.
-El modelo Binomial asume la duplicacion aleatoria (i.e.,la exposicion a un soporte no modifica
-la probabilidad de resultar expuesto a otro), y la homogeneidad de las probabilidades de exposicion del soporte y
-las probabilidades individuales de exposicion. Uniendo estas dos hipotesis ultimas, la probabilidad de exposicion de
-cualquier individuo a un soporte determinado se calcula como la media de las audiencias de cada soporte.
-Las probabilidades de exposicion son estacionarias respecto al tiempo.
+Implements the Binomial model, developed by Chandon (1985), to
+calculate the reach and contact distribution (and cumulative distribution) of
+a media plan with n vehicles and a single insertion per vehicle. The Binomial
+model assumes random duplication (i.e. exposure to one vehicle does not change
+the probability of being exposed to another), and homogeneity of both the
+vehicle exposure probabilities and the individual exposure probabilities.
+Combining these last two assumptions, the exposure probability of any
+individual to a given vehicle is computed as the mean of every vehicle's
+audience. Exposure probabilities are assumed stationary over time.
 }
 \details{
-El modelo Bnomial calcula:
+The Binomial model calculates:
 \enumerate{
-\item Cobertura considerando un soporte hipotetico "promedio" cuya audiencia es la media simple de las audiencias de cada soporte
-\item Distribucion de contactos para cada nivel de exposicion
-\item Distribucion de contactos acumulada (expuestos al menos i veces)
+\item Reach, treating the plan as one hypothetical "average" vehicle whose
+audience is the simple mean of every vehicle's audience
+\item The contact distribution for each exposure level
+\item The cumulative contact distribution (exposed at least i times)
 }
 
-La metodologia incluye:
+The methodology includes:
 \itemize{
-\item Conversion de audiencias a probabilidades individuales
-\item Calculo de probabilidad media de exposicion
-\item Aplicacion del modelo Binomial para n inserciones
-\item Calculo de distribuciones de contactos (y acumulada)
+\item Converting audiences to individual probabilities
+\item Computing the mean exposure probability
+\item Applying the Binomial model for n insertions
+\item Computing the contact distributions (and cumulative)
 }
 }
 \examples{
-# Ejemplo basico con tres soportes
-audiencias <- c(300000, 400000, 200000)
-pob_total <- 1000000
-resultado <- calc_binomial(audiencias, pob_total)
+# Basic example with three vehicles
+audiences <- c(300000, 400000, 200000)
+population <- 1000000
+result <- calc_binomial(audiences, population)
 
-# Examinar los resultados
-print(paste("Cobertura total:", resultado$reach$porcentaje, "\%"))
-print(paste("Probabilidad media:", resultado$probabilidad_media))
+# Inspect the results
+print(paste("Total reach:", result$reach$percent, "\%"))
+print(paste("Mean probability:", result$mean_probability))
 
-# Verificar que las distribuciones suman 1 (100\%)
+# Check that the distributions sum to 1 (100\%)
 \dontrun{
-sum_dist <- sum(resultado$distribucion$porcentaje)/100
-print(paste("Suma distribucion:", round(sum_dist, 4)))
+sum_dist <- sum(result$distribution$percent) / 100
+print(paste("Distribution sum:", round(sum_dist, 4)))
 }
 
 }
@@ -79,8 +82,8 @@ Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribu
 contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 }
 \seealso{
-\code{\link{calc_sainsbury}} para estimaciones con la distribucion Binomial
-\code{\link{calc_beta_binomial}} para estimaciones con la distribucion Beta-Binomial
-\code{\link{calc_metheringham}} para estimaciones con la distribucion de Metheringham
-\code{\link{calc_hofmans}} para estimaciones con la distribucion de Hofmans
+\code{\link{calc_sainsbury}} for estimates under the Sainsbury distribution
+\code{\link{calc_beta_binomial}} for estimates under the Beta-Binomial distribution
+\code{\link{calc_metheringham}} for estimates under the Metheringham distribution
+\code{\link{calc_hofmans}} for estimates under the Hofmans distribution
 }

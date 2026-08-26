@@ -3,80 +3,80 @@
 \encoding{UTF-8}
 \name{calc_hofmans}
 \alias{calc_hofmans}
-\title{Calculo de audiencia acumulada segun el modelo de audiencia acumulada de Hofmans}
+\title{Cumulative audience under the Hofmans cumulative-audience model}
 \usage{
 calc_hofmans(R1, R2, N, show_steps = TRUE)
 }
 \arguments{
-\item{R1}{Numerico. Cobertura tras la primera insercion (como proporcion entre 0 y 1)}
+\item{R1}{Numeric. Reach after the first insertion (as a proportion between 0 and 1)}
 
-\item{R2}{Numerico. Cobertura tras la segunda insercion (como proporcion entre 0 y 1)}
+\item{R2}{Numeric. Reach after the second insertion (as a proportion between 0 and 1)}
 
-\item{N}{Entero. Numero de inserciones para las que calcular la audiencia acumulada}
+\item{N}{Integer. Number of insertions for which to calculate cumulative audience}
 
-\item{show_steps}{Logico. Si TRUE muestra los pasos intermedios del calculo}
+\item{show_steps}{Logical. If TRUE, prints the intermediate calculation steps}
 }
 \value{
-Una lista "reach_hofmans" conteniendo:
+A list of class "reach_hofmans" containing:
 \itemize{
-\item results: Data frame con:
+\item results: Data frame with:
 \itemize{
-\item N: Numero de insercion
-\item RN: Cobertura acumulada (proporcion)
+\item N: Insertion number
+\item RN: Cumulative reach (proportion)
 }
-\item parametros: Lista con los parametros calculados:
+\item parameters: List with the calculated parameters:
 \itemize{
-\item k: Factor k calculado
-\item d: Duplicacion entre inserciones
-\item alpha: Parametro de ajuste para N>3
+\item k: Calculated k factor
+\item d: Duplication between insertions
+\item alpha: Adjustment parameter for N>3
 }
-\item plot: Grafico de la evolucion de la cobertura
+\item plot: Plot of the evolution of reach
 }
 }
 \description{
-Implementa el modelo de Hofmans (1966) para calcular la audiencia acumulada
-de un plan de medios con multiples inserciones en un soporte. El modelo considera
-la duplicacion entre inserciones, y utiliza un parametro de ajuste (alpha) para mejorar
-la estimacion de las audiencias acumuladas.
+Implements the Hofmans (1966) model to calculate the cumulative
+audience of a media plan with multiple insertions in one vehicle. The model
+accounts for duplication between insertions and uses an adjustment parameter
+(alpha) to improve the estimate of cumulative audiences.
 }
 \details{
-El modelo de Hofmans calcula la cobertura acumulada en dos etapas:
+The Hofmans model calculates cumulative reach in two stages:
 \enumerate{
-\item Utiliza una primera formulacion para calcular R3:
+\item Uses a first formulation to calculate R3:
 \itemize{
 \item R3 = (3R1)^2 / (3R1 + k(2R1-R2)(3 choose 2))
-\item donde k = 2R1/R2
+\item where k = 2R1/R2
 }
-\item Para N>3 aplica una formulacion mejorada que incorpora un parametro alpha:
+\item For N>3, applies an improved formulation that incorporates an alpha parameter:
 \itemize{
 \item RN = (NR1)^2 / (NR1 + k*(N-1)^a*(N/2)*d)
-\item donde alpha se calcula usando R3
-\item y d = 2R1-R2 es la duplicacion entre inserciones
+\item where alpha is computed from R3
+\item and d = 2R1-R2 is the duplication between insertions
 }
 }
 
-El modelo asume:
+The model assumes:
 \itemize{
-\item Audiencia constante para todas las inserciones
-\item Duplicacion constante entre pares de inserciones
-\item Comportamiento no lineal de la acumulacion para N > 3
+\item Constant audience across all insertions
+\item Constant duplication between pairs of insertions
+\item Non-linear accumulation behaviour for N > 3
 }
 }
 \examples{
-# Ejemplo basico con 5 inserciones
-R1 <- 0.06    # 6\% de cobertura primera insercion
-R2 <- 0.103   # 10.3\% de cobertura segunda insercion
-resultado <- calc_hofmans(R1, R2, N = 5)
+# Basic example with 5 insertions
+R1 <- 0.06    # 6\% reach after the first insertion
+R2 <- 0.103   # 10.3\% reach after the second insertion
+result <- calc_hofmans(R1, R2, N = 5)
 
-# Examinar los resultados
-print(resultado$results)
-print(resultado$parametros)
+# Inspect the results
+print(result$results)
+print(result$parameters)
 
-# Ejemplo con validacion de datos
+# Example with input validation
 \dontrun{
-R1_invalido <- 1.2  # >100\% cobertura
-resultado <- calc_hofmans(R1_invalido, R2, N = 5)
-# Generara un error por cobertura invalida
+invalid_R1 <- 1.2  # >100\% reach
+result <- calc_hofmans(invalid_R1, R2, N = 5)
+# Raises an error due to the invalid reach
 }
 
 }
@@ -85,8 +85,8 @@ Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribu
 contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
 }
 \seealso{
-\code{\link{calc_beta_binomial}} para estimaciones con la distribucion Beta-Binomial
-\code{\link{calc_sainsbury}} para estimaciones el modelo de Sainsbury
-\code{\link{calc_binomial}} para estimaciones con el modelo Binomial
-\code{\link{calc_metheringham}} para estimaciones con el modelo de Metheringham
+\code{\link{calc_beta_binomial}} for estimates under the Beta-Binomial distribution
+\code{\link{calc_sainsbury}} for the Sainsbury model
+\code{\link{calc_binomial}} for the Binomial model
+\code{\link{calc_metheringham}} for the Metheringham model
 }

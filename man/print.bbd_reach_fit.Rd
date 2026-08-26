@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{Object of class \code{bbd_reach_fit}.}
 
-\item{...}{Argumentos adicionales pasados a print}
+\item{...}{Additional arguments passed to print}
 }
 \description{
 Prints the results of a Beta-Binomial distribution fitted to

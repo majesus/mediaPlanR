@@ -40,15 +40,15 @@ test_that("v2 independent model preserves legacy Sainsbury results", {
   ), 1000000)
   modern <- estimate_reach(plan)
 
-  expect_equal(modern$reach$percent, legacy$reach$porcentaje, tolerance = 1e-12)
+  expect_equal(modern$reach$percent, legacy$reach$percent, tolerance = 1e-12)
   expect_equal(modern$distribution$percent[-1],
-               legacy$distribucion$porcentaje, tolerance = 1e-12)
+               legacy$distribution$percent, tolerance = 1e-12)
 })
 
 test_that("Sainsbury handles many vehicles without exponential enumeration", {
   result <- calc_sainsbury(rep(1000, 100), 100000)
-  expect_true(result$reach$porcentaje > 0)
-  expect_length(result$distribucion$porcentaje, 100)
+  expect_true(result$reach$percent > 0)
+  expect_length(result$distribution$percent, 100)
 })
 
 test_that("audience metrics distinguish composition from affinity", {
@@ -69,4 +69,23 @@ test_that("NBD average frequency uses the analytic mean despite its open tail", 
   expect_equal(result$average_frequency,
                result$parameters$mean_contacts / result$reach$probability,
                tolerance = 1e-12)
+})
+
+test_that("compare_reach_models aligns one row per model with consistent reach figures", {
+  plan <- media_plan(data.frame(
+    channel = c("A", "B"), audience = c(300000, 200000),
+    insertions = c(2, 3), cost_per_insertion = c(1, 1)
+  ), population = 1000000)
+
+  comparison <- compare_reach_models(plan, c("independent", "binomial"))
+
+  expect_s3_class(comparison, "data.frame")
+  expect_equal(comparison$model, c("independent", "binomial"))
+  expect_equal(comparison$reach_percent, comparison$reach_probability * 100)
+  expect_equal(comparison$reach_people,
+               comparison$reach_probability * plan$population)
+  expect_true(all(comparison$reach_probability > 0 &
+                     comparison$reach_probability <= 1))
+
+  expect_error(compare_reach_models(plan, "not_a_model"), "Unknown reach model")
 })
