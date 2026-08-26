@@ -19,8 +19,9 @@ Invisible \code{x}. La funcion se invoca por su efecto de impresion.
 Genera un informe formateado con las metricas del modelo CANEX.
 }
 \examples{
-dist <- data.frame(exposures = 0:2, probability = c(0.3, 0.5, 0.2))
-metrics <- calculate_metrics(dist)
-print(metrics)
+resultado <- calc_canex(
+  data.frame(k = 2, R1 = 0.2, R2 = 0.36), matrix(1, 1, 1), 1000
+)
+print(resultado)
 
 }

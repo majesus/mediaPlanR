@@ -19,14 +19,7 @@ reference:
   desc: "Explicit fitting, continuous-count approximation, and sequential aggregation"
   contents:
   - fit_bbd_to_reach
+  - calibrate_bbd
   - fit_nbd_exposure
   - nbd_exposure_distribution
   - evaluate_exposure_model
-- title: "Compatibility and interactive tools"
-  contents:
-  - starts_with("optimizar_")
-  - optimize_media_sb
-  - calcular_metricas_medios
-  - calcular_roas
-  - imprimir_resultados
-  - starts_with("run_")

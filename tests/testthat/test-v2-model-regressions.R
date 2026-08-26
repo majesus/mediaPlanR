@@ -22,9 +22,9 @@ test_that("CANEX rejects impossible pairwise duplication", {
   expect_error(calc_canex(vehicles, impossible), "Frechet bounds")
 })
 
-test_that("MBBD distribution and reported coverage use identical final parameters", {
-  result <- calc_MBBD(c(5, 7, 4), c(500000, 550000, 600000),
-                      RM = 550000, universe = 1000000, A0 = 0.1)
+test_that("BBD-to-reach distribution and reported coverage use identical final parameters", {
+  result <- fit_bbd_to_reach(c(5, 7, 4), c(500000, 550000, 600000),
+                             RM = 550000, universe = 1000000, A0 = 0.1)
   distribution_reach <- (1 - result$contact_distribution[1]) * 1000000
   expect_true(result$parameters$converged)
   expect_equal(result$coverage$BBD, 550000, tolerance = 100)

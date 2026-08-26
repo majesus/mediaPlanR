@@ -1,30 +1,8 @@
-#' @encoding UTF-8
-#' @title Calcular parametros de la Distribucion Beta-Binomial (BBD)
-#' @description Calcula alpha y beta para la distribucion Beta-Binomial mediante
-#' el metodo de los momentos a partir de las coberturas tras la primera y segunda
-#' insercion (R1, R2).
-#'
-#' @param R1 Numerico. Cobertura tras la primera insercion (0-1)
-#' @param R2 Numerico. Cobertura tras la segunda insercion (0-1)
-#'
-#' @details
-#' La implementacion representa explicitamente dos limites. Si R2 coincide con
-#' el alcance bajo independencia, devuelve el limite binomial
-#' (`alpha = beta = Inf`). Si R2 coincide con R1, devuelve el limite polarizado
-#' (`alpha = beta = 0`), donde cada persona tiene propension cero o uno.
-#'
-#' @return Lista con los componentes:
-#' \itemize{
-#'   \item alpha: Parametro alpha de la BBD
-#'   \item beta: Parametro beta de la BBD
-#'   \item p: Probabilidad media de exposicion
-#'   \item type: `beta_binomial`, `binomial_limit` o `polarized_limit`
-#' }
-#'
-#' @examples
-#' params <- calculate_bbd_params(0.4902, 0.5805)
-#'
-#' @export
+# Calcula alpha y beta de la Beta-Binomial por el metodo de los momentos a
+# partir de R1 y R2. Representa explicitamente los limites binomial
+# (alpha = beta = Inf, cuando R2 iguala el alcance bajo independencia) y
+# polarizado (alpha = beta = 0, cuando R2 = R1). Uso interno: calc_canex(),
+# calc_csd(), calc_mbd(), calc_msad().
 calculate_bbd_params <- function(R1, R2) {
   if (!is.numeric(R1) || !is.numeric(R2) || length(R1) != 1L ||
       length(R2) != 1L || !is.finite(R1) || !is.finite(R2) ||
@@ -56,25 +34,7 @@ calculate_bbd_params <- function(R1, R2) {
   list(alpha = alpha, beta = beta, p = R1, type = "beta_binomial")
 }
 
-#' @encoding UTF-8
-#' @title Calcular media y varianza de la Distribucion Beta-Binomial
-#' @description Calcula la media y la varianza de una Beta-Binomial dados
-#' el numero de ensayos y sus parametros de forma.
-#'
-#' @param k Entero. Numero de inserciones (ensayos)
-#' @param alpha Numerico. Parametro alpha de la BBD
-#' @param beta Numerico. Parametro beta de la BBD
-#'
-#' @return Lista con los componentes:
-#' \itemize{
-#'   \item mean: Media de la distribucion
-#'   \item variance: Varianza de la distribucion
-#' }
-#'
-#' @examples
-#' mv <- calculate_mean_variance(2, 0.5, 1.2)
-#'
-#' @export
+# Media y varianza de una Beta-Binomial(k, alpha, beta). Uso interno.
 calculate_mean_variance <- function(k, alpha, beta) {
   mean_val <- k * alpha / (alpha + beta)
   variance <- k * alpha * beta * (alpha + beta + k) /
@@ -82,23 +42,8 @@ calculate_mean_variance <- function(k, alpha, beta) {
   list(mean = mean_val, variance = variance)
 }
 
-#' @encoding UTF-8
-#' @title Calcular la probabilidad marginal Beta-Binomial
-#' @description Calcula, en espacio logaritmico por estabilidad numerica, la
-#' probabilidad de obtener x exitos en k ensayos bajo una distribucion
-#' Beta-Binomial de parametros alpha y beta.
-#'
-#' @param x Entero. Numero de exitos (contactos)
-#' @param k Entero. Numero de ensayos (inserciones)
-#' @param alpha Numerico. Parametro alpha de la BBD
-#' @param beta Numerico. Parametro beta de la BBD
-#'
-#' @return Numerico. Probabilidad P(X = x)
-#'
-#' @examples
-#' prob <- calculate_marginal_prob(2, 5, 0.5, 1.2)
-#'
-#' @export
+# P(X = x) para una Beta-Binomial(k, alpha, beta), en espacio logaritmico
+# por estabilidad numerica. Uso interno.
 calculate_marginal_prob <- function(x, k, alpha, beta) {
   if (x < 0 || x > k) return(0)
 
@@ -110,23 +55,10 @@ calculate_marginal_prob <- function(x, k, alpha, beta) {
   exp(log_num - log_den)
 }
 
-#' @encoding UTF-8
-#' @title Calcular la duplicacion (correlacion) entre dos vehiculos
-#' @description Calcula el coeficiente de correlacion entre las exposiciones
-#' a dos vehiculos a partir de su probabilidad de exposicion conjunta y sus
-#' probabilidades marginales de exposicion.
-#'
-#' @param pij Numerico. Probabilidad de exposicion conjunta a ambos vehiculos
-#' @param pi Numerico. Probabilidad marginal de exposicion al primer vehiculo
-#' @param pj Numerico. Probabilidad marginal de exposicion al segundo vehiculo
-#'
-#' @return Numerico. Coeficiente de correlacion (entre -1 y 1); 0 si la
-#' varianza de alguno de los dos vehiculos es nula.
-#'
-#' @examples
-#' corr <- calculate_duplication(0.15, 0.3, 0.4)
-#'
-#' @export
+# Coeficiente de correlacion entre las exposiciones a dos vehiculos, a partir
+# de su probabilidad de exposicion conjunta (pij) y sus probabilidades
+# marginales (pi, pj); 0 si la varianza de alguno de los dos es nula. Uso
+# interno.
 calculate_duplication <- function(pij, pi, pj) {
   eps <- 1e-10
   if (pi < eps || pi > 1 - eps || pj < eps || pj > 1 - eps) return(0)
@@ -137,24 +69,10 @@ calculate_duplication <- function(pij, pi, pj) {
   (pij - pi * pj) / denominator
 }
 
-#' @encoding UTF-8
-#' @title Transformar la matriz de duplicaciones en matriz de correlaciones
-#' @description Convierte la matriz de duplicaciones brutas (proporcion de
-#' poblacion expuesta simultaneamente a cada par de vehiculos) en la matriz
-#' de coeficientes de correlacion que el modelo CANEX usa como termino de
-#' ajuste de la probabilidad conjunta.
-#'
-#' @param duplications Matriz cuadrada. Duplicaciones brutas entre vehiculos (0-1)
-#' @param vehicles_data Data frame con, al menos, la columna R1 de cada vehiculo
-#'
-#' @return Matriz de coeficientes de correlacion (diagonal = 1)
-#'
-#' @examples
-#' dup_matrix <- matrix(c(1, 0.0157, 0.0157, 1), nrow = 2)
-#' vehicles <- data.frame(R1 = c(0.4902, 0.033))
-#' correlations <- transform_duplications(dup_matrix, vehicles)
-#'
-#' @export
+# Convierte la matriz de duplicaciones brutas (proporcion de poblacion
+# expuesta simultaneamente a cada par de vehiculos) en la matriz de
+# coeficientes de correlacion que el modelo CANEX usa como termino de ajuste
+# de la probabilidad conjunta. Uso interno.
 transform_duplications <- function(duplications, vehicles_data) {
   m <- nrow(duplications)
   correlations <- diag(1, m)
@@ -336,8 +254,6 @@ validate_canex_inputs <- function(vehicles_data, duplications, poblacion) {
 #' avg_contacts <- results2$stats$avg_contacts
 #'
 #' @seealso
-#' \code{\link{calculate_bbd_params}} para el calculo de parametros BBD
-#' \code{\link{transform_duplications}} para la transformacion de la matriz de duplicacion
 #' \code{\link{calc_beta_binomial}} para el modelo univariante (un solo vehiculo)
 #'
 #' @references
@@ -441,24 +357,11 @@ calc_canex <- function(vehicles_data, duplications, poblacion = 1000000) {
   report
 }
 
-#' @encoding UTF-8
-#' @title Calcular metricas de alcance y frecuencia CANEX
-#' @description A partir de una distribucion de probabilidad por numero total
-#' de contactos, calcula el alcance, la distribucion de contactos (y
-#' acumulada) y las metricas resumen del modelo CANEX.
-#'
-#' @param distribution Data frame con columnas \code{exposures} (numero de
-#' contactos) y \code{probability} (probabilidad asociada, no necesariamente
-#' normalizada a 1)
-#' @param poblacion Entero. Tamano de la poblacion objetivo (por defecto 1.000.000)
-#'
-#' @return Un objeto de clase \code{"reach_canex"} (ver \code{\link{calc_canex}}).
-#'
-#' @examples
-#' dist <- data.frame(exposures = 0:2, probability = c(0.3, 0.5, 0.2))
-#' metrics <- calculate_metrics(dist, 1000000)
-#'
-#' @export
+# A partir de una distribucion de probabilidad por numero total de contactos
+# (columnas exposures, probability; no necesariamente normalizada a 1),
+# calcula el alcance, la distribucion de contactos (y acumulada) y las
+# metricas resumen del modelo CANEX. Devuelve un objeto "reach_canex". Uso
+# interno.
 calculate_metrics <- function(distribution, poblacion = 1000000) {
   if (!is.data.frame(distribution) ||
       !all(c("exposures", "probability") %in% names(distribution)) ||
@@ -536,9 +439,10 @@ calculate_metrics <- function(distribution, poblacion = 1000000) {
 #' @return Invisible \code{x}. La funcion se invoca por su efecto de impresion.
 #'
 #' @examples
-#' dist <- data.frame(exposures = 0:2, probability = c(0.3, 0.5, 0.2))
-#' metrics <- calculate_metrics(dist)
-#' print(metrics)
+#' resultado <- calc_canex(
+#'   data.frame(k = 2, R1 = 0.2, R2 = 0.36), matrix(1, 1, 1), 1000
+#' )
+#' print(resultado)
 #'
 #' @export
 print.reach_canex <- function(x, ...) {

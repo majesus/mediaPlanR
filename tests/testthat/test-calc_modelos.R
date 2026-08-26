@@ -45,10 +45,3 @@ test_that("calc_hofmans produce una cobertura monotona creciente y devuelve un g
 
   expect_error(calc_hofmans(0.1, 0.2, N = 5, show_steps = FALSE), "division por cero")
 })
-
-test_that("calc_MBBD ejecuta el ejemplo documentado sin error (regresion del ejemplo roto)", {
-  insertions <- c(5, 7, 4)
-  audiences <- c(500000, 550000, 600000)
-  resultado <- calc_MBBD(insertions, audiences, RM = 550000, universe = 1000000, A0 = 0.1)
-  expect_s3_class(resultado, "MBBD")
-})

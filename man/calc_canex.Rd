@@ -99,7 +99,5 @@ exposure distributions: A generalization of the "duplication of viewing
 law". Journal of Marketing Research, 28(3), 361-367.
 }
 \seealso{
-\code{\link{calculate_bbd_params}} para el calculo de parametros BBD
-\code{\link{transform_duplications}} para la transformacion de la matriz de duplicacion
 \code{\link{calc_beta_binomial}} para el modelo univariante (un solo vehiculo)
 }

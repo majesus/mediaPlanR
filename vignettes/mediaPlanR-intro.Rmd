@@ -21,9 +21,9 @@ knitr::opts_chunk$set(
 
 **mediaPlanR** reúne, en un único paquete de R, los modelos clásicos de
 cobertura y distribución de contactos empleados en planificación de medios
-publicitarios, indicadores de eficiencia de un plan (GRP, CPM, ROAS) y
-herramientas de optimización, junto con aplicaciones Shiny para explorar
-estos modelos de forma interactiva.
+publicitarios, junto con un núcleo de planificación validado (plan,
+métricas, comparación de modelos y optimización de la cobertura sujeta a
+presupuesto).
 
 ```{r setup}
 library(mediaPlanR)
@@ -162,8 +162,7 @@ escenario_nbd$diagnostics$probability_above_opportunities
 ```
 
 El último diagnóstico cuantifica la masa que una NBD ilimitada asigna por
-encima de las oportunidades finitas. `calc_nbd()` permanece como wrapper
-histórico, pero no es la API recomendada para análisis nuevos.
+encima de las oportunidades finitas.
 
 ## CSD y MSAD: dos estimadores de reach, una arquitectura secuencial
 
@@ -290,9 +289,8 @@ por Kim (2005) y Cheong (2007) en sus tesis doctorales, incluidos únicamente
 para que cualquiera pueda verificar que `calc_csd()`, `calc_msad()` y
 `calc_mbd()` reproducen sus respectivos ejemplos publicados: son datos
 factuales puntuales reutilizados con fines de validación, no una reproducción
-creativa ni sustancial de esas tesis. También están disponibles `nbd_example`
-y `mbbd_example`.
-Los nombres históricos `canex`, `nbd` y `MBBD` permanecen por compatibilidad.
+creativa ni sustancial de esas tesis. `bbd_reach_example` cumple el mismo
+papel ilustrativo para `fit_bbd_to_reach()`.
 El dataset de `calc_binomial()` se llama `binomial_plan` para no enmascarar
 `stats::binomial`.
 
@@ -363,35 +361,6 @@ pautas y ocho modelos. Es un recurso valioso para una futura batería externa de
 benchmarks, pero no sustituye las especificaciones primarias de HBBD, CBD o DMD.
 Incorporar únicamente las columnas de resultados sin reconstruir sus entradas y
 algoritmos produciría pruebas circulares o incompletas.
-
-## Indicadores de eficiencia
-
-```{r}
-grps <- calc_grps(
-  audiencias = c(300000, 400000, 200000),
-  inserciones = c(3, 2, 4),
-  pob_total = 1000000
-)
-grps$grps
-
-cpm <- calc_cpm(
-  precios = c(1000, 1500, 800),
-  audiencias = c(300000, 400000, 200000)
-)
-cpm$cpm
-```
-
-## Aplicaciones interactivas
-
-El paquete incluye varias aplicaciones Shiny para explorar estos modelos
-sin necesidad de escribir código:
-
-```{r, eval = FALSE}
-run_canex_explorer()          # Modelo CANEX
-run_beta_binomial_explorer()  # Distribución Beta-Binomial
-run_reach_converg_explorer()  # Convergencia de la cobertura acumulada
-run_aud_util_explorer()       # Audiencia bruta vs. audiencia útil
-```
 
 ## Referencias
 

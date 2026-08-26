@@ -382,13 +382,8 @@ calc_beta_binomial <- function(A1, A2, P, n) {
     stop("No se pudieron calcular parametros validos con los datos proporcionados")
   }
 
-  # Funcion auxiliar para calcular la probabilidad beta-binomial
-  dbetabinom <- function(x, n, alpha, beta) {
-    choose(n, x) * beta(x + alpha, n - x + beta) / beta(alpha, beta)
-  }
-
   # Calculo de la distribucion de contactos (P)
-  P_dist <- sapply(0:n, function(k) dbetabinom(x = k, n = n, alpha = alpha, beta = beta))
+  P_dist <- extraDistr::dbbinom(0:n, size = n, alpha = alpha, beta = beta)
 
   # Calculo de la distribucion acumulada (R)
   R_dist <- sapply(0:n, function(k) sum(P_dist[(k+1):length(P_dist)]))
@@ -568,22 +563,10 @@ print.reach_beta_binomial <- function(x, ...) {
 
 #__________________________________________________________#
 
-#' @encoding UTF-8
-#' @title Convertir una matriz simetrica en un vector (triangulo superior)
-#' @description Linealiza una matriz simetrica (p.ej. de duplicaciones o de
-#' oportunidades de contacto) recorriendo su triangulo superior, incluyendo
-#' la diagonal, en el orden (1,1), (1,2), ..., (1,n), (2,2), (2,3), ....
-#' Funcion auxiliar empleada por \code{\link{calc_metheringham}}.
-#'
-#' @param matriz Matriz cuadrada simetrica
-#'
-#' @return Vector numerico con los elementos del triangulo superior de \code{matriz}
-#'
-#' @examples
-#' m <- matrix(c(1, 2, 2, 3), nrow = 2)
-#' matriz_a_vector(m)
-#'
-#' @export
+# Linealiza una matriz simetrica (p.ej. de duplicaciones o de oportunidades
+# de contacto) recorriendo su triangulo superior, incluyendo la diagonal, en
+# el orden (1,1), (1,2), ..., (1,n), (2,2), (2,3), .... Uso interno de
+# calc_metheringham().
 matriz_a_vector <- function(matriz) {
   n <- nrow(matriz)
   vector <- numeric()
@@ -595,22 +578,10 @@ matriz_a_vector <- function(matriz) {
   return(vector)
 }
 
-#' @encoding UTF-8
-#' @title Crear la matriz de oportunidades de contacto entre soportes
-#' @description A partir del numero de inserciones de cada soporte, calcula
-#' el numero de pares de oportunidades de contacto entre cada par de
-#' soportes (fuera de la diagonal) y dentro de un mismo soporte (en la
-#' diagonal, como combinaciones de 2 entre sus propias inserciones). Funcion
-#' auxiliar empleada por \code{\link{calc_metheringham}}.
-#'
-#' @param inserciones Vector numerico con el numero de inserciones de cada soporte
-#'
-#' @return Matriz cuadrada simetrica de oportunidades de contacto
-#'
-#' @examples
-#' crear_matriz_oportunidades(c(4, 3, 5))
-#'
-#' @export
+# A partir del numero de inserciones de cada soporte, calcula el numero de
+# pares de oportunidades de contacto entre cada par de soportes (fuera de la
+# diagonal) y dentro de un mismo soporte (en la diagonal, como combinaciones
+# de 2 entre sus propias inserciones). Uso interno de calc_metheringham().
 crear_matriz_oportunidades <- function(inserciones) {
   n <- length(inserciones)
   matriz <- matrix(0, nrow = n, ncol = n)

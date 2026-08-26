@@ -1,32 +1,3 @@
-#' @encoding UTF-8
-#' @title Datos ilustrativos de soportes de prensa
-#' @description Conjunto de datos ficticio con audiencias, tarifas e indices
-#' de utilidad de 60 soportes de prensa espanola, empleado en los ejemplos
-#' de \code{\link{calc_sainsbury}}, \code{\link{calc_binomial}},
-#' \code{\link{optimize_media_sb}} y \code{\link{calcular_metricas_medios}}.
-#'
-#' @format Un data frame con 60 filas y 7 variables:
-#' \describe{
-#'   \item{soportes}{Caracter. Nombre del soporte}
-#'   \item{soportes_.}{Numerico. Coeficiente de soporte (uso interno docente)}
-#'   \item{audiencias}{Entero. Audiencia del soporte (personas)}
-#'   \item{tarifas}{Numerico. Tarifa de una insercion en el soporte}
-#'   \item{indices_utilidad}{Numerico. Indice de utilidad de la audiencia (0-1 aprox.)}
-#'   \item{inserciones}{Entero. Numero de inserciones consideradas}
-#'   \item{duplicacion}{Entero. Audiencia duplicada estimada frente al resto de soportes (personas)}
-#' }
-#'
-#' @note Los datos son ficticios y se emplean unicamente con fines docentes e
-#' ilustrativos; no representan cifras reales de audiencia o tarifas.
-#'
-#' @source Elaboracion propia con fines docentes.
-#'
-#' @examples
-#' data(datos_medios)
-#' head(datos_medios)
-#'
-"datos_medios"
-
 #__________________________________________________________#
 # Coleccion de datasets de ejemplo, uno por funcion modelo.
 #
@@ -42,10 +13,10 @@
 # porque 'binomial' ya existe en stats (la familia de calc_binomial()
 # para modelos lineales generalizados); usar ese nombre lo enmascararia
 # tras cargar mediaPlanR. El resto de datasets heredados de la version 0.2.0
-# (sainsbury, beta_binomial, metheringham, hofmans, agostini, grps, cpm,
-# roas) se renombraron con el sufijo '_example' para seguir la misma
-# convencion que los datasets nuevos de v2 y no confundirse con el nombre
-# de su funcion modelo (p. ej. metheringham_example vs. calc_metheringham()).
+# (sainsbury, beta_binomial, metheringham, hofmans, agostini) se renombraron
+# con el sufijo '_example' para seguir la misma convencion que los datasets
+# nuevos de v2 y no confundirse con el nombre de su funcion modelo (p. ej.
+# metheringham_example vs. calc_metheringham()).
 #__________________________________________________________#
 
 #' @encoding UTF-8
@@ -140,59 +111,9 @@
 "agostini_example"
 
 #' @encoding UTF-8
-#' @title Historical MBBD-named example data
-#' @description Legacy name for the example now available as
-#' \code{mbbd_example}. It fits one BBD to external reach and is not an MSAD
-#' example. New code should use \code{mbbd_example} with
-#' \code{\link{fit_bbd_to_reach}}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{insertions}{Vector numerico. Numero de inserciones para cada soporte}
-#'   \item{audiences}{Vector numerico. Audiencia de cada soporte en personas}
-#'   \item{RM}{Entero. Estimacion de cobertura segun Morgensztern en personas}
-#'   \item{universe}{Entero. Tamano del universo objetivo en personas}
-#'   \item{A0}{Numerico. Valor inicial del parametro A}
-#' }
-#' @examples
-#' data(MBBD)
-#' do.call(calc_MBBD, MBBD)
-"MBBD"
-
-#' @encoding UTF-8
-#' @title Historical CANEX example data name
-#' @description Legacy name for \code{canex_example}. New code should prefer
-#' the descriptive name.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{vehicles_data}{Data frame con columnas k, R1 y R2 por vehiculo}
-#'   \item{duplications}{Matriz cuadrada de duplicaciones brutas entre vehiculos}
-#'   \item{poblacion}{Tamano de la poblacion objetivo}
-#' }
-#' @examples
-#' data(canex)
-#' do.call(calc_canex, canex)
-"canex"
-
-#' @encoding UTF-8
-#' @title Historical NBD example data name
-#' @description Legacy name for \code{nbd_example}. New statistical work
-#' should normally use \code{\link{fit_nbd_exposure}} with observed counts.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{inserciones}{Vector numerico con el numero de inserciones por soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
-#'   \item{k}{Parametro de heterogeneidad (forma de la distribucion Gamma)}
-#' }
-#' @examples
-#' data(nbd)
-#' do.call(calc_nbd, nbd)
-"nbd"
-
-#' @encoding UTF-8
 #' @title Example inputs for calc_canex()
-#' @description Descriptively named replacement for the historical
-#' \code{canex} example object. The list is ready for \code{do.call()}.
+#' @description List of arguments for \code{\link{calc_canex}}, ready for
+#' \code{do.call()}.
 #' @format A list with \code{vehicles_data}, \code{duplications}, and
 #' \code{poblacion}.
 #' @examples
@@ -201,29 +122,16 @@
 "canex_example"
 
 #' @encoding UTF-8
-#' @title Example inputs for the experimental NBD plan wrapper
-#' @description Descriptively named replacement for the historical \code{nbd}
-#' example object. For new analyses prefer \code{fit_nbd_exposure()} with
-#' observed counts or \code{nbd_exposure_distribution()} with explicit
-#' count-process parameters.
-#' @format A list with \code{audiencias}, \code{inserciones},
-#' \code{pob_total}, and \code{k}.
-#' @examples
-#' data(nbd_example)
-#' do.call(calc_nbd, nbd_example)
-"nbd_example"
-
-#' @encoding UTF-8
-#' @title Legacy example for fitting a BBD to external reach
-#' @description Descriptively named replacement for the historical
-#' \code{MBBD} object. Despite its legacy name, this example exercises
-#' \code{fit_bbd_to_reach()}, not the MSAD sequential model.
+#' @title Example inputs for fitting a BBD to an external reach estimate
+#' @description List of arguments for \code{\link{fit_bbd_to_reach}}, ready
+#' for \code{do.call()}. Fits one Beta-Binomial distribution to external
+#' reach; it is not the Morgensztern MSAD sequential model.
 #' @format A list with \code{insertions}, \code{audiences}, \code{RM},
 #' \code{universe}, and \code{A0}.
 #' @examples
-#' data(mbbd_example)
-#' do.call(fit_bbd_to_reach, mbbd_example)
-"mbbd_example"
+#' data(bbd_reach_example)
+#' do.call(fit_bbd_to_reach, bbd_reach_example)
+"bbd_reach_example"
 
 #' @encoding UTF-8
 #' @title Illustrative example inputs for the Morgensztern MSAD model
@@ -351,48 +259,3 @@
 #' result$distribution
 #' @seealso [calc_mbd()], [mbd_example]
 "mbd_cheong2007"
-
-#' @encoding UTF-8
-#' @title Datos de ejemplo para calc_grps()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_grps}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{inserciones}{Vector numerico del numero de inserciones por soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
-#' }
-#' @examples
-#' data(grps_example)
-#' do.call(calc_grps, grps_example)
-"grps_example"
-
-#' @encoding UTF-8
-#' @title Datos de ejemplo para calc_cpm()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_cpm}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{precios}{Vector numerico con precios de cada insercion}
-#'   \item{audiencias}{Vector numerico con audiencias de cada soporte}
-#' }
-#' @examples
-#' data(cpm_example)
-#' do.call(calc_cpm, cpm_example)
-"cpm_example"
-
-#' @encoding UTF-8
-#' @title Datos de ejemplo para calcular_roas()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calcular_roas}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{audiencia_efectiva}{Numero total de personas alcanzadas por la campana}
-#'   \item{precio_unidad}{Precio de venta por unidad}
-#'   \item{margen_unidad}{Beneficio neto por unidad vendida}
-#'   \item{inversion}{Inversion total en publicidad}
-#' }
-#' @examples
-#' data(roas_example)
-#' do.call(calcular_roas, roas_example)
-"roas_example"

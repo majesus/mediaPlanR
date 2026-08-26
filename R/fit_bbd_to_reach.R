@@ -46,7 +46,7 @@
 #'   \item La convergencia se alcanza cuando |BBD - RM| menor o igual que precision
 #' }
 #'
-#' @return A list of class `bbd_reach_fit` and legacy class `MBBD` containing:
+#' @return A list of class `bbd_reach_fit` containing:
 #' \itemize{
 #'   \item parameters: Lista con parametros finales:
 #'     \itemize{
@@ -228,41 +228,15 @@ fit_bbd_to_reach <- function(insertions, audiences, RM, universe, A0,
     iteration_history = history
   )
 
-  class(result) <- c("bbd_reach_fit", "MBBD", "list")
+  class(result) <- c("bbd_reach_fit", "list")
   return(result)
-}
-
-#' Legacy name for a Beta-Binomial reach calibration
-#'
-#' `calc_MBBD()` is retained for compatibility. The historical name suggested
-#' a full Morgensztern sequential model, although the function only calibrates
-#' one Beta-Binomial distribution to an externally supplied reach. Use
-#' [fit_bbd_to_reach()] for that operation or [calc_msad()] for the sequential
-#' aggregation model described by Kim (2005).
-#'
-#' @inheritParams fit_bbd_to_reach
-#' @return The value returned by [fit_bbd_to_reach()].
-#' @export
-calc_MBBD <- function(insertions, audiences, RM, universe, A0,
-                      precision = 100, max_iter = 100,
-                      adj_factor = 0.01) {
-  fit_bbd_to_reach(
-    insertions = insertions,
-    audiences = audiences,
-    RM = RM,
-    universe = universe,
-    A0 = A0,
-    precision = precision,
-    max_iter = max_iter,
-    adj_factor = adj_factor
-  )
 }
 
 #' Print a Beta-Binomial reach fit
 #'
 #' @description Prints the results of a Beta-Binomial distribution fitted to
 #' an external reach estimate.
-#' @param x Object inheriting from `bbd_reach_fit` or legacy class `MBBD`.
+#' @param x Object of class `bbd_reach_fit`.
 #' @param ... Argumentos adicionales pasados a print
 #' @export
 #' @method print bbd_reach_fit
@@ -330,9 +304,4 @@ print.bbd_reach_fit <- function(x, ...) {
   cat(sprintf("\nModa = %d", which.max(x$contact_distribution) - 1))
   cat("\n\n")
   invisible(x)
-}
-
-#' @export
-print.MBBD <- function(x, ...) {
-  print.bbd_reach_fit(x, ...)
 }

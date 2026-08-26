@@ -220,11 +220,11 @@ mbd_safety_net <- function(distribution, tolerance) {
 #'   had to be engaged and how much probability mass it redistributed.
 #'
 #' @details
-#' `calc_mbd()` (Cheong 2007) is unrelated to the historical `calc_MBBD()` /
-#' `fit_bbd_to_reach()` (which fits one Beta-Binomial to an externally given
-#' reach target). The two are easy to confuse by name alone: MBD is
-#' Cheong's (2007) *Multivariate* Beta Binomial Distribution described here,
-#' while historical MBBD fits a *single-vehicle* Beta-Binomial.
+#' `calc_mbd()` (Cheong 2007) is unrelated to `fit_bbd_to_reach()` (which
+#' fits one Beta-Binomial to an externally given reach target). The two are
+#' easy to confuse by name alone: MBD is Cheong's (2007) *Multivariate* Beta
+#' Binomial Distribution described here, while `fit_bbd_to_reach()` fits a
+#' *single-vehicle* Beta-Binomial.
 #'
 #' # What is, and is not, guaranteed
 #'

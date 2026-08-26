@@ -29,7 +29,7 @@
   mass and correlation-matrix compatibility.
 - Renamed the historical MBBD calculation to `fit_bbd_to_reach()` because it
   fits one BBD to external reach rather than implementing sequential
-  Morgensztern aggregation. `calc_MBBD()` remains as a compatibility wrapper.
+  Morgensztern aggregation.
 - Added `calc_msad()`, implementing Kim's MSAD structure with per-vehicle BBD
   marginals, Morgensztern reach, sequential non-random convolution, explicit
   aggregation order, and probability diagnostics.
@@ -49,35 +49,15 @@
   Poisson-Gamma scenarios. NBD outputs now quantify mass above finite
   opportunities and are labelled experimental outside continuous processes.
 - Added the documented Hofmans parameters to its return value.
-- Corrected cost-per-rating-point and useful-audience semantics in the legacy
-  KPI table.
-- Replaced the historical batch optimizer with a compatibility wrapper around
-  the v2 optimization engine.
-- Removed the dead legacy bodies of `optimize_media_sb()`, `calcular_metricas_medios()`,
-  `optimizar_d()` and `optimizar_dc()` that remained in `R/calc_plan_modelos.R`
-  and `R/model_optimization.R` after those functions were re-implemented as
-  compatibility wrappers in `R/zz_compat_v2.R`. Those bodies were unreachable
-  at runtime (R's default alphabetical file-loading order meant the
-  `zz_compat_v2.R` definitions always won), but they still carried the
-  `@export` tag that `roxygen2` used to build each function's help page, so
-  the shipped documentation described the old, unreachable behaviour (e.g. an
-  unvalidated affinity-index multiplication and a mislabelled
-  `Audiencia_miles` column that was not actually expressed in thousands)
-  instead of the corrected v2-backed implementation actually exported by the
-  package. Documentation for all four functions has been rewritten to match
-  their real behaviour.
 - Renamed the example datasets inherited from 0.2.0 (`sainsbury`, `beta_binomial`,
-  `metheringham`, `hofmans`, `agostini`, `grps`, `cpm`, `roas`) to
-  `sainsbury_example`, `beta_binomial_example`, `metheringham_example`,
-  `hofmans_example`, `agostini_example`, `grps_example`, `cpm_example`, and
-  `roas_example`. Each bare name was indistinguishable at a glance from its
-  model function (e.g. `metheringham` next to `calc_metheringham()`); the
+  `metheringham`, `hofmans`, `agostini`) to `sainsbury_example`,
+  `beta_binomial_example`, `metheringham_example`, `hofmans_example`, and
+  `agostini_example`. Each bare name was indistinguishable at a glance from
+  its model function (e.g. `metheringham` next to `calc_metheringham()`); the
   `_example` suffix matches the convention already used for the datasets v2
-  introduced (`canex_example`, `csd_example`, `msad_example`, `nbd_example`,
-  `mbbd_example`) and the reasoning already applied to `binomial_plan` (named
-  to avoid masking `stats::binomial`). `binomial_plan`, and the three
-  intentionally dual-named legacy/`_example` pairs (`canex`/`canex_example`,
-  `nbd`/`nbd_example`, `MBBD`/`mbbd_example`), are unaffected.
+  introduced (`canex_example`, `csd_example`, `msad_example`) and the
+  reasoning already applied to `binomial_plan` (named to avoid masking
+  `stats::binomial`).
 - Split `csd_example`, `msad_example`, and `mbd_example` from the dissertation
   numbers they originally reproduced. `csd_example`, `msad_example`, and
   `mbd_example` are now original illustrative data, not derived from any
@@ -89,17 +69,52 @@
   documentation and its unit test that reproduce Kim's AER/APE example now
   reference `csd_kim2005` accordingly.
 
-## Compatibility
+## Scope, before the first CRAN submission
 
-The established `calc_*`, `optimizar_*`, `optimize_media_sb()` and Spanish KPI
-functions remain available. New projects should prefer the v2 API.
+`mediaPlanR` has never been released, on CRAN or otherwise, so this release
+carries no compatibility obligation to past users. The package is scoped to
+cross-media reach/frequency models and the v2 planning core; nothing here
+should be read as a deprecation of functionality that used to exist under a
+different name.
 
-The new `canex_example`, `csd_example`, `nbd_example`, `mbbd_example`, and
-`msad_example` datasets replace ambiguous historical names or provide
-ready-to-use illustrative inputs. `csd_kim2005`, `msad_kim2005`, and
-`mbd_cheong2007` separately reproduce the published Kim (2005) and Cheong
-(2007) worked examples for literature validation, each with an explicit
-provenance qualification. Historical datasets remain available.
+- Removed the historical `calc_MBBD()`/`print.MBBD` wrapper, the `MBBD` S3
+  class and the `MBBD` and `canex`/`nbd` legacy-named datasets. `canex` and
+  `nbd` were unlabelled duplicates of `canex_example` and `nbd_example`;
+  `fit_bbd_to_reach()` is the only entry point for that calculation now, and
+  its worked example is `bbd_reach_example` (renamed from `mbbd_example`).
+- Removed the univariate NBD plan wrapper `calc_nbd()` and its `nbd`/
+  `nbd_example` datasets. `fit_nbd_exposure()` (observed counts) and
+  `nbd_exposure_distribution()` (explicit scenario parameters) are the NBD
+  API; see `vignette("mediaPlanR-intro")`.
+- Removed the Spanish-named compatibility layer around the v2 engine
+  (`optimizar_d()`, `optimizar_dc()`, `optimize_media_sb()`,
+  `calcular_metricas_medios()`) in favour of `calibrate_bbd()`,
+  `optimize_media_plan()`, and `plan_metrics()` directly.
+- Moved the budget/KPI functions (`calc_grps()`, `calc_cpm()`,
+  `calcular_roas()`, `plot_grp_metricas()`) and the four Shiny explorers
+  (`run_canex_explorer()`, `run_beta_binomial_explorer()`,
+  `run_reach_converg_explorer()`, `run_aud_util_explorer()`) out of the
+  package. They depended on `shiny`, `bslib`, `ggrepel` and `scales`, none of
+  which the remaining reach/frequency core needs; those four dependencies
+  were dropped accordingly. This is not a functionality judgement — they are
+  kept, unmodified, as the seed of a separate budget/KPI/interactive package.
+- Unexported `calculate_bbd_params()`, `calculate_mean_variance()`,
+  `calculate_marginal_prob()`, `calculate_duplication()`,
+  `transform_duplications()`, `calculate_metrics()`, `matriz_a_vector()` and
+  `crear_matriz_oportunidades()`: internal computational steps shared by
+  `calc_canex()`, `calc_csd()`, `calc_mbd()`, `calc_msad()` and
+  `calc_metheringham()`, not independent entry points.
+- Unified the two duplicate local implementations of the Beta-Binomial point
+  probability (in the CANEX explorer, now moved out, and in
+  `calc_beta_binomial()`) on the single `extraDistr::dbbinom()` already used
+  everywhere else in the package.
+- Dropped the unused `readr` `Suggests` declaration.
+
+The `canex_example`, `csd_example`, `msad_example`, and `bbd_reach_example`
+datasets are original illustrative inputs, ready for `do.call()`.
+`csd_kim2005`, `msad_kim2005`, and `mbd_cheong2007` separately reproduce the
+published Kim (2005) and Cheong (2007) worked examples for literature
+validation, each with an explicit provenance qualification.
 
 ## References
 

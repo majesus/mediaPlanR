@@ -94,11 +94,6 @@ exposure-count approximations:
 - `fit_nbd_exposure()` and `nbd_exposure_distribution()` for unbounded
   exposure-count processes.
 
-The historical `calc_MBBD()` and `calc_nbd()` entry points remain supported,
-but their documentation now states their actual scope. `calc_MBBD()` is not a
-full MSAD implementation, and a univariate NBD is not a finite-insertion or
-cross-vehicle dependence model.
-
 ```r
 data(csd_kim2005)
 csd <- do.call(calc_csd, csd_kim2005)
@@ -140,15 +135,14 @@ open-tail NBD cells are rejected unless observed and predicted tails have first
 been collapsed identically.
 
 Descriptive example objects are available as `canex_example`, `csd_example`,
-`nbd_example`, `mbbd_example`, and `msad_example`. `csd_example`, `msad_example`
-and `mbd_example` are original illustrative data, not derived from any
-published source. `csd_kim2005`, `msad_kim2005` and `mbd_cheong2007` instead
-reproduce the minimal factual inputs (reach and duplication figures) published
-by Kim (2005) and Cheong (2007), included solely so users can verify that
-`calc_csd()`, `calc_msad()` and `calc_mbd()` reproduce their published worked
-examples; `msad_kim2005` reuses Kim's CSD inputs but does not claim that its
-MSAD output was published by Kim. Historical shorter names remain available
-for compatibility.
+`bbd_reach_example`, and `msad_example`. `csd_example`, `msad_example`,
+`mbd_example` and `canex_example` are original illustrative data, not derived
+from any published source. `csd_kim2005`, `msad_kim2005` and `mbd_cheong2007`
+instead reproduce the minimal factual inputs (reach and duplication figures)
+published by Kim (2005) and Cheong (2007), included solely so users can
+verify that `calc_csd()`, `calc_msad()` and `calc_mbd()` reproduce their
+published worked examples; `msad_kim2005` reuses Kim's CSD inputs but does
+not claim that its MSAD output was published by Kim.
 
 ## Reproducibility guarantees
 
@@ -158,7 +152,6 @@ for compatibility.
 - Model boundary cases have regression tests.
 - Observed-versus-predicted evaluations require declared scales and identical
   contact support.
-- Compatibility outputs are tested against the v2 core.
 
 ## References
 

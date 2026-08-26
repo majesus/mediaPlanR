@@ -51,11 +51,11 @@ and the two component distributions are convolved into a growing
 pseudo-vehicle.
 }
 \details{
-\code{calc_mbd()} (Cheong 2007) is unrelated to the historical \code{calc_MBBD()} /
-\code{fit_bbd_to_reach()} (which fits one Beta-Binomial to an externally given
-reach target). The two are easy to confuse by name alone: MBD is
-Cheong's (2007) \emph{Multivariate} Beta Binomial Distribution described here,
-while historical MBBD fits a \emph{single-vehicle} Beta-Binomial.
+\code{calc_mbd()} (Cheong 2007) is unrelated to \code{fit_bbd_to_reach()} (which
+fits one Beta-Binomial to an externally given reach target). The two are
+easy to confuse by name alone: MBD is Cheong's (2007) \emph{Multivariate} Beta
+Binomial Distribution described here, while \code{fit_bbd_to_reach()} fits a
+\emph{single-vehicle} Beta-Binomial.
 }
 \section{What is, and is not, guaranteed}{
 Cheong's own dissertation reports that the inclusion-exclusion grid can

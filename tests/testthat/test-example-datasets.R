@@ -1,8 +1,6 @@
 test_that("cada dataset de ejemplo funciona con do.call() sobre su función correspondiente", {
   data(sainsbury_example); data(binomial_plan); data(beta_binomial_example)
   data(metheringham_example); data(hofmans_example); data(agostini_example)
-  data(MBBD); data(canex); data(nbd)
-  data(grps_example); data(cpm_example); data(roas_example)
 
   expect_s3_class(do.call(calc_sainsbury, sainsbury_example), "reach_sainsbury")
   expect_s3_class(do.call(calc_binomial, binomial_plan), "reach_binomial")
@@ -10,12 +8,6 @@ test_that("cada dataset de ejemplo funciona con do.call() sobre su función corr
   expect_s3_class(do.call(calc_metheringham, metheringham_example), "reach_metheringham")
   expect_type(do.call(calc_hofmans, c(hofmans_example, list(show_steps = FALSE))), "list")
   expect_s3_class(do.call(calc_agostini, agostini_example), "reach_agostini")
-  expect_s3_class(do.call(calc_MBBD, MBBD), "MBBD")
-  expect_s3_class(do.call(calc_canex, canex), "reach_canex")
-  expect_s3_class(do.call(calc_nbd, nbd), "reach_nbd")
-  expect_type(do.call(calc_grps, grps_example), "list")
-  expect_type(do.call(calc_cpm, cpm_example), "list")
-  expect_s3_class(do.call(calcular_roas, c(roas_example, list(imprimir_resultados = FALSE))), "data.frame")
 })
 
 test_that("'binomial_plan' no se llama 'binomial' (evita enmascarar stats::binomial)", {
