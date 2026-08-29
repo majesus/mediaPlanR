@@ -121,7 +121,9 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' result$distribution
 #'
 #' @seealso [calc_canex()] for a full-grid canonical expansion and
-#'   [calc_msad()] for the Morgensztern sequential alternative.
+#'   [calc_msad()] for the Morgensztern sequential alternative; [calc_cbd()]
+#'   for a different sequential architecture built on this same canonical
+#'   expansion at the (0,1) level.
 #' @export
 calc_csd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),

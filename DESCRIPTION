@@ -1,18 +1,24 @@
 Package: mediaPlanR
 Type: Package
 Version: 2.0.0
-Date: 2026-08-26
+Date: 2026-08-29
 Title: Reliable Cross-Media Reach and Frequency Planning
 Description: Reproducible tools for cross-media reach, contact-frequency
     distributions, target-audience metrics and budget-constrained reach
     optimization. Provides a validated media-plan data contract, exact
     Poisson-binomial calculations, Binomial, Beta-Binomial, canonical-expansion,
-    Canonical Sequential and Morgensztern Sequential models, plus an explicitly
+    Canonical Sequential, Morgensztern Sequential and Conditional Beta
+    Distribution models, a Multivariate Beta-Binomial model, plus an explicitly
     scoped Negative-Binomial count approximation and effective-reach
     optimization with explicit optimality diagnostics. Methods follow
-    Danaher (1991) <doi:10.1177/002224379102800311>, Leckenby & Rice (1986)
-    <doi:10.1080/00913367.1986.10673014>, and Ehrenberg (1959)
-    <doi:10.2307/2985810>.
+    Danaher (1991)
+    <doi:10.1177/002224379102800311>, Leckenby & Rice (1986)
+    <doi:10.1080/00913367.1986.10673014>, Ehrenberg (1959)
+    <doi:10.2307/2985810>, Kim (2005, "A Canonical Sequential Aggregation
+    Media Model", doctoral dissertation, The University of Texas at Austin),
+    and Cheong (2007, "Multivariate Beta Binomial Distribution Model as a
+    Web Media Exposure Model", doctoral dissertation, The University of
+    Texas at Austin).
 Authors@R: person(
     given = "Manuel J.",
     family = "Sánchez-Franco",

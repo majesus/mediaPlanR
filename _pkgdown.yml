@@ -26,12 +26,11 @@ reference:
 - title: "Example datasets"
   desc: "Illustrative inputs (ready for do.call()) and literature-reproduction benchmarks"
   contents:
-  - sainsbury_example
-  - binomial_plan
+  - ratings_example
   - beta_binomial_example
   - metheringham_example
-  - hofmans_example
-  - agostini_example
+  - hofmans_accumulation_example
+  - hofmans_duplication_example
   - canex_example
   - bbd_reach_example
   - csd_example

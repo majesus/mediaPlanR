@@ -88,5 +88,7 @@ Doctoral dissertation, The University of Texas at Austin, pp. 78-97.
 }
 \seealso{
 \code{\link[=calc_canex]{calc_canex()}} for a full-grid canonical expansion and
-\code{\link[=calc_msad]{calc_msad()}} for the Morgensztern sequential alternative.
+\code{\link[=calc_msad]{calc_msad()}} for the Morgensztern sequential alternative; \code{\link[=calc_cbd]{calc_cbd()}}
+for a different sequential architecture built on this same canonical
+expansion at the (0,1) level.
 }

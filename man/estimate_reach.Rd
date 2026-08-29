@@ -4,20 +4,31 @@
 \alias{estimate_reach}
 \title{Estimate reach and contact distribution for a media plan}
 \usage{
-estimate_reach(plan, model = c("independent", "binomial", "nbd"), k = NULL)
+estimate_reach(plan, model = c("sainsbury", "binomial"))
 }
 \arguments{
 \item{plan}{A \code{media_plan} object.}
 
-\item{model}{Reach model. \code{independent} is the exact Poisson-binomial model
-for independent opportunities; \code{binomial} uses their average probability;
-\code{nbd} is an experimental unbounded count approximation and requires \code{k}.}
-
-\item{k}{Positive NBD heterogeneity parameter.}
+\item{model}{\code{sainsbury} (default) runs \code{\link[=calc_sainsbury]{calc_sainsbury()}}: heterogeneous
+vehicle probabilities, combined via the exact Poisson-binomial
+convolution. \code{binomial} runs \code{\link[=calc_binomial]{calc_binomial()}}: every vehicle is treated
+as sharing the plan's average probability. Both assume random
+duplication \emph{and} random accumulation (a repeat insertion in the same
+vehicle is treated as independent, exactly like an insertion in a
+different vehicle) -- see \code{vignette("mediaPlanR-intro")}.}
 }
 \value{
 A \code{media_reach} object with a complete zero-to-N distribution.
 }
 \description{
-Estimate reach and contact distribution for a media plan
+A \code{media_plan}-native front end for \code{calc_sainsbury()}/\code{calc_binomial()}:
+reads \code{audience}, \code{insertions}, and \code{population} from \code{plan} and calls the
+requested model directly, so the two share a single implementation.
+}
+\seealso{
+\code{\link[=calc_sainsbury]{calc_sainsbury()}} and \code{\link[=calc_binomial]{calc_binomial()}}, called directly by this
+function. For the experimental Negative-Binomial approximation, call
+\code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}} directly with your own \code{mean_contacts} --
+it is scoped to continuous exposure processes, not finite insertion
+schedules, so it is not offered here or in \code{\link[=optimize_media_plan]{optimize_media_plan()}}.
 }

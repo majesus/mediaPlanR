@@ -58,19 +58,29 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #'   `min_cost`.
 #' @param effective_frequency Minimum contacts defining effective reach.
 #' @param max_insertions Integer upper bound per channel.
-#' @param model Reach model supported by `estimate_reach()`.
+#' @param model `sainsbury` or `binomial`; see `estimate_reach()`. Candidate
+#'   allocations routinely place several insertions in the same vehicle, so
+#'   the experimental NBD approximation (scoped to continuous exposure
+#'   processes, not finite schedules) is not offered here.
 #' @param method `exact`, `greedy`, or `auto`.
 #' @param max_combinations Maximum allocations allowed for exact enumeration.
 #'
 #' @return A `media_optimization` object. `global_optimum` is `TRUE` only for
 #'   exhaustive search.
+#'
+#' @references
+#' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la
+#' distribucion de contactos en la planificacion de medios publicitarios
+#' impresos. Tesis doctoral, Universidad de Valencia, Espana. (Sections
+#' 3.3.1.1-3.3.1.2.)
+#'
 #' @export
 optimize_media_plan <- function(plan, budget,
                                 objective = c("max_reach", "min_cost"),
                                 target_reach = NULL,
                                 effective_frequency = 1L,
                                 max_insertions = plan$data$insertions,
-                                model = c("independent", "binomial"),
+                                model = c("sainsbury", "binomial"),
                                 method = c("auto", "exact", "greedy"),
                                 max_combinations = 1e6) {
   assert_media_plan(plan)

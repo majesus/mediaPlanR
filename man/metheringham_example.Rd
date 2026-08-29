@@ -11,6 +11,7 @@ A list with the components:
 \item{audiences}{Numeric vector with the audience of each vehicle}
 \item{insertions}{Numeric vector with the number of insertions per vehicle}
 \item{duplication_matrix}{Symmetric matrix with the duplication between vehicles}
+\item{population}{Population size}
 }
 }
 \usage{

@@ -99,4 +99,6 @@ law". Journal of Marketing Research, 28(3), 361-367.
 }
 \seealso{
 \code{\link{calc_beta_binomial}} for the univariate model (a single vehicle)
+\code{\link{calc_cbd}}, whose between-vehicle step reuses this same
+canonical expansion, extended to insertion-level Beta-Binomial expansion
 }

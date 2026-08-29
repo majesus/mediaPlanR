@@ -32,8 +32,8 @@ plan <- media_plan(
 )
 
 metrics <- plan_metrics(plan)
-reach <- estimate_reach(plan, model = "independent")
-comparison <- compare_reach_models(plan, c("independent", "binomial"))
+reach <- estimate_reach(plan, model = "sainsbury")
+comparison <- compare_reach_models(plan, c("sainsbury", "binomial"))
 ```
 
 All v2 reach results contain:
@@ -88,8 +88,9 @@ The package distinguishes historical finite-opportunity models from continuous
 exposure-count approximations:
 
 - `calc_sainsbury()`, `calc_binomial()`, `calc_beta_binomial()`;
-- `calc_metheringham()`, `calc_hofmans()`, `calc_agostini()`;
-- `calc_canex()`, Kim's `calc_csd()`, and the Leckenby-Rice `calc_msad()`;
+- `calc_metheringham()`, `calc_hofmans_accumulation()`, `calc_agostini_duplication()`,
+  `calc_hofmans_duplication()`;
+- `calc_canex()`, `calc_cbd()`, Kim's `calc_csd()`, and the Leckenby-Rice `calc_msad()`;
 - `fit_bbd_to_reach()` for fitting one BBD to an external reach estimate;
 - `fit_nbd_exposure()` and `nbd_exposure_distribution()` for unbounded
   exposure-count processes.

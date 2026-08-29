@@ -286,7 +286,9 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' result$distribution
 #'
 #' @seealso [calc_csd()] and [calc_msad()] for sequential aggregation models
-#'   with a completely verified reference example.
+#'   with a completely verified reference example; [calc_cbd()] for the
+#'   model sharing this function's exact within-vehicle peeling step, with a
+#'   different (canonical-expansion, not imputed) between-vehicle step.
 #' @export
 calc_mbd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),

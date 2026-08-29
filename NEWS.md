@@ -8,6 +8,31 @@
   modes. Exact results report a verifiable global optimum.
 - Added `audience_metrics()` to separate target composition, rating, affinity
   and selectivity.
+- Added `calc_cbd()`, implementing the Conditional Beta Distribution
+  (Leckenby & Kim, reported in Kim, 1994; reviewed in Kim, 2005, pp. 59-64):
+  between-vehicle duplication via Danaher's (1991) second-order canonical
+  expansion for the full (0,1) joint exposure grid, then the same
+  conditional Beta-Binomial peeling `calc_mbd()` uses to expand each vehicle
+  into its own insertion-level distribution. Kim (2005) and Cheong (2007)
+  each independently rank CBD among the two or three most accurate models
+  they tested; it was the one such model this package did not yet have. No
+  published numerical example was available to validate against (unlike
+  `calc_csd()`); validated instead by construction (the raw joint grid
+  recovers each vehicle's own R1 as its exact marginal) and by an exact
+  reduction to independent convolution at zero correlation.
+- Added `calc_hofmans_duplication()`, Hofmans' (1966) ad hoc correction of
+  `calc_agostini_duplication()` for several vehicles with one insertion each: a
+  pairwise duplication coefficient computed directly from each vehicle pair's
+  own audiences, rather than one coefficient fitted from external calibration
+  data. Reach only, like `calc_agostini_duplication()`; unrelated to
+  `calc_hofmans_accumulation()` (same author, different model: one vehicle
+  with several insertions). Aldas Manzano (1998, sec. 3.2.1.2) and Kim (2005,
+  pp. 44-45) independently report the identical formula. Renamed
+  `calc_agostini()` to `calc_agostini_duplication()` and `calc_hofmans()` to
+  `calc_hofmans_accumulation()` so both Hofmans models, and their shared-domain
+  Agostini counterpart, carry their domain in the function name; their example
+  datasets follow suit (`hofmans_accumulation_example`, new
+  `hofmans_duplication_example`).
 - Added `calc_mbd()`, implementing Cheong's (2007) Multivariate Beta Binomial
   Distribution model: vehicle co-exposure via Waring's (1792) inclusion-
   exclusion, imputed from a Beta-Binomial fit to each subset's own mean
@@ -56,8 +81,69 @@
   its model function (e.g. `metheringham` next to `calc_metheringham()`); the
   `_example` suffix matches the convention already used for the datasets v2
   introduced (`canex_example`, `csd_example`, `msad_example`) and the
-  reasoning already applied to `binomial_plan` (named to avoid masking
+  reasoning already applied to `binomial_example` (named to avoid masking
   `stats::binomial`).
+- Renamed the `binomial_plan` dataset to `binomial_example` to follow the
+  same `_example` convention as every other dataset.
+- `calc_R1_R2()` is no longer exported. It had no internal callers and no
+  documented public use case; it remains available internally for the
+  Beta-Binomial alpha/beta <-> R1/R2 conversions.
+- Consolidated `sainsbury_example`, `binomial_example`, and `agostini_example`
+  into a single `ratings_example` dataset. `calc_sainsbury()`, `calc_binomial()`,
+  and `calc_agostini_duplication()` share the same random-duplication starting
+  hypothesis and the same minimal input (audiences and population), so one shared
+  dataset replaces three near-identical ones.
+- Fixed `calc_binomial()` to compute its contact distribution via
+  `stats::dbinom()`, instead of a separately hand-written Binomial formula.
+- Added an `insertions` argument to `calc_sainsbury()` and `calc_binomial()`
+  (default: one per vehicle, reproducing the exact previous behaviour and
+  citation). Aldas Manzano (1998) reviews these as two models restricted to
+  one insertion per vehicle (Sainsbury: sec. 3.2.2.2; Binomial: sec.
+  3.2.2.1, Chandon, 1985) alongside a *general* pair for several insertions
+  per vehicle (Sainsbury: sec. 3.3.1.2; Binomial: sec. 3.3.1.1, Lee &
+  Burkart, 1960) -- but the general formulas reduce exactly to the
+  one-insertion ones at `insertions = 1`, so they are the same two models at
+  different levels of generality, not four models. `estimate_reach()` (and
+  `compare_reach_models()`, `optimize_media_plan()`) now call
+  `calc_sainsbury()`/`calc_binomial()` directly instead of separately
+  reimplementing this math, and their `model` values are `sainsbury`/
+  `binomial` accordingly (an earlier `binom_heterogeneous`/`binom_homogeneous`
+  rename, meant to avoid a name collision with `calc_binomial()` while the
+  two implementations were still separate, is superseded now that
+  consolidation removes the collision at its root).
+- Removed the experimental NBD approximation from `estimate_reach()`'s and
+  `compare_reach_models()`'s `model` options (`optimize_media_plan()` never
+  offered it). It has no literature-grounded generalization to several
+  vehicles with several insertions each -- unlike Sainsbury/Binomial above --
+  so offering it as a third, equally-weighted option overstated its scope.
+  Call `nbd_exposure_distribution()` directly for that approximation.
+- Completed `calc_metheringham()`. It previously stopped at the model's
+  calibration inputs (A1, mean audience; D, mean duplication; A2 = 2*A1 - D)
+  without ever estimating alpha/beta or evaluating the Beta-Binomial contact
+  distribution the model is defined by (Aldas Manzano, 1998, sec. 3.2.2.9) --
+  so, unlike every other model in this family, it never returned reach or a
+  distribution. A1 and A2 are exactly the R1/R2 `calc_beta_binomial()` takes
+  for one vehicle with several insertions (R2 = 2*R1 - E_2^2 is an identity
+  of the Beta-Binomial distribution), so `calc_metheringham()` now calls it
+  directly for the plan's actual number of vehicles. This adds a required
+  `population` argument; `metheringham_example` gained a `population` field
+  to match.
+- Gave the "classical reach models" (Sainsbury, Binomial, Beta-Binomial,
+  Metheringham, CANEX) a single shared print format (`print_reach_report()`
+  in `R/print_helpers.R`): the same section headers, rounding, and layout for
+  reach, the contact distribution, the cumulative distribution, and model
+  parameters, so results read the same way regardless of which model
+  produced them. Agostini keeps its own, simpler layout (it has no
+  per-contact distribution to show); the sequential-aggregation models
+  (CSD, MSAD, MBD) keep their existing compact format, which already reads
+  consistently across the three of them and suits distributions that can run
+  into the hundreds of cells.
+- `optimize_media_plan()` was briefly removed in early v2.0.0 development on
+  the mistaken assumption that its reach evaluation (several insertions per
+  channel, every step of its search) had no literature basis. A closer
+  reading of Aldas Manzano (1998) found the model family above, which is
+  exactly what it needed; the function was restored with the corrected
+  citations and the `binom_heterogeneous`/`binom_homogeneous` naming.
 - Split `csd_example`, `msad_example`, and `mbd_example` from the dissertation
   numbers they originally reproduced. `csd_example`, `msad_example`, and
   `mbd_example` are now original illustrative data, not derived from any

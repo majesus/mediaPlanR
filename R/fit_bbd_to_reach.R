@@ -233,14 +233,7 @@ fit_bbd_to_reach <- function(insertions, audiences, RM, universe, A0,
   return(result)
 }
 
-#' Print a Beta-Binomial reach fit
-#'
-#' @description Prints the results of a Beta-Binomial distribution fitted to
-#' an external reach estimate.
-#' @param x Object of class `bbd_reach_fit`.
-#' @param ... Additional arguments passed to print
 #' @export
-#' @method print bbd_reach_fit
 print.bbd_reach_fit <- function(x, ...) {
   # Helper to format large numbers
   format_number <- function(x) format(x, big.mark = ",", scientific = FALSE)

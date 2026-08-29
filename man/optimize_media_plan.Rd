@@ -11,7 +11,7 @@ optimize_media_plan(
   target_reach = NULL,
   effective_frequency = 1L,
   max_insertions = plan$data$insertions,
-  model = c("independent", "binomial"),
+  model = c("sainsbury", "binomial"),
   method = c("auto", "exact", "greedy"),
   max_combinations = 1e+06
 )
@@ -31,7 +31,10 @@ default upper bounds.}
 
 \item{max_insertions}{Integer upper bound per channel.}
 
-\item{model}{Reach model supported by \code{estimate_reach()}.}
+\item{model}{\code{sainsbury} or \code{binomial}; see \code{estimate_reach()}. Candidate
+allocations routinely place several insertions in the same vehicle, so
+the experimental NBD approximation (scoped to continuous exposure
+processes, not finite schedules) is not offered here.}
 
 \item{method}{\code{exact}, \code{greedy}, or \code{auto}.}
 
@@ -46,4 +49,10 @@ Finds an insertion allocation under a budget using either exhaustive search
 (with a verifiable global optimum) or an explicitly labelled greedy
 heuristic. The objective can maximize effective reach or minimize spend for
 a required effective reach.
+}
+\references{
+Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la
+distribucion de contactos en la planificacion de medios publicitarios
+impresos. Tesis doctoral, Universidad de Valencia, Espana. (Sections
+3.3.1.1-3.3.1.2.)
 }

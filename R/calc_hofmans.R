@@ -1,10 +1,13 @@
 
 #' @encoding UTF-8
-#' @title Cumulative audience under the Hofmans cumulative-audience model
+#' @title Cumulative audience under the Hofmans accumulation model
 #' @description Implements the Hofmans (1966) model to calculate the cumulative
-#' audience of a media plan with multiple insertions in one vehicle. The model
+#' audience of a media plan with multiple insertions in one vehicle -- the
+#' "accumulation" domain in Aldas Manzano's (1998) three-way split. The model
 #' accounts for duplication between insertions and uses an adjustment parameter
-#' (alpha) to improve the estimate of cumulative audiences.
+#' (alpha) to improve the estimate of cumulative audiences. It is unrelated to
+#' \code{\link{calc_hofmans_duplication}} below, the same author's separate
+#' model for several vehicles with a single insertion each.
 #'
 #' @references
 #' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
@@ -38,7 +41,7 @@
 #'   \item Non-linear accumulation behaviour for N > 3
 #' }
 #'
-#' @return A list of class "reach_hofmans" containing:
+#' @return A list of class "reach_hofmans_accumulation" containing:
 #' \itemize{
 #'   \item results: Data frame with:
 #'     \itemize{
@@ -58,7 +61,7 @@
 #' # Basic example with 5 insertions
 #' R1 <- 0.06    # 6% reach after the first insertion
 #' R2 <- 0.103   # 10.3% reach after the second insertion
-#' result <- calc_hofmans(R1, R2, N = 5)
+#' result <- calc_hofmans_accumulation(R1, R2, N = 5)
 #'
 #' # Inspect the results
 #' print(result$results)
@@ -67,7 +70,7 @@
 #' # Example with input validation
 #' \dontrun{
 #' invalid_R1 <- 1.2  # >100% reach
-#' result <- calc_hofmans(invalid_R1, R2, N = 5)
+#' result <- calc_hofmans_accumulation(invalid_R1, R2, N = 5)
 #' # Raises an error due to the invalid reach
 #' }
 #'
@@ -78,7 +81,7 @@
 #' \code{\link{calc_binomial}} for the Binomial model
 #' \code{\link{calc_metheringham}} for the Metheringham model
 #' @importFrom ggplot2 .data
-calc_hofmans <- function(R1, R2, N, show_steps = TRUE) {
+calc_hofmans_accumulation <- function(R1, R2, N, show_steps = TRUE) {
   # Input validation
   if (any(c(R1, R2) > 1) || R1 <= 0 || R2 <= 0) {
     stop("R1 and R2 must be greater than 0 and at most 1")
@@ -179,5 +182,115 @@ calc_hofmans <- function(R1, R2, N, show_steps = TRUE) {
     results = results,
     parameters = list(k = k, d = d, alpha = alpha),
     plot = plot_hofmans
-  ), class = "reach_hofmans"))
+  ), class = "reach_hofmans_accumulation"))
+}
+
+#__________________________________________________________#
+
+#' @encoding UTF-8
+#' @title Reach under the Hofmans duplication model
+#' @description Implements Hofmans' (1966) *duplication* model: an ad hoc
+#' correction of Agostini's (1961) formula for several vehicles with a
+#' single insertion each -- the same "duplication" domain as
+#' \code{\link{calc_agostini_duplication}}. Where Agostini corrects the
+#' random-duplication assumption with one empirical coefficient shared by
+#' every vehicle pair, Hofmans replaces it with a pairwise coefficient
+#' computed directly from each pair's own observed audiences and duplication
+#' -- no coefficient needs to be fitted from an external calibration data
+#' set. Like Agostini, it estimates total reach only, not the contact
+#' distribution: \code{\link{calc_hofmans_accumulation}} above (an unrelated,
+#' same-author model for one vehicle with several insertions) is the one
+#' that produces a distribution.
+#'
+#' @references
+#' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la
+#' distribucion de contactos en la planificacion de medios publicitarios
+#' impresos. Tesis doctoral, Universidad de Valencia, Espana. (Sec. 3.2.1.2.)
+#' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
+#' Doctoral dissertation, The University of Texas at Austin, pp. 44-45,
+#' independently reviews the identical formula.
+#'
+#' @param audiences Numeric vector with the individual audience of each vehicle
+#' @param population Population size
+#' @param duplication_matrix Symmetric matrix with the pairwise duplicated
+#'   audience between vehicles, in the same units as \code{audiences}
+#'   (people, not a proportion). Diagonal values are ignored.
+#'
+#' @details
+#' \deqn{R_m = \frac{(\sum_i A_i)^2}{\sum_i A_i + \sum_{i<j} K_{ij} A_{ij}}}
+#' with \eqn{K_{ij} = (A_i + A_j)/(A_i + A_j - A_{ij})}. Both Aldas Manzano
+#' (1998) and Kim (2005) report this exact formula, independently
+#' attributing it to Hofmans (1966).
+#'
+#' @return A list of class "reach_hofmans_duplication" containing:
+#' \itemize{
+#'   \item reach: List with percent and people
+#' }
+#'
+#' @examples
+#' audiences <- c(300000, 400000, 200000)
+#' population <- 1000000
+#' duplication_matrix <- matrix(c(
+#'      0, 60000, 40000,
+#'  60000,     0, 50000,
+#'  40000, 50000,     0
+#' ), nrow = 3, byrow = TRUE)
+#' calc_hofmans_duplication(audiences, population, duplication_matrix)
+#'
+#' @export
+#' @seealso \code{\link{calc_agostini_duplication}}, the single-coefficient
+#'   counterpart this model refines pair by pair.
+calc_hofmans_duplication <- function(audiences, population, duplication_matrix) {
+  if (!is.numeric(audiences) || !is.numeric(population)) {
+    stop("audiences and population must be numeric")
+  }
+  n <- length(audiences)
+  if (n < 2L || anyNA(audiences) || any(!is.finite(audiences))) {
+    stop("audiences must contain at least two finite values")
+  }
+  if (length(population) != 1L || !is.finite(population) || population <= 0 ||
+      any(audiences <= 0) || any(audiences > population)) {
+    stop("audiences must be positive and smaller than the population")
+  }
+  if (!is.matrix(duplication_matrix) || !is.numeric(duplication_matrix) ||
+      !identical(dim(duplication_matrix), c(n, n))) {
+    stop("duplication_matrix must be a numeric square matrix matching audiences")
+  }
+  if (!isTRUE(all.equal(duplication_matrix[upper.tri(duplication_matrix)],
+                        t(duplication_matrix)[upper.tri(duplication_matrix)],
+                        check.attributes = FALSE))) {
+    stop("duplication_matrix must be symmetric outside its diagonal")
+  }
+
+  pairs <- utils::combn(n, 2L)
+  kD <- 0
+  for (col in seq_len(ncol(pairs))) {
+    i <- pairs[1L, col]; j <- pairs[2L, col]
+    Aij <- duplication_matrix[i, j]
+    upper_bound <- min(audiences[i], audiences[j])
+    if (!is.finite(Aij) || Aij < 0 || Aij > upper_bound ||
+        audiences[i] + audiences[j] - Aij <= 0) {
+      stop(sprintf(paste0(
+        "duplication_matrix[%d,%d] must be between 0 and min(audience %d, ",
+        "audience %d)"), i, j, i, j), call. = FALSE)
+    }
+    Kij <- (audiences[i] + audiences[j]) / (audiences[i] + audiences[j] - Aij)
+    kD <- kD + Kij * Aij
+  }
+  A <- sum(audiences)
+  reach <- A^2 / (A + kD)
+
+  structure(list(
+    reach = list(percent = 100 * reach / population, people = reach)
+  ), class = "reach_hofmans_duplication")
+}
+
+#' @export
+print.reach_hofmans_duplication <- function(x, ...) {
+  print_reach_report(
+    "HOFMANS MODEL (duplication)",
+    "ad hoc correction of Agostini's formula using a pairwise duplication coefficient",
+    x$reach$percent, x$reach$people
+  )
+  invisible(x)
 }

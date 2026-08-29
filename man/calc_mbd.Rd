@@ -119,5 +119,7 @@ Waring, E. (1792). Meditationes Algebraicae. Cambridge.
 }
 \seealso{
 \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_msad]{calc_msad()}} for sequential aggregation models
-with a completely verified reference example.
+with a completely verified reference example; \code{\link[=calc_cbd]{calc_cbd()}} for the
+model sharing this function's exact within-vehicle peeling step, with a
+different (canonical-expansion, not imputed) between-vehicle step.
 }

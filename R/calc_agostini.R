@@ -1,7 +1,9 @@
 #' @encoding UTF-8
-#' @title Cumulative reach under the Agostini model
+#' @title Cumulative reach under the Agostini duplication model
 #' @description Implements the Agostini (1961) model to estimate the cumulative
-#' (net) reach of a media plan with several vehicles, correcting the
+#' (net) reach of a media plan with several vehicles, each with a single
+#' insertion -- the "duplication" domain in Aldas Manzano's (1998) three-way
+#' split, shared with \code{\link{calc_hofmans_duplication}}. It corrects the
 #' random-duplication (independence) assumption with an empirical coefficient k
 #' that adjusts the predicted duplication between each newly added vehicle and
 #' the reach accumulated so far.
@@ -34,7 +36,7 @@
 #' especially practical when only a mean estimated duplication is available for
 #' the media type.
 #'
-#' @return A list of class "reach_agostini" containing:
+#' @return A list of class "reach_agostini_duplication" containing:
 #' \itemize{
 #'   \item reach: List with the plan's final cumulative reach:
 #'     \itemize{
@@ -49,11 +51,11 @@
 #'
 #' @examples
 #' audiences <- c(300000, 400000, 200000)
-#' result <- calc_agostini(audiences, population = 1000000, k = 0.9)
+#' result <- calc_agostini_duplication(audiences, population = 1000000, k = 0.9)
 #' print(result)
 #'
 #' # k = 1 is equivalent to the random-duplication (independence) assumption
-#' result_independence <- calc_agostini(audiences, population = 1000000, k = 1)
+#' result_independence <- calc_agostini_duplication(audiences, population = 1000000, k = 1)
 #' result_independence$reach$percent
 #'
 #' @export
@@ -61,7 +63,8 @@
 #' \code{\link{calc_sainsbury}} for the random-duplication assumption with vehicle heterogeneity
 #' \code{\link{calc_binomial}} for the random-duplication assumption with vehicle homogeneity
 #' \code{\link{calc_metheringham}} for the adjustment via observed mean duplication
-calc_agostini <- function(audiences, population, k = 0.9) {
+#' \code{\link{calc_hofmans_duplication}} for the same role with a pairwise, unfitted coefficient
+calc_agostini_duplication <- function(audiences, population, k = 0.9) {
   if (!is.numeric(audiences) || !is.numeric(population) || !is.numeric(k)) {
     stop("audiences, population and k must be numeric")
   }
@@ -105,38 +108,25 @@ calc_agostini <- function(audiences, population, k = 0.9) {
     ),
     k = k,
     n_vehicles = n
-  ), class = "reach_agostini")
+  ), class = "reach_agostini_duplication")
 }
 
-#' @encoding UTF-8
-#' @title Print a reach_agostini object
-#' @description Produces a formatted report of the Agostini model metrics.
-#'
-#' @param x Object of class \code{"reach_agostini"}, the result of \code{\link{calc_agostini}}
-#' @param ... Additional arguments (unused)
-#'
-#' @return Invisibly returns \code{x}. Called for its printing side effect.
-#'
-#' @examples
-#' result <- calc_agostini(c(300000, 400000, 200000), population = 1000000)
-#' print(result)
-#'
 #' @export
-print.reach_agostini <- function(x, ...) {
+print.reach_agostini_duplication <- function(x, ...) {
   cat("AGOSTINI MODEL\n")
   cat("==============\n")
   cat(sprintf("Description: random duplication corrected via the empirical coefficient k = %.3f\n\n", x$k))
 
-  cat("CUMULATIVE REACH AFTER EACH VEHICLE IS ADDED:\n")
-  cat("------------------------------------------------\n")
+  cat("HEADLINE METRICS:\n")
+  cat("-----------------\n")
+  cat(sprintf("Total reach: %.2f%% (%.0f people)\n", x$reach$percent, x$reach$people))
+
+  cat("\nCUMULATIVE REACH AFTER EACH VEHICLE IS ADDED:\n")
+  cat("----------------------------------------------\n")
   for (i in seq_len(x$n_vehicles)) {
     cat(sprintf("After vehicle %d: %.2f%% (%.0f people)\n",
                 i, x$cumulative$percent[i], x$cumulative$people[i]))
   }
-
-  cat("\nTOTAL PLAN REACH:\n")
-  cat("------------------\n")
-  cat(sprintf("%.2f%% (%.0f people)\n", x$reach$percent, x$reach$people))
 
   invisible(x)
 }

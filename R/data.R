@@ -8,44 +8,43 @@
 #   do.call(calc_canex, canex_example)
 #   do.call(calc_sainsbury, sainsbury_example)
 #
-# The dataset for calc_binomial() is called 'binomial_plan' rather than
-# 'binomial' because 'binomial' already exists in stats (the family used by
-# generalized linear models); using that name would mask it once mediaPlanR
-# is loaded. The remaining datasets inherited from version 0.2.0
-# (sainsbury, beta_binomial, metheringham, hofmans, agostini) were renamed
-# with the '_example' suffix to follow the same convention as the newer v2
-# datasets and to avoid being confused with their model function's own name
-# (e.g. metheringham_example vs. calc_metheringham()).
+# calc_sainsbury(), calc_binomial(), and calc_agostini_duplication() share the
+# same random-duplication starting hypothesis and the same minimal input shape
+# (audiences and population; calc_agostini_duplication()'s k falls back to its
+# default), so they share a single dataset, 'ratings_example', instead of one
+# dataset each. It is not called 'binomial_example' because 'binomial' already
+# exists in stats (the family used by generalized linear models); using that
+# name would mask it once mediaPlanR is loaded. The remaining datasets
+# inherited from version 0.2.0 (beta_binomial, metheringham, hofmans) were
+# renamed with the '_example' suffix to follow the same convention as the
+# newer v2 datasets and to avoid being confused with their model function's
+# own name (e.g. metheringham_example vs. calc_metheringham()). The two
+# Hofmans models -- accumulation (one vehicle, several insertions) and
+# duplication (several vehicles, one insertion each) -- each keep the domain
+# in both the function name and its dataset name, so neither can be mistaken
+# for the other's input shape.
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Example inputs for calc_sainsbury()
-#' @description List of arguments for \code{\link{calc_sainsbury}}, ready for
-#' \code{do.call()}.
+#' @title Example inputs shared by calc_sainsbury(), calc_binomial(), and calc_agostini_duplication()
+#' @description List of arguments ready for \code{do.call()} with any of the
+#' three reach models that share the random-duplication starting hypothesis
+#' for several vehicles, each with a single insertion: \code{\link{calc_sainsbury}}
+#' (heterogeneous vehicle probabilities), \code{\link{calc_binomial}}
+#' (homogeneous, averaged probability), and \code{\link{calc_agostini_duplication}}
+#' (the same hypothesis corrected by an empirical coefficient \code{k}, which
+#' falls back to its default when omitted here).
 #' @format A list with the components:
 #' \describe{
 #'   \item{audiences}{Numeric vector with the audience of each vehicle}
 #'   \item{population}{Population size}
 #' }
 #' @examples
-#' data(sainsbury_example)
-#' do.call(calc_sainsbury, sainsbury_example)
-"sainsbury_example"
-
-#' @encoding UTF-8
-#' @title Example inputs for calc_binomial()
-#' @description List of arguments for \code{\link{calc_binomial}}, ready for
-#' \code{do.call()}. Called \code{binomial_plan} rather than \code{binomial}
-#' to avoid masking \code{stats::binomial} once the package is loaded.
-#' @format A list with the components:
-#' \describe{
-#'   \item{audiences}{Numeric vector with the audience of each vehicle}
-#'   \item{population}{Population size}
-#' }
-#' @examples
-#' data(binomial_plan)
-#' do.call(calc_binomial, binomial_plan)
-"binomial_plan"
+#' data(ratings_example)
+#' do.call(calc_sainsbury, ratings_example)
+#' do.call(calc_binomial, ratings_example)
+#' do.call(calc_agostini_duplication, ratings_example)
+"ratings_example"
 
 #' @encoding UTF-8
 #' @title Example inputs for calc_beta_binomial()
@@ -72,6 +71,7 @@
 #'   \item{audiences}{Numeric vector with the audience of each vehicle}
 #'   \item{insertions}{Numeric vector with the number of insertions per vehicle}
 #'   \item{duplication_matrix}{Symmetric matrix with the duplication between vehicles}
+#'   \item{population}{Population size}
 #' }
 #' @examples
 #' data(metheringham_example)
@@ -79,9 +79,11 @@
 "metheringham_example"
 
 #' @encoding UTF-8
-#' @title Example inputs for calc_hofmans()
-#' @description List of arguments for \code{\link{calc_hofmans}}, ready for
-#' \code{do.call()}.
+#' @title Example inputs for calc_hofmans_accumulation()
+#' @description List of arguments for \code{\link{calc_hofmans_accumulation}},
+#' ready for \code{do.call()}. One vehicle, several insertions -- the
+#' "accumulation" domain. For the other Hofmans model (several vehicles, one
+#' insertion each), see \code{\link{hofmans_duplication_example}}.
 #' @format A list with the components:
 #' \describe{
 #'   \item{R1}{Reach after the first insertion (0-1)}
@@ -89,24 +91,31 @@
 #'   \item{N}{Number of insertions for which to calculate cumulative audience}
 #' }
 #' @examples
-#' data(hofmans_example)
-#' do.call(calc_hofmans, hofmans_example)
-"hofmans_example"
+#' data(hofmans_accumulation_example)
+#' do.call(calc_hofmans_accumulation, hofmans_accumulation_example)
+#' @seealso [calc_hofmans_accumulation()], [hofmans_duplication_example]
+"hofmans_accumulation_example"
 
 #' @encoding UTF-8
-#' @title Example inputs for calc_agostini()
-#' @description List of arguments for \code{\link{calc_agostini}}, ready for
-#' \code{do.call()}.
+#' @title Example inputs for calc_hofmans_duplication()
+#' @description List of arguments for \code{\link{calc_hofmans_duplication}},
+#' ready for \code{do.call()}. Several vehicles, one insertion each -- the
+#' "duplication" domain, the same as \code{\link{calc_agostini_duplication}}.
+#' This is original illustrative data (not derived from any published
+#' source). For the other Hofmans model (one vehicle, several insertions),
+#' see \code{\link{hofmans_accumulation_example}}.
 #' @format A list with the components:
 #' \describe{
 #'   \item{audiences}{Numeric vector with the audience of each vehicle}
 #'   \item{population}{Population size}
-#'   \item{k}{Agostini's empirical duplication coefficient}
+#'   \item{duplication_matrix}{Symmetric matrix with the pairwise duplicated
+#'   audience between vehicles, in the same units as \code{audiences}}
 #' }
 #' @examples
-#' data(agostini_example)
-#' do.call(calc_agostini, agostini_example)
-"agostini_example"
+#' data(hofmans_duplication_example)
+#' do.call(calc_hofmans_duplication, hofmans_duplication_example)
+#' @seealso [calc_hofmans_duplication()], [hofmans_accumulation_example]
+"hofmans_duplication_example"
 
 #' @encoding UTF-8
 #' @title Example inputs for calc_canex()

@@ -51,59 +51,44 @@ new_reach_result <- function(probability, population, model, parameters = list()
 
 #' Estimate reach and contact distribution for a media plan
 #'
+#' A `media_plan`-native front end for `calc_sainsbury()`/`calc_binomial()`:
+#' reads `audience`, `insertions`, and `population` from `plan` and calls the
+#' requested model directly, so the two share a single implementation.
+#'
 #' @param plan A `media_plan` object.
-#' @param model Reach model. `independent` is the exact Poisson-binomial model
-#'   for independent opportunities; `binomial` uses their average probability;
-#'   `nbd` is an experimental unbounded count approximation and requires `k`.
-#' @param k Positive NBD heterogeneity parameter.
+#' @param model `sainsbury` (default) runs [calc_sainsbury()]: heterogeneous
+#'   vehicle probabilities, combined via the exact Poisson-binomial
+#'   convolution. `binomial` runs [calc_binomial()]: every vehicle is treated
+#'   as sharing the plan's average probability. Both assume random
+#'   duplication *and* random accumulation (a repeat insertion in the same
+#'   vehicle is treated as independent, exactly like an insertion in a
+#'   different vehicle) -- see `vignette("mediaPlanR-intro")`.
 #'
 #' @return A `media_reach` object with a complete zero-to-N distribution.
+#'
+#' @seealso [calc_sainsbury()] and [calc_binomial()], called directly by this
+#'   function. For the experimental Negative-Binomial approximation, call
+#'   [nbd_exposure_distribution()] directly with your own `mean_contacts` --
+#'   it is scoped to continuous exposure processes, not finite insertion
+#'   schedules, so it is not offered here or in [optimize_media_plan()].
+#'
 #' @export
-estimate_reach <- function(plan, model = c("independent", "binomial", "nbd"),
-                           k = NULL) {
+estimate_reach <- function(plan, model = c("sainsbury", "binomial")) {
   assert_media_plan(plan)
   model <- match.arg(model)
   d <- plan$data
-  probabilities <- rep(d$audience / plan$population, d$insertions)
-  if (!length(probabilities)) {
-    return(new_reach_result(1, plan$population, model))
-  }
-
-  if (model == "independent") {
-    probability <- poisson_binomial_distribution(probabilities)
-    parameters <- list(opportunities = length(probabilities))
-  } else if (model == "binomial") {
-    n <- length(probabilities)
-    p <- mean(probabilities)
-    probability <- stats::dbinom(0:n, size = n, prob = p)
-    parameters <- list(n = n, p = p)
+  classical <- if (model == "sainsbury") {
+    calc_sainsbury(d$audience, plan$population, d$insertions)
   } else {
-    if (!is.numeric(k) || length(k) != 1L || !is.finite(k) || k <= 0) {
-      stop("k must be one positive finite number for the NBD model", call. = FALSE)
-    }
-    mean_contacts <- sum(probabilities)
-    max_contacts <- length(probabilities)
-    nbd_model <- nbd_exposure_distribution(
-      mean_contacts = mean_contacts,
-      size = k,
-      report_max = max_contacts,
-      opportunities = max_contacts
-    )
-    probability <- nbd_model$distribution$probability
-    parameters <- list(mean_contacts = mean_contacts, k = k,
-                       last_bin_is_open = TRUE,
-                       experimental = TRUE,
-                       scope = nbd_model$diagnostics$scope,
-                       probability_above_opportunities =
-                         nbd_model$diagnostics$probability_above_opportunities)
+    calc_binomial(d$audience, plan$population, d$insertions)
   }
-  result <- new_reach_result(probability, plan$population, model, parameters)
-  if (model == "nbd" && result$reach$probability > 0) {
-    # The final displayed bin is open-ended, so its label cannot be used to
-    # recover the exact mean. The NBD mean is known analytically.
-    result$average_frequency <- mean_contacts / result$reach$probability
+  probability <- c(1 - classical$reach$percent / 100, classical$distribution$percent / 100)
+  parameters <- if (model == "binomial") {
+    list(n = sum(d$insertions), p = classical$mean_probability)
+  } else {
+    list(opportunities = sum(d$insertions))
   }
-  result
+  new_reach_result(probability, plan$population, model, parameters)
 }
 
 #' @export
@@ -117,19 +102,16 @@ print.media_reach <- function(x, ...) {
 #' Compare reach estimates under several models
 #'
 #' @param plan A `media_plan` object.
-#' @param models Character vector containing `independent`, `binomial`, or
-#'   `nbd`.
-#' @param k NBD heterogeneity parameter when `nbd` is requested.
+#' @param models Character vector containing `sainsbury` and/or `binomial`.
+#'   See `estimate_reach()`.
 #' @return A data frame with one row per model.
 #' @export
-compare_reach_models <- function(plan,
-                                 models = c("independent", "binomial"),
-                                 k = NULL) {
-  allowed <- c("independent", "binomial", "nbd")
+compare_reach_models <- function(plan, models = c("sainsbury", "binomial")) {
+  allowed <- c("sainsbury", "binomial")
   if (!length(models) || any(!models %in% allowed)) {
     stop("Unknown reach model", call. = FALSE)
   }
-  results <- lapply(models, function(model) estimate_reach(plan, model, k = k))
+  results <- lapply(models, function(model) estimate_reach(plan, model))
   data.frame(
     model = models,
     reach_probability = vapply(results, function(x) x$reach$probability, numeric(1)),

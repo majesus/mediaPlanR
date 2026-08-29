@@ -252,6 +252,8 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'
 #' @seealso
 #' \code{\link{calc_beta_binomial}} for the univariate model (a single vehicle)
+#' \code{\link{calc_cbd}}, whose between-vehicle step reuses this same
+#' canonical expansion, extended to insertion-level Beta-Binomial expansion
 #'
 #' @references
 #' Danaher, P. J. (1991). A canonical expansion model for multivariate media
@@ -425,59 +427,14 @@ calculate_metrics <- function(distribution, population = 1000000) {
   report
 }
 
-#' @encoding UTF-8
-#' @title Print a reach_canex object
-#' @description Produces a formatted report of the CANEX model metrics.
-#'
-#' @param x Object of class \code{"reach_canex"}, the result of \code{\link{calc_canex}}
-#' @param ... Additional arguments (unused)
-#'
-#' @return Invisibly returns \code{x}. Called for its printing side effect.
-#'
-#' @examples
-#' result <- calc_canex(
-#'   data.frame(k = 2, R1 = 0.2, R2 = 0.36), matrix(1, 1, 1), 1000
-#' )
-#' print(result)
-#'
 #' @export
 print.reach_canex <- function(x, ...) {
-  cat("\nCANEX MODEL (Canonical Expansion)")
-  cat("\n===================================")
-  cat("\nDescription: model that accounts for heterogeneity and duplications between vehicles\n")
-
-  cat("\nHEADLINE METRICS:")
-  cat("\n--------------------")
-  cat(sprintf("\nTotal reach: %.2f%% (%.0f people)\n",
-              x$total_reach * 100, x$total_reach_people))
-
-  cat("\nCONTACT DISTRIBUTION:")
-  cat("\n-------------------------")
-  cat("\n(Percentage of the population receiving exactly N contacts)")
-  for (i in seq_len(nrow(x$distribution))) {
-    contacts <- x$distribution$contacts[i]
-    cat(sprintf("\n%d contact%s: %.2f%% (%.0f people)",
-                contacts, ifelse(contacts == 1, "", "s"),
-                x$distribution$percent[i], x$distribution$people[i]))
-  }
-
-  cat("\n\nCUMULATIVE DISTRIBUTION:")
-  cat("\n-----------------------")
-  cat("\n(Percentage of the population receiving at least N contacts)")
-  for (i in seq_len(nrow(x$cumulative))) {
-    min_contacts <- x$cumulative$min_contacts[i]
-    cat(sprintf("\n>= %d contact%s: %.2f%% (%.0f people)",
-                min_contacts, ifelse(min_contacts == 1, "", "s"),
-                x$cumulative$percent[i], x$cumulative$people[i]))
-  }
-
-  cat("\n\nSUMMARY STATISTICS:")
-  cat("\n-------------------")
-  cat(sprintf("\nAverage contacts per person reached: %.2f",
-              x$stats$avg_contacts))
-  cat(sprintf("\nProbability of 0 contacts: %.2f%%",
-              x$stats$zero_contacts_prob * 100))
-  cat("\n")
-
+  print_reach_report(
+    "CANEX MODEL (Canonical Expansion)",
+    "model that accounts for heterogeneity and duplications between vehicles",
+    x$total_reach * 100, x$total_reach_people,
+    distribution = x$distribution, cumulative = x$cumulative,
+    parameters = list("Probability of 0 contacts (%)" = x$stats$zero_contacts_prob * 100)
+  )
   invisible(x)
 }
