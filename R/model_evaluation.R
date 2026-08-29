@@ -170,8 +170,9 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #'   its maximum. For several schedules, also include the column named by
 #'   `schedule_col`.
 #' @param predicted Either a supported model result whose `distribution`
-#'   contains `contacts` and `probability`/`percentage`, or a data frame with
-#'   columns `contacts` and `predicted`. Data-frame predictions must use the
+#'   contains `contacts` and `probability`/`percent` (the legacy `percentage`
+#'   column name is also accepted), or a data frame with columns `contacts`
+#'   and `predicted`. Data-frame predictions must use the
 #'   same schedule column when `schedule_col` is supplied.
 #' @param observed_scale Required declaration of the `observed` column:
 #'   `"count"`, `"probability"`, or `"percent"`. Counts may be weighted and

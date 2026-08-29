@@ -19,14 +19,23 @@ reference:
   desc: "Explicit fitting, continuous-count approximation, and sequential aggregation"
   contents:
   - fit_bbd_to_reach
+  - calibrate_bbd
   - fit_nbd_exposure
   - nbd_exposure_distribution
   - evaluate_exposure_model
-- title: "Compatibility and interactive tools"
+- title: "Example datasets"
+  desc: "Illustrative inputs (ready for do.call()) and literature-reproduction benchmarks"
   contents:
-  - starts_with("optimizar_")
-  - optimize_media_sb
-  - calcular_metricas_medios
-  - calcular_roas
-  - imprimir_resultados
-  - starts_with("run_")
+  - ratings_example
+  - beta_binomial_example
+  - metheringham_example
+  - hofmans_accumulation_example
+  - hofmans_duplication_example
+  - canex_example
+  - bbd_reach_example
+  - csd_example
+  - csd_kim2005
+  - msad_example
+  - msad_kim2005
+  - mbd_example
+  - mbd_cheong2007

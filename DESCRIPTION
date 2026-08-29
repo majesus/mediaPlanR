@@ -1,18 +1,24 @@
 Package: mediaPlanR
 Type: Package
 Version: 2.0.0
-Date: 2026-08-19
+Date: 2026-08-29
 Title: Reliable Cross-Media Reach and Frequency Planning
 Description: Reproducible tools for cross-media reach, contact-frequency
-    distributions, target-audience metrics and budget allocation. Provides a
-    validated media-plan data contract, exact Poisson-binomial calculations,
-    Binomial, Beta-Binomial, canonical-expansion, Canonical Sequential and
-    Morgensztern Sequential models, plus an explicitly scoped Negative-Binomial count approximation,
-    effective-reach optimization with explicit optimality diagnostics, and
-    compatibility functions for established planning workflows. Methods follow
-    Danaher (1991) <doi:10.1177/002224379102800311>, Leckenby & Rice (1986)
-    <doi:10.1080/00913367.1986.10673014>, and Ehrenberg (1959)
-    <doi:10.2307/2985810>.
+    distributions, target-audience metrics and budget-constrained reach
+    optimization. Provides a validated media-plan data contract, exact
+    Poisson-binomial calculations, Binomial, Beta-Binomial, canonical-expansion,
+    Canonical Sequential, Morgensztern Sequential and Conditional Beta
+    Distribution models, a Multivariate Beta-Binomial model, plus an explicitly
+    scoped Negative-Binomial count approximation and effective-reach
+    optimization with explicit optimality diagnostics. Methods follow
+    Danaher (1991)
+    <doi:10.1177/002224379102800311>, Leckenby & Rice (1986)
+    <doi:10.1080/00913367.1986.10673014>, Ehrenberg (1959)
+    <doi:10.2307/2985810>, Kim (2005, "A Canonical Sequential Aggregation
+    Media Model", doctoral dissertation, The University of Texas at Austin),
+    and Cheong (2007, "Multivariate Beta Binomial Distribution Model as a
+    Web Media Exposure Model", doctoral dissertation, The University of
+    Texas at Austin).
 Authors@R: person(
     given = "Manuel J.",
     family = "Sánchez-Franco",
@@ -31,16 +37,11 @@ RoxygenNote: 7.3.2
 Imports:
     stats,
     extraDistr,
-    shiny (>= 1.7.0),
-    bslib (>= 0.5.0),
-    ggplot2 (>= 3.4.0),
-    ggrepel,
-    scales
+    ggplot2 (>= 3.4.0)
 Suggests:
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0),
-    readr
+    testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Depends:
     R (>= 4.0)

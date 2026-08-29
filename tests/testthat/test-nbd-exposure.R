@@ -34,12 +34,3 @@ test_that("underdispersed counts use the Poisson boundary", {
   expect_identical(fit$estimates$size, Inf)
 })
 
-test_that("legacy calc_nbd exposes finite-opportunity diagnostics", {
-  result <- calc_nbd(
-    c(300000, 400000, 200000), c(3, 2, 4), 1000000, k = 1.7
-  )
-  expect_identical(result$diagnostics$process, "unbounded_poisson_gamma")
-  expect_equal(result$diagnostics$opportunities, 9L)
-  expect_gt(result$diagnostics$probability_above_opportunities, 0)
-})
-

@@ -1,93 +1,61 @@
-#' @encoding UTF-8
-#' @title Datos ilustrativos de soportes de prensa
-#' @description Conjunto de datos ficticio con audiencias, tarifas e indices
-#' de utilidad de 60 soportes de prensa espanola, empleado en los ejemplos
-#' de \code{\link{calc_sainsbury}}, \code{\link{calc_binomial}},
-#' \code{\link{optimize_media_sb}} y \code{\link{calcular_metricas_medios}}.
-#'
-#' @format Un data frame con 60 filas y 7 variables:
-#' \describe{
-#'   \item{soportes}{Caracter. Nombre del soporte}
-#'   \item{soportes_.}{Numerico. Coeficiente de soporte (uso interno docente)}
-#'   \item{audiencias}{Entero. Audiencia del soporte (personas)}
-#'   \item{tarifas}{Numerico. Tarifa de una insercion en el soporte}
-#'   \item{indices_utilidad}{Numerico. Indice de utilidad de la audiencia (0-1 aprox.)}
-#'   \item{inserciones}{Entero. Numero de inserciones consideradas}
-#'   \item{duplicacion}{Entero. Audiencia duplicada estimada frente al resto de soportes (personas)}
-#' }
-#'
-#' @note Los datos son ficticios y se emplean unicamente con fines docentes e
-#' ilustrativos; no representan cifras reales de audiencia o tarifas.
-#'
-#' @source Elaboracion propia con fines docentes.
-#'
-#' @examples
-#' data(datos_medios)
-#' head(datos_medios)
-#'
-"datos_medios"
-
 #__________________________________________________________#
-# Coleccion de datasets de ejemplo, uno por funcion modelo.
+# Collection of example datasets, one per model function.
 #
-# Cada dataset es una lista cuyos elementos coinciden EXACTAMENTE, en
-# nombre, con los argumentos formales de su funcion correspondiente, de
-# modo que se pueden pasar directamente con do.call() sin tener que
-# construir a mano los datos de entrada:
+# Each dataset is a list whose elements match EXACTLY, by name, the formal
+# arguments of its corresponding function, so they can be passed directly
+# with do.call() without having to build the input data by hand:
 #
 #   do.call(calc_canex, canex_example)
 #   do.call(calc_sainsbury, sainsbury_example)
 #
-# El dataset de calc_binomial() se llama 'binomial_plan' y no 'binomial'
-# porque 'binomial' ya existe en stats (la familia de calc_binomial()
-# para modelos lineales generalizados); usar ese nombre lo enmascararia
-# tras cargar mediaPlanR. El resto de datasets heredados de la version 0.2.0
-# (sainsbury, beta_binomial, metheringham, hofmans, agostini, grps, cpm,
-# roas) se renombraron con el sufijo '_example' para seguir la misma
-# convencion que los datasets nuevos de v2 y no confundirse con el nombre
-# de su funcion modelo (p. ej. metheringham_example vs. calc_metheringham()).
+# calc_sainsbury(), calc_binomial(), and calc_agostini_duplication() share the
+# same random-duplication starting hypothesis and the same minimal input shape
+# (audiences and population; calc_agostini_duplication()'s k falls back to its
+# default), so they share a single dataset, 'ratings_example', instead of one
+# dataset each. It is not called 'binomial_example' because 'binomial' already
+# exists in stats (the family used by generalized linear models); using that
+# name would mask it once mediaPlanR is loaded. The remaining datasets
+# inherited from version 0.2.0 (beta_binomial, metheringham, hofmans) were
+# renamed with the '_example' suffix to follow the same convention as the
+# newer v2 datasets and to avoid being confused with their model function's
+# own name (e.g. metheringham_example vs. calc_metheringham()). The two
+# Hofmans models -- accumulation (one vehicle, several insertions) and
+# duplication (several vehicles, one insertion each) -- each keep the domain
+# in both the function name and its dataset name, so neither can be mistaken
+# for the other's input shape.
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_sainsbury()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_sainsbury}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs shared by calc_sainsbury(), calc_binomial(), and calc_agostini_duplication()
+#' @description List of arguments ready for \code{do.call()} with any of the
+#' three reach models that share the random-duplication starting hypothesis
+#' for several vehicles, each with a single insertion: \code{\link{calc_sainsbury}}
+#' (heterogeneous vehicle probabilities), \code{\link{calc_binomial}}
+#' (homogeneous, averaged probability), and \code{\link{calc_agostini_duplication}}
+#' (the same hypothesis corrected by an empirical coefficient \code{k}, which
+#' falls back to its default when omitted here).
+#' @format A list with the components:
 #' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
+#'   \item{audiences}{Numeric vector with the audience of each vehicle}
+#'   \item{population}{Population size}
 #' }
 #' @examples
-#' data(sainsbury_example)
-#' do.call(calc_sainsbury, sainsbury_example)
-"sainsbury_example"
+#' data(ratings_example)
+#' do.call(calc_sainsbury, ratings_example)
+#' do.call(calc_binomial, ratings_example)
+#' do.call(calc_agostini_duplication, ratings_example)
+"ratings_example"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_binomial()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_binomial}}, lista para usar con \code{do.call()}.
-#' Se llama \code{binomial_plan} y no \code{binomial} para no enmascarar
-#' \code{stats::binomial} tras cargar el paquete.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_beta_binomial()
+#' @description List of arguments for \code{\link{calc_beta_binomial}}, ready
+#' for \code{do.call()}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
-#' }
-#' @examples
-#' data(binomial_plan)
-#' do.call(calc_binomial, binomial_plan)
-"binomial_plan"
-
-#' @encoding UTF-8
-#' @title Datos de ejemplo para calc_beta_binomial()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_beta_binomial}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{A1}{Audiencia del soporte tras la primera insercion}
-#'   \item{A2}{Audiencia del soporte tras la segunda insercion}
-#'   \item{P}{Tamano total de la poblacion}
-#'   \item{n}{Numero total de inserciones planificadas}
+#'   \item{A1}{Vehicle audience after the first insertion}
+#'   \item{A2}{Vehicle audience after the second insertion}
+#'   \item{P}{Total population size}
+#'   \item{n}{Total number of planned insertions}
 #' }
 #' @examples
 #' data(beta_binomial_example)
@@ -95,14 +63,15 @@
 "beta_binomial_example"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_metheringham()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_metheringham}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_metheringham()
+#' @description List of arguments for \code{\link{calc_metheringham}}, ready
+#' for \code{do.call()}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{inserciones}{Vector numerico con el numero de inserciones por soporte}
-#'   \item{matriz_duplicacion}{Matriz simetrica con la duplicacion entre soportes}
+#'   \item{audiences}{Numeric vector with the audience of each vehicle}
+#'   \item{insertions}{Numeric vector with the number of insertions per vehicle}
+#'   \item{duplication_matrix}{Symmetric matrix with the duplication between vehicles}
+#'   \item{population}{Population size}
 #' }
 #' @examples
 #' data(metheringham_example)
@@ -110,120 +79,66 @@
 "metheringham_example"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_hofmans()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_hofmans}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_hofmans_accumulation()
+#' @description List of arguments for \code{\link{calc_hofmans_accumulation}},
+#' ready for \code{do.call()}. One vehicle, several insertions -- the
+#' "accumulation" domain. For the other Hofmans model (several vehicles, one
+#' insertion each), see \code{\link{hofmans_duplication_example}}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{R1}{Cobertura tras la primera insercion (0-1)}
-#'   \item{R2}{Cobertura tras la segunda insercion (0-1)}
-#'   \item{N}{Numero de inserciones para las que calcular la audiencia acumulada}
+#'   \item{R1}{Reach after the first insertion (0-1)}
+#'   \item{R2}{Reach after the second insertion (0-1)}
+#'   \item{N}{Number of insertions for which to calculate cumulative audience}
 #' }
 #' @examples
-#' data(hofmans_example)
-#' do.call(calc_hofmans, hofmans_example)
-"hofmans_example"
+#' data(hofmans_accumulation_example)
+#' do.call(calc_hofmans_accumulation, hofmans_accumulation_example)
+#' @seealso [calc_hofmans_accumulation()], [hofmans_duplication_example]
+"hofmans_accumulation_example"
 
 #' @encoding UTF-8
-#' @title Datos de ejemplo para calc_agostini()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_agostini}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
+#' @title Example inputs for calc_hofmans_duplication()
+#' @description List of arguments for \code{\link{calc_hofmans_duplication}},
+#' ready for \code{do.call()}. Several vehicles, one insertion each -- the
+#' "duplication" domain, the same as \code{\link{calc_agostini_duplication}}.
+#' This is original illustrative data (not derived from any published
+#' source). For the other Hofmans model (one vehicle, several insertions),
+#' see \code{\link{hofmans_accumulation_example}}.
+#' @format A list with the components:
 #' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
-#'   \item{k}{Coeficiente empirico de duplicacion de Agostini}
+#'   \item{audiences}{Numeric vector with the audience of each vehicle}
+#'   \item{population}{Population size}
+#'   \item{duplication_matrix}{Symmetric matrix with the pairwise duplicated
+#'   audience between vehicles, in the same units as \code{audiences}}
 #' }
 #' @examples
-#' data(agostini_example)
-#' do.call(calc_agostini, agostini_example)
-"agostini_example"
-
-#' @encoding UTF-8
-#' @title Historical MBBD-named example data
-#' @description Legacy name for the example now available as
-#' \code{mbbd_example}. It fits one BBD to external reach and is not an MSAD
-#' example. New code should use \code{mbbd_example} with
-#' \code{\link{fit_bbd_to_reach}}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{insertions}{Vector numerico. Numero de inserciones para cada soporte}
-#'   \item{audiences}{Vector numerico. Audiencia de cada soporte en personas}
-#'   \item{RM}{Entero. Estimacion de cobertura segun Morgensztern en personas}
-#'   \item{universe}{Entero. Tamano del universo objetivo en personas}
-#'   \item{A0}{Numerico. Valor inicial del parametro A}
-#' }
-#' @examples
-#' data(MBBD)
-#' do.call(calc_MBBD, MBBD)
-"MBBD"
-
-#' @encoding UTF-8
-#' @title Historical CANEX example data name
-#' @description Legacy name for \code{canex_example}. New code should prefer
-#' the descriptive name.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{vehicles_data}{Data frame con columnas k, R1 y R2 por vehiculo}
-#'   \item{duplications}{Matriz cuadrada de duplicaciones brutas entre vehiculos}
-#'   \item{poblacion}{Tamano de la poblacion objetivo}
-#' }
-#' @examples
-#' data(canex)
-#' do.call(calc_canex, canex)
-"canex"
-
-#' @encoding UTF-8
-#' @title Historical NBD example data name
-#' @description Legacy name for \code{nbd_example}. New statistical work
-#' should normally use \code{\link{fit_nbd_exposure}} with observed counts.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{inserciones}{Vector numerico con el numero de inserciones por soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
-#'   \item{k}{Parametro de heterogeneidad (forma de la distribucion Gamma)}
-#' }
-#' @examples
-#' data(nbd)
-#' do.call(calc_nbd, nbd)
-"nbd"
+#' data(hofmans_duplication_example)
+#' do.call(calc_hofmans_duplication, hofmans_duplication_example)
+#' @seealso [calc_hofmans_duplication()], [hofmans_accumulation_example]
+"hofmans_duplication_example"
 
 #' @encoding UTF-8
 #' @title Example inputs for calc_canex()
-#' @description Descriptively named replacement for the historical
-#' \code{canex} example object. The list is ready for \code{do.call()}.
+#' @description List of arguments for \code{\link{calc_canex}}, ready for
+#' \code{do.call()}.
 #' @format A list with \code{vehicles_data}, \code{duplications}, and
-#' \code{poblacion}.
+#' \code{population}.
 #' @examples
 #' data(canex_example)
 #' do.call(calc_canex, canex_example)
 "canex_example"
 
 #' @encoding UTF-8
-#' @title Example inputs for the experimental NBD plan wrapper
-#' @description Descriptively named replacement for the historical \code{nbd}
-#' example object. For new analyses prefer \code{fit_nbd_exposure()} with
-#' observed counts or \code{nbd_exposure_distribution()} with explicit
-#' count-process parameters.
-#' @format A list with \code{audiencias}, \code{inserciones},
-#' \code{pob_total}, and \code{k}.
-#' @examples
-#' data(nbd_example)
-#' do.call(calc_nbd, nbd_example)
-"nbd_example"
-
-#' @encoding UTF-8
-#' @title Legacy example for fitting a BBD to external reach
-#' @description Descriptively named replacement for the historical
-#' \code{MBBD} object. Despite its legacy name, this example exercises
-#' \code{fit_bbd_to_reach()}, not the MSAD sequential model.
+#' @title Example inputs for fitting a BBD to an external reach estimate
+#' @description List of arguments for \code{\link{fit_bbd_to_reach}}, ready
+#' for \code{do.call()}. Fits one Beta-Binomial distribution to external
+#' reach; it is not the Morgensztern MSAD sequential model.
 #' @format A list with \code{insertions}, \code{audiences}, \code{RM},
 #' \code{universe}, and \code{A0}.
 #' @examples
-#' data(mbbd_example)
-#' do.call(fit_bbd_to_reach, mbbd_example)
-"mbbd_example"
+#' data(bbd_reach_example)
+#' do.call(fit_bbd_to_reach, bbd_reach_example)
+"bbd_reach_example"
 
 #' @encoding UTF-8
 #' @title Illustrative example inputs for the Morgensztern MSAD model
@@ -351,48 +266,3 @@
 #' result$distribution
 #' @seealso [calc_mbd()], [mbd_example]
 "mbd_cheong2007"
-
-#' @encoding UTF-8
-#' @title Datos de ejemplo para calc_grps()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_grps}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{audiencias}{Vector numerico con las audiencias de cada soporte}
-#'   \item{inserciones}{Vector numerico del numero de inserciones por soporte}
-#'   \item{pob_total}{Tamano de la poblacion}
-#' }
-#' @examples
-#' data(grps_example)
-#' do.call(calc_grps, grps_example)
-"grps_example"
-
-#' @encoding UTF-8
-#' @title Datos de ejemplo para calc_cpm()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calc_cpm}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{precios}{Vector numerico con precios de cada insercion}
-#'   \item{audiencias}{Vector numerico con audiencias de cada soporte}
-#' }
-#' @examples
-#' data(cpm_example)
-#' do.call(calc_cpm, cpm_example)
-"cpm_example"
-
-#' @encoding UTF-8
-#' @title Datos de ejemplo para calcular_roas()
-#' @description Lista con los argumentos de ejemplo para
-#' \code{\link{calcular_roas}}, lista para usar con \code{do.call()}.
-#' @format Una lista con los componentes:
-#' \describe{
-#'   \item{audiencia_efectiva}{Numero total de personas alcanzadas por la campana}
-#'   \item{precio_unidad}{Precio de venta por unidad}
-#'   \item{margen_unidad}{Beneficio neto por unidad vendida}
-#'   \item{inversion}{Inversion total en publicidad}
-#' }
-#' @examples
-#' data(roas_example)
-#' do.call(calcular_roas, roas_example)
-"roas_example"

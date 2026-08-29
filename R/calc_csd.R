@@ -121,7 +121,9 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' result$distribution
 #'
 #' @seealso [calc_canex()] for a full-grid canonical expansion and
-#'   [calc_msad()] for the Morgensztern sequential alternative.
+#'   [calc_msad()] for the Morgensztern sequential alternative; [calc_cbd()]
+#'   for a different sequential architecture built on this same canonical
+#'   expansion at the (0,1) level.
 #' @export
 calc_csd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),
@@ -271,14 +273,14 @@ calc_csd <- function(vehicles_data, duplications,
   result <- list(
     reach = list(
       probability = reach,
-      percentage = 100 * reach,
+      percent = 100 * reach,
       people = population * reach
     ),
     average_frequency = average_frequency,
     distribution = data.frame(
       contacts = contacts,
       probability = current,
-      percentage = 100 * current,
+      percent = 100 * current,
       people = population * current,
       cumulative_probability = cumulative
     ),
@@ -307,7 +309,7 @@ calc_csd <- function(vehicles_data, duplications,
 print.reach_csd <- function(x, ...) {
   cat("Canonical Sequential Aggregation Distribution (CSD)\n")
   cat(sprintf("Reach: %.2f%% | Average frequency: %.3f\n",
-              x$reach$percentage, x$average_frequency))
+              x$reach$percent, x$average_frequency))
   cat("Aggregation order:", paste(x$aggregation_order, collapse = " -> "),
       sprintf("(%s)\n", x$aggregation_rule))
   cat(sprintf("Probability sum: %.12f | Mean error: %.3g\n",

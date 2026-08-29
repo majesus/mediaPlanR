@@ -16,12 +16,12 @@ test_that("media_plan validates units and plan_metrics uses consistent denominat
   expect_true(all(metrics$by_channel$target_audience <= metrics$by_channel$audience))
 })
 
-test_that("independent reach is a complete exact Poisson-binomial distribution", {
+test_that("sainsbury reach is a complete exact Poisson-binomial distribution", {
   plan <- media_plan(data.frame(
     channel = c("A", "B"), audience = c(200, 300),
     insertions = c(2, 1), cost_per_insertion = c(1, 1)
   ), population = 1000)
-  result <- estimate_reach(plan, "independent")
+  result <- estimate_reach(plan, "sainsbury")
 
   expect_s3_class(result, "media_reach")
   expect_equal(sum(result$distribution$probability), 1, tolerance = 1e-12)
@@ -31,7 +31,7 @@ test_that("independent reach is a complete exact Poisson-binomial distribution",
                0.2 + 0.2 + 0.3, tolerance = 1e-12)
 })
 
-test_that("v2 independent model preserves legacy Sainsbury results", {
+test_that("v2 sainsbury model preserves legacy Sainsbury results", {
   audiences <- c(300000, 400000, 200000)
   legacy <- calc_sainsbury(audiences, 1000000)
   plan <- media_plan(data.frame(
@@ -40,15 +40,62 @@ test_that("v2 independent model preserves legacy Sainsbury results", {
   ), 1000000)
   modern <- estimate_reach(plan)
 
-  expect_equal(modern$reach$percent, legacy$reach$porcentaje, tolerance = 1e-12)
+  expect_equal(modern$reach$percent, legacy$reach$percent, tolerance = 1e-12)
   expect_equal(modern$distribution$percent[-1],
-               legacy$distribucion$porcentaje, tolerance = 1e-12)
+               legacy$distribution$percent, tolerance = 1e-12)
+})
+
+test_that("v2 binomial model preserves legacy Binomial results", {
+  audiences <- c(300000, 400000, 200000)
+  legacy <- calc_binomial(audiences, 1000000)
+  plan <- media_plan(data.frame(
+    channel = LETTERS[1:3], audience = audiences,
+    insertions = 1L, cost_per_insertion = 0
+  ), 1000000)
+  modern <- estimate_reach(plan, "binomial")
+
+  expect_equal(modern$reach$percent, legacy$reach$percent, tolerance = 1e-12)
+  expect_equal(modern$distribution$percent[-1],
+               legacy$distribution$percent, tolerance = 1e-12)
+})
+
+test_that("calc_sainsbury/calc_binomial with insertions match estimate_reach exactly", {
+  plan <- media_plan(data.frame(
+    channel = c("TV", "Radio", "Digital"),
+    audience = c(300000, 180000, 120000),
+    insertions = c(4, 6, 10), cost_per_insertion = 1
+  ), population = 1000000)
+
+  sainsbury_direct <- calc_sainsbury(plan$data$audience, plan$population, plan$data$insertions)
+  sainsbury_via_plan <- estimate_reach(plan, "sainsbury")
+  expect_equal(sainsbury_via_plan$reach$percent, sainsbury_direct$reach$percent, tolerance = 1e-12)
+
+  binomial_direct <- calc_binomial(plan$data$audience, plan$population, plan$data$insertions)
+  binomial_via_plan <- estimate_reach(plan, "binomial")
+  expect_equal(binomial_via_plan$reach$percent, binomial_direct$reach$percent, tolerance = 1e-12)
+})
+
+test_that("calc_sainsbury/calc_binomial handle all-zero insertions without NaNs", {
+  zero_sainsbury <- calc_sainsbury(c(1000, 2000), 10000, insertions = c(0, 0))
+  expect_equal(zero_sainsbury$reach$percent, 0)
+  expect_length(zero_sainsbury$distribution$percent, 0)
+
+  zero_binomial <- calc_binomial(c(1000, 2000), 10000, insertions = c(0, 0))
+  expect_equal(zero_binomial$reach$percent, 0)
+  expect_length(zero_binomial$distribution$percent, 0)
+
+  plan <- media_plan(data.frame(
+    channel = c("A", "B"), audience = c(1000, 2000),
+    insertions = c(0, 0), cost_per_insertion = 1
+  ), population = 10000)
+  expect_equal(estimate_reach(plan, "sainsbury")$reach$percent, 0)
+  expect_equal(estimate_reach(plan, "binomial")$reach$percent, 0)
 })
 
 test_that("Sainsbury handles many vehicles without exponential enumeration", {
   result <- calc_sainsbury(rep(1000, 100), 100000)
-  expect_true(result$reach$porcentaje > 0)
-  expect_length(result$distribucion$porcentaje, 100)
+  expect_true(result$reach$percent > 0)
+  expect_length(result$distribution$percent, 100)
 })
 
 test_that("audience metrics distinguish composition from affinity", {
@@ -60,13 +107,21 @@ test_that("audience metrics distinguish composition from affinity", {
                "not logically compatible")
 })
 
-test_that("NBD average frequency uses the analytic mean despite its open tail", {
+test_that("compare_reach_models aligns one row per model with consistent reach figures", {
   plan <- media_plan(data.frame(
-    channel = "A", audience = 300, insertions = 2,
-    cost_per_insertion = 1
-  ), population = 1000)
-  result <- estimate_reach(plan, "nbd", k = 0.5)
-  expect_equal(result$average_frequency,
-               result$parameters$mean_contacts / result$reach$probability,
-               tolerance = 1e-12)
+    channel = c("A", "B"), audience = c(300000, 200000),
+    insertions = c(2, 3), cost_per_insertion = c(1, 1)
+  ), population = 1000000)
+
+  comparison <- compare_reach_models(plan, c("sainsbury", "binomial"))
+
+  expect_s3_class(comparison, "data.frame")
+  expect_equal(comparison$model, c("sainsbury", "binomial"))
+  expect_equal(comparison$reach_percent, comparison$reach_probability * 100)
+  expect_equal(comparison$reach_people,
+               comparison$reach_probability * plan$population)
+  expect_true(all(comparison$reach_probability > 0 &
+                     comparison$reach_probability <= 1))
+
+  expect_error(compare_reach_models(plan, "not_a_model"), "Unknown reach model")
 })

@@ -7,14 +7,14 @@
 \title{Example inputs for calc_canex()}
 \format{
 A list with \code{vehicles_data}, \code{duplications}, and
-\code{poblacion}.
+\code{population}.
 }
 \usage{
 canex_example
 }
 \description{
-Descriptively named replacement for the historical
-\code{canex} example object. The list is ready for \code{do.call()}.
+List of arguments for \code{\link{calc_canex}}, ready for
+\code{do.call()}.
 }
 \examples{
 data(canex_example)

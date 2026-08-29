@@ -4,15 +4,13 @@
 \alias{compare_reach_models}
 \title{Compare reach estimates under several models}
 \usage{
-compare_reach_models(plan, models = c("independent", "binomial"), k = NULL)
+compare_reach_models(plan, models = c("sainsbury", "binomial"))
 }
 \arguments{
 \item{plan}{A \code{media_plan} object.}
 
-\item{models}{Character vector containing \code{independent}, \code{binomial}, or
-\code{nbd}.}
-
-\item{k}{NBD heterogeneity parameter when \code{nbd} is requested.}
+\item{models}{Character vector containing \code{sainsbury} and/or \code{binomial}.
+See \code{estimate_reach()}.}
 }
 \value{
 A data frame with one row per model.

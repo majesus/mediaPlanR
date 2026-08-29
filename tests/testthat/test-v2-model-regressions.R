@@ -22,9 +22,9 @@ test_that("CANEX rejects impossible pairwise duplication", {
   expect_error(calc_canex(vehicles, impossible), "Frechet bounds")
 })
 
-test_that("MBBD distribution and reported coverage use identical final parameters", {
-  result <- calc_MBBD(c(5, 7, 4), c(500000, 550000, 600000),
-                      RM = 550000, universe = 1000000, A0 = 0.1)
+test_that("BBD-to-reach distribution and reported coverage use identical final parameters", {
+  result <- fit_bbd_to_reach(c(5, 7, 4), c(500000, 550000, 600000),
+                             RM = 550000, universe = 1000000, A0 = 0.1)
   distribution_reach <- (1 - result$contact_distribution[1]) * 1000000
   expect_true(result$parameters$converged)
   expect_equal(result$coverage$BBD, 550000, tolerance = 100)
@@ -32,9 +32,9 @@ test_that("MBBD distribution and reported coverage use identical final parameter
 })
 
 test_that("Hofmans return value matches its documented contract", {
-  result <- calc_hofmans(0.06, 0.103, 5, show_steps = FALSE)
-  expect_s3_class(result, "reach_hofmans")
-  expect_named(result$parametros, c("k", "d", "alpha"))
+  result <- calc_hofmans_accumulation(0.06, 0.103, 5, show_steps = FALSE)
+  expect_s3_class(result, "reach_hofmans_accumulation")
+  expect_named(result$parameters, c("k", "d", "alpha"))
 })
 
 test_that("one-dimensional BBD calibration preserves R1 and reaches its target", {

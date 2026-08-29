@@ -27,15 +27,3 @@ test_that("optimizer never silently exceeds budget", {
   expect_true(fit$metrics$totals$spend <= fit$budget)
 })
 
-test_that("legacy optimizer delegates to verified search", {
-  inputs <- data.frame(
-    soportes = c("A", "B"), audiencias = c(500, 400), tarifas = c(10, 6)
-  )
-  fit <- optimize_media_sb(inputs, FEM = 1, objetivo_cobertura = 35,
-                           presupuesto_max = 10, poblacion_total = 1000)
-  expect_true(fit$exito)
-  expect_true(fit$presupuesto_cumplido)
-  expect_true(fit$evaluacion$global_optimum)
-  expect_equal(fit$coste_total, 6)
-})
-

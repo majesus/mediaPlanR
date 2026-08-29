@@ -220,11 +220,11 @@ mbd_safety_net <- function(distribution, tolerance) {
 #'   had to be engaged and how much probability mass it redistributed.
 #'
 #' @details
-#' `calc_mbd()` (Cheong 2007) is unrelated to the historical `calc_MBBD()` /
-#' `fit_bbd_to_reach()` (which fits one Beta-Binomial to an externally given
-#' reach target). The two are easy to confuse by name alone: MBD is
-#' Cheong's (2007) *Multivariate* Beta Binomial Distribution described here,
-#' while historical MBBD fits a *single-vehicle* Beta-Binomial.
+#' `calc_mbd()` (Cheong 2007) is unrelated to `fit_bbd_to_reach()` (which
+#' fits one Beta-Binomial to an externally given reach target). The two are
+#' easy to confuse by name alone: MBD is Cheong's (2007) *Multivariate* Beta
+#' Binomial Distribution described here, while `fit_bbd_to_reach()` fits a
+#' *single-vehicle* Beta-Binomial.
 #'
 #' # What is, and is not, guaranteed
 #'
@@ -286,7 +286,9 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' result$distribution
 #'
 #' @seealso [calc_csd()] and [calc_msad()] for sequential aggregation models
-#'   with a completely verified reference example.
+#'   with a completely verified reference example; [calc_cbd()] for the
+#'   model sharing this function's exact within-vehicle peeling step, with a
+#'   different (canonical-expansion, not imputed) between-vehicle step.
 #' @export
 calc_mbd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),
@@ -419,10 +421,10 @@ calc_mbd <- function(vehicles_data, duplications,
   steps <- do.call(rbind, steps)
 
   result <- list(
-    reach = list(probability = reach, percentage = 100 * reach, people = population * reach),
+    reach = list(probability = reach, percent = 100 * reach, people = population * reach),
     average_frequency = average_frequency,
     distribution = data.frame(
-      contacts = contacts, probability = distribution, percentage = 100 * distribution,
+      contacts = contacts, probability = distribution, percent = 100 * distribution,
       people = population * distribution, cumulative_probability = cumulative
     ),
     aggregation_order = order_index,
@@ -446,7 +448,7 @@ calc_mbd <- function(vehicles_data, duplications,
 print.reach_mbd <- function(x, ...) {
   cat("Multivariate Beta Binomial Distribution (MBD)\n")
   cat(sprintf("Reach: %.2f%% | Average frequency: %.3f\n",
-              x$reach$percentage, x$average_frequency))
+              x$reach$percent, x$average_frequency))
   cat("Aggregation order:", paste(x$aggregation_order, collapse = " -> "),
       sprintf("(%s)\n", x$aggregation_rule))
   cat(sprintf("Probability sum: %.12f | Mean error: %.3g\n",

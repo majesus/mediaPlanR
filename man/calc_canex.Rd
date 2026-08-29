@@ -3,66 +3,65 @@
 \encoding{UTF-8}
 \name{calc_canex}
 \alias{calc_canex}
-\title{Calcular el modelo CANEX (Canonical Expansion Model)}
+\title{Calculate the CANEX model (Canonical Expansion Model)}
 \usage{
-calc_canex(vehicles_data, duplications, poblacion = 1e+06)
+calc_canex(vehicles_data, duplications, population = 1e+06)
 }
 \arguments{
-\item{vehicles_data}{Data frame con los datos de cada vehiculo de medios:
+\item{vehicles_data}{Data frame with each media vehicle's data:
 \itemize{
-\item k: Numero de inserciones del vehiculo (entero positivo)
-\item R1: Cobertura tras la primera insercion (0-1)
-\item R2: Cobertura tras la segunda insercion (0-1)
+\item k: Number of insertions for the vehicle (positive integer)
+\item R1: Reach after the first insertion (0-1)
+\item R2: Reach after the second insertion (0-1)
 }}
 
-\item{duplications}{Matriz cuadrada donde el elemento \verb{[i,j]} es la
-proporcion de poblacion expuesta simultaneamente a los vehiculos i y j}
+\item{duplications}{Square matrix where element \verb{[i,j]} is the
+proportion of the population simultaneously exposed to vehicles i and j}
 
-\item{poblacion}{Entero. Tamano de la poblacion objetivo (por defecto 1.000.000)}
+\item{population}{Integer. Target population size (defaults to 1,000,000)}
 }
 \value{
-Un objeto de clase \code{"reach_canex"}: una lista con los
-componentes:
+An object of class \code{"reach_canex"}: a list with components:
 \itemize{
-\item total_reach: Proporcion de poblacion alcanzada (0-1)
-\item total_reach_people: Numero de personas alcanzadas
-\item distribution: Data frame con columnas contacts, percentage, people
-\item cumulative: Data frame con columnas min_contacts, percentage, people
-\item stats: Lista con avg_contacts (contactos medios entre alcanzados)
-y zero_contacts_prob (probabilidad de cero contactos)
-\item diagnostics: Masa negativa truncada, masa previa a la
-renormalizacion y menor autovalor de la matriz de correlaciones. Estos
-valores permiten evaluar cuanto corrigio la aproximacion de segundo orden.
+\item total_reach: Proportion of the population reached (0-1)
+\item total_reach_people: Number of people reached
+\item distribution: Data frame with columns contacts, percent, people
+\item cumulative: Data frame with columns min_contacts, percent, people
+\item stats: List with avg_contacts (average contacts among those
+reached) and zero_contacts_prob (probability of zero contacts)
+\item diagnostics: Truncated negative mass, mass before renormalization,
+and the smallest eigenvalue of the correlation matrix. These values let
+you assess how much the second-order approximation had to be corrected.
 }
 }
 \description{
-Implementa el modelo de expansion canonica de Danaher (1991)
-para calcular la distribucion de alcance y frecuencia de una pauta
-multivehiculo, considerando explicitamente la heterogeneidad de exposicion
-de cada vehiculo (via Beta-Binomial) y las duplicaciones observadas entre
-vehiculos (via un termino de correlacion de segundo orden).
+Implements Danaher's (1991) canonical expansion model to
+calculate the reach and frequency distribution of a multi-vehicle
+schedule, explicitly accounting for each vehicle's exposure heterogeneity
+(via Beta-Binomial) and the observed duplications between vehicles (via a
+second-order correlation term).
 }
 \details{
-El modelo sigue estos pasos:
+The model follows these steps:
 \enumerate{
-\item Calcula los parametros Beta-Binomial (alpha, beta) de cada vehiculo
-\item Transforma la matriz de duplicaciones brutas en correlaciones
-\item Genera la distribucion de probabilidad conjunta de exposicion,
-truncando a cero las probabilidades negativas que puede producir la
-expansion canonica truncada, y renormalizando el resultado para que la
-masa de probabilidad total vuelva a sumar 1
-\item Agrega la distribucion conjunta por numero total de contactos y
-calcula las metricas de alcance y frecuencia
+\item Computes each vehicle's Beta-Binomial parameters (alpha, beta)
+\item Transforms the raw duplication matrix into correlations
+\item Generates the joint exposure probability distribution, truncating
+to zero the negative probabilities that the truncated canonical
+expansion can produce, and renormalizing the result so total
+probability mass sums back to 1
+\item Aggregates the joint distribution by total number of contacts and
+calculates the reach and frequency metrics
 }
 
-El numero de combinaciones de exposicion a evaluar crece de forma
-exponencial con el numero de vehiculos y de inserciones
-(\code{prod(k_i + 1)}), por lo que el modelo esta pensado para pautas de
-tamano pequeno o mediano; para pautas extensas la funcion se detiene con
-un error informativo en lugar de agotar la memoria disponible.
+The number of exposure combinations to evaluate grows exponentially with
+the number of vehicles and insertions (\code{prod(k_i + 1)}), so the model
+is intended for small- or medium-sized schedules; for large schedules the
+function stops with an informative error instead of exhausting available
+memory.
 }
 \examples{
-# Dos vehiculos (valores tomados de un caso de referencia del modelo)
+# Two vehicles (values taken from a model reference case)
 vehicles <- data.frame(
   k = c(2, 2),
   R1 = c(0.4902, 0.033),
@@ -76,7 +75,7 @@ duplications <- matrix(
 results <- calc_canex(vehicles, duplications)
 print(results)
 
-# Tres vehiculos con poblacion personalizada
+# Three vehicles with a custom population
 vehicles2 <- data.frame(
   k = c(2, 2, 2),
   R1 = c(0.4902, 0.033, 0.0300),
@@ -88,7 +87,7 @@ duplications2 <- matrix(
     0.0139, 0.0003, 1.000),
   nrow = 3, byrow = TRUE
 )
-results2 <- calc_canex(vehicles2, duplications2, poblacion = 500000)
+results2 <- calc_canex(vehicles2, duplications2, population = 500000)
 total_reach <- results2$total_reach
 avg_contacts <- results2$stats$avg_contacts
 
@@ -99,7 +98,7 @@ exposure distributions: A generalization of the "duplication of viewing
 law". Journal of Marketing Research, 28(3), 361-367.
 }
 \seealso{
-\code{\link{calculate_bbd_params}} para el calculo de parametros BBD
-\code{\link{transform_duplications}} para la transformacion de la matriz de duplicacion
-\code{\link{calc_beta_binomial}} para el modelo univariante (un solo vehiculo)
+\code{\link{calc_beta_binomial}} for the univariate model (a single vehicle)
+\code{\link{calc_cbd}}, whose between-vehicle step reuses this same
+canonical expansion, extended to insertion-level Beta-Binomial expansion
 }

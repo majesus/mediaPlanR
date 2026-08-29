@@ -4,21 +4,22 @@
 \encoding{UTF-8}
 \name{metheringham_example}
 \alias{metheringham_example}
-\title{Datos de ejemplo para calc_metheringham()}
+\title{Example inputs for calc_metheringham()}
 \format{
-Una lista con los componentes:
+A list with the components:
 \describe{
-\item{audiencias}{Vector numerico con las audiencias de cada soporte}
-\item{inserciones}{Vector numerico con el numero de inserciones por soporte}
-\item{matriz_duplicacion}{Matriz simetrica con la duplicacion entre soportes}
+\item{audiences}{Numeric vector with the audience of each vehicle}
+\item{insertions}{Numeric vector with the number of insertions per vehicle}
+\item{duplication_matrix}{Symmetric matrix with the duplication between vehicles}
+\item{population}{Population size}
 }
 }
 \usage{
 metheringham_example
 }
 \description{
-Lista con los argumentos de ejemplo para
-\code{\link{calc_metheringham}}, lista para usar con \code{do.call()}.
+List of arguments for \code{\link{calc_metheringham}}, ready
+for \code{do.call()}.
 }
 \examples{
 data(metheringham_example)

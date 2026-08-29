@@ -1,144 +1,132 @@
 #' @encoding UTF-8
-#' @title Calculo de la cobertura acumulada segun el modelo de Agostini
-#' @description Implementa el modelo de Agostini (1961) para estimar la
-#' cobertura acumulada (neta) de un plan de medios con varios soportes,
-#' corrigiendo el supuesto de duplicacion aleatoria (independencia) mediante
-#' un coeficiente empirico k que ajusta la duplicacion predicha entre cada
-#' nuevo soporte incorporado y la cobertura acumulada hasta ese momento.
+#' @title Cumulative reach under the Agostini duplication model
+#' @description Implements the Agostini (1961) model to estimate the cumulative
+#' (net) reach of a media plan with several vehicles, each with a single
+#' insertion -- the "duplication" domain in Aldas Manzano's (1998) three-way
+#' split, shared with \code{\link{calc_hofmans_duplication}}. It corrects the
+#' random-duplication (independence) assumption with an empirical coefficient k
+#' that adjusts the predicted duplication between each newly added vehicle and
+#' the reach accumulated so far.
 #'
 #' @references
 #' Agostini, J. M. (1961). How to estimate unduplicated audiences.
 #' Journal of Advertising Research, 1(3), 11-14.
 #'
-#' @param audiencias Vector numerico con las audiencias individuales de cada
-#' soporte, en el orden en que se incorporan al plan
-#' @param pob_total Tamano de la poblacion
-#' @param k Numerico. Coeficiente empirico de duplicacion de Agostini (por
-#' defecto 0.9). Valores por debajo de 1 implican menor duplicacion que la
-#' esperada bajo independencia (audiencias mas complementarias entre si);
-#' valores por encima de 1 implican mayor duplicacion (audiencias mas
-#' solapadas). Idealmente k debe calibrarse con datos de duplicacion
-#' observada para el tipo de medio analizado; en su ausencia, la literatura
-#' recomienda valores orientativos entre 0.85 y 1.15.
+#' @param audiences Numeric vector with the individual audience of each vehicle,
+#' in the order in which they are added to the plan
+#' @param population Population size
+#' @param k Numeric. Agostini's empirical duplication coefficient (default 0.9).
+#' Values below 1 imply less duplication than expected under independence (more
+#' complementary audiences); values above 1 imply more duplication (more
+#' overlapping audiences). Ideally k should be calibrated from observed
+#' duplication data for the media type being analysed; absent that, the
+#' literature recommends indicative values between 0.85 and 1.15.
 #'
 #' @details
-#' Partiendo de la cobertura acumulada tras incorporar los primeros i-1
-#' soportes, R(i-1), el modelo anade el soporte i-esimo mediante:
-#' \deqn{R(i) = R(i-1) + Audiencia_i - k \times \frac{R(i-1) \times Audiencia_i}{Poblacion}}
-#' con R(1) = Audiencia_1. Cuando k = 1 el modelo coincide exactamente con el
-#' supuesto de duplicacion aleatoria (independencia) aplicado de forma
-#' iterativa, esto es, la misma hipotesis de partida de los modelos
-#' Sainsbury y Binomial, pero sin necesitar conocer de antemano todas las
-#' audiencias simultaneamente. A diferencia de \code{\link{calc_metheringham}}
-#' o \code{\link{calc_canex}}, el modelo de Agostini no requiere una matriz
-#' de duplicaciones observadas entre cada par de soportes, sino un unico
-#' coeficiente empirico agregado, lo que lo hace especialmente practico
-#' cuando solo se dispone de una duplicacion media estimada para el tipo de
-#' medio.
+#' Starting from the cumulative reach after adding the first i-1 vehicles,
+#' R(i-1), the model adds vehicle i via:
+#' \deqn{R(i) = R(i-1) + Audience_i - k \times \frac{R(i-1) \times Audience_i}{Population}}
+#' with R(1) = Audience_1. When k = 1 the model coincides exactly with the
+#' random-duplication (independence) assumption applied iteratively, i.e. the
+#' same starting hypothesis as the Sainsbury and Binomial models, but without
+#' needing to know every audience simultaneously in advance. Unlike
+#' \code{\link{calc_metheringham}} or \code{\link{calc_canex}}, the Agostini
+#' model does not require an observed duplication matrix between every pair of
+#' vehicles, only a single aggregate empirical coefficient, which makes it
+#' especially practical when only a mean estimated duplication is available for
+#' the media type.
 #'
-#' @return Una lista "reach_agostini" conteniendo:
+#' @return A list of class "reach_agostini_duplication" containing:
 #' \itemize{
-#'   \item reach: Lista con la cobertura acumulada final del plan:
+#'   \item reach: List with the plan's final cumulative reach:
 #'     \itemize{
-#'       \item porcentaje: Cobertura final en porcentaje
-#'       \item personas: Cobertura final en numero de personas
+#'       \item percent: Final reach as a percentage
+#'       \item people: Final reach in number of people
 #'     }
-#'   \item acumulada: Lista con la evolucion de la cobertura acumulada tras
-#'   incorporar cada soporte (porcentaje y personas)
-#'   \item k: Coeficiente de duplicacion empleado
-#'   \item n_soportes: Numero de soportes incorporados
+#'   \item cumulative: List with the evolution of cumulative reach after each
+#'   vehicle is added (percent and people)
+#'   \item k: Duplication coefficient used
+#'   \item n_vehicles: Number of vehicles added
 #' }
 #'
 #' @examples
-#' audiencias <- c(300000, 400000, 200000)
-#' resultado <- calc_agostini(audiencias, pob_total = 1000000, k = 0.9)
-#' print(resultado)
+#' audiences <- c(300000, 400000, 200000)
+#' result <- calc_agostini_duplication(audiences, population = 1000000, k = 0.9)
+#' print(result)
 #'
-#' # k = 1 equivale al supuesto de duplicacion aleatoria (independencia)
-#' resultado_independencia <- calc_agostini(audiencias, pob_total = 1000000, k = 1)
-#' resultado_independencia$reach$porcentaje
+#' # k = 1 is equivalent to the random-duplication (independence) assumption
+#' result_independence <- calc_agostini_duplication(audiences, population = 1000000, k = 1)
+#' result_independence$reach$percent
 #'
 #' @export
 #' @seealso
-#' \code{\link{calc_sainsbury}} para el supuesto de duplicacion aleatoria con heterogeneidad de soportes
-#' \code{\link{calc_binomial}} para el supuesto de duplicacion aleatoria con homogeneidad de soportes
-#' \code{\link{calc_metheringham}} para el ajuste mediante duplicacion media observada
-calc_agostini <- function(audiencias, pob_total, k = 0.9) {
-  if (!is.numeric(audiencias) || !is.numeric(pob_total) || !is.numeric(k)) {
-    stop("audiencias, pob_total y k deben ser numericos")
+#' \code{\link{calc_sainsbury}} for the random-duplication assumption with vehicle heterogeneity
+#' \code{\link{calc_binomial}} for the random-duplication assumption with vehicle homogeneity
+#' \code{\link{calc_metheringham}} for the adjustment via observed mean duplication
+#' \code{\link{calc_hofmans_duplication}} for the same role with a pairwise, unfitted coefficient
+calc_agostini_duplication <- function(audiences, population, k = 0.9) {
+  if (!is.numeric(audiences) || !is.numeric(population) || !is.numeric(k)) {
+    stop("audiences, population and k must be numeric")
   }
-  if (length(audiencias) < 1) {
-    stop("audiencias debe contener al menos un soporte")
+  if (length(audiences) < 1) {
+    stop("audiences must contain at least one vehicle")
   }
-  if (any(audiencias <= 0) || any(audiencias > pob_total)) {
-    stop("Las audiencias deben ser positivas y no superiores a la poblacion")
+  if (any(audiences <= 0) || any(audiences > population)) {
+    stop("audiences must be positive and no greater than the population")
   }
-  if (length(pob_total) != 1 || pob_total <= 0) {
-    stop("pob_total debe ser un unico numero positivo")
+  if (length(population) != 1 || population <= 0) {
+    stop("population must be a single positive number")
   }
   if (length(k) != 1 || k < 0) {
-    stop("k debe ser un unico numero no negativo")
+    stop("k must be a single non-negative number")
   }
 
-  n <- length(audiencias)
-  acumulada_personas <- numeric(n)
-  acumulada_personas[1] <- audiencias[1]
+  n <- length(audiences)
+  cumulative_people <- numeric(n)
+  cumulative_people[1] <- audiences[1]
 
   if (n > 1) {
     for (i in 2:n) {
-      acumulada_personas[i] <- acumulada_personas[i - 1] + audiencias[i] -
-        k * (acumulada_personas[i - 1] * audiencias[i] / pob_total)
+      cumulative_people[i] <- cumulative_people[i - 1] + audiences[i] -
+        k * (cumulative_people[i - 1] * audiences[i] / population)
     }
   }
-  # La cobertura acumulada nunca puede superar la poblacion total, incluso si
-  # se emplea un coeficiente k mal calibrado.
-  acumulada_personas <- pmin(pmax(acumulada_personas, 0), pob_total)
+  # Cumulative reach can never exceed the total population, even with a
+  # poorly calibrated k coefficient.
+  cumulative_people <- pmin(pmax(cumulative_people, 0), population)
 
-  reach_final <- acumulada_personas[n]
+  final_reach <- cumulative_people[n]
 
   structure(list(
     reach = list(
-      porcentaje = reach_final / pob_total * 100,
-      personas = reach_final
+      percent = final_reach / population * 100,
+      people = final_reach
     ),
-    acumulada = list(
-      porcentaje = acumulada_personas / pob_total * 100,
-      personas = acumulada_personas
+    cumulative = list(
+      percent = cumulative_people / population * 100,
+      people = cumulative_people
     ),
     k = k,
-    n_soportes = n
-  ), class = "reach_agostini")
+    n_vehicles = n
+  ), class = "reach_agostini_duplication")
 }
 
-#' @encoding UTF-8
-#' @title Imprimir un objeto reach_agostini
-#' @description Genera un informe formateado con las metricas del modelo de Agostini.
-#'
-#' @param x Objeto de clase \code{"reach_agostini"}, resultado de \code{\link{calc_agostini}}
-#' @param ... Argumentos adicionales (no usados)
-#'
-#' @return Invisible \code{x}. La funcion se invoca por su efecto de impresion.
-#'
-#' @examples
-#' resultado <- calc_agostini(c(300000, 400000, 200000), pob_total = 1000000)
-#' print(resultado)
-#'
 #' @export
-print.reach_agostini <- function(x, ...) {
-  cat("MODELO DE AGOSTINI\n")
-  cat("==================\n")
-  cat(sprintf("Descripcion: Duplicacion aleatoria corregida mediante coeficiente empirico k = %.3f\n\n", x$k))
+print.reach_agostini_duplication <- function(x, ...) {
+  cat("AGOSTINI MODEL\n")
+  cat("==============\n")
+  cat(sprintf("Description: random duplication corrected via the empirical coefficient k = %.3f\n\n", x$k))
 
-  cat("COBERTURA ACUMULADA TRAS INCORPORAR CADA SOPORTE:\n")
-  cat("--------------------------------------------------\n")
-  for (i in seq_len(x$n_soportes)) {
-    cat(sprintf("Tras soporte %d: %.2f%% (%.0f personas)\n",
-                i, x$acumulada$porcentaje[i], x$acumulada$personas[i]))
+  cat("HEADLINE METRICS:\n")
+  cat("-----------------\n")
+  cat(sprintf("Total reach: %.2f%% (%.0f people)\n", x$reach$percent, x$reach$people))
+
+  cat("\nCUMULATIVE REACH AFTER EACH VEHICLE IS ADDED:\n")
+  cat("----------------------------------------------\n")
+  for (i in seq_len(x$n_vehicles)) {
+    cat(sprintf("After vehicle %d: %.2f%% (%.0f people)\n",
+                i, x$cumulative$percent[i], x$cumulative$people[i]))
   }
-
-  cat("\nCOBERTURA TOTAL DEL PLAN:\n")
-  cat("-------------------------\n")
-  cat(sprintf("%.2f%% (%.0f personas)\n", x$reach$porcentaje, x$reach$personas))
 
   invisible(x)
 }
