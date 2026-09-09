@@ -33,6 +33,16 @@ test_that("print.reach_canex fires correctly via print() (regression test for th
   expect_output(print(res), "CANEX MODEL")
 })
 
+test_that("print.reach_canex's printed average matches stats$avg_contacts (regression test: CANEX's distribution includes the zero-contact row, unlike the other models sharing print_reach_report())", {
+  vehicles <- data.frame(k = c(2, 2), R1 = c(0.4902, 0.033), R2 = c(0.5805, 0.0502))
+  duplications <- matrix(c(1, 0.0157, 0.0157, 1), nrow = 2, byrow = TRUE)
+  res <- calc_canex(vehicles, duplications, population = 1000000)
+
+  expect_output(print(res),
+                sprintf("Average contacts per person reached: %.2f",
+                        res$stats$avg_contacts))
+})
+
 test_that("calc_canex validates its inputs", {
   vehicles_ok <- data.frame(k = c(2, 2), R1 = c(0.4902, 0.033), R2 = c(0.5805, 0.0502))
   dup_ok <- matrix(c(1, 0.0157, 0.0157, 1), nrow = 2)

@@ -48,6 +48,37 @@
 
 ## Correctness
 
+- Fixed `calc_beta_binomial()` silently returning an all-`NaN` distribution
+  (with no error or warning) when `A1`/`A2` place `R2` exactly at the
+  binomial (independence) limit: its inline alpha/beta formula produced
+  `alpha = beta = Inf`, which `extraDistr::dbbinom()` turns into `NaN` rather
+  than an error. `calc_beta_binomial()` now delegates to the same
+  `calculate_bbd_params()` helper already used by `calc_canex()`,
+  `calc_csd()`, `calc_msad()` and `calc_mbd()`, which handles the binomial
+  limit (`alpha = beta = Inf`, falls back to `stats::dbinom()`) and the
+  polarized limit (`alpha = beta = 0`, `R2 = R1`) explicitly. The polarized
+  limit previously stopped with an unhelpful "Could not compute valid
+  parameters" error even though it is a mathematically valid degenerate case
+  handled correctly everywhere else in the package.
+- Fixed the same underlying issue in `calc_mbd()`/`calc_cbd()`'s shared
+  vehicle-peeling step (`mbd_peel_vehicle()`/`mbd_conditional_allocate()`):
+  when the vehicle being peeled has its own `R1`/`R2` at the binomial or
+  polarized limit, the conditional Beta-Binomial split previously called
+  `extraDistr::dbbinom()` with non-finite or degenerate alpha/beta and then
+  divided by `Inf` in `mbd_conditional_allocate()`, raising "missing value
+  where TRUE/FALSE is needed". Both limits are now computed directly from
+  their closed-form limiting distributions (a shared `Binomial(n, p)` at the
+  binomial limit; point masses at 0 and at the vehicle's insertion count at
+  the polarized limit).
+- Fixed `print.reach_canex()` reporting an incorrect "average contacts per
+  person reached": `print_reach_report()` (shared by the Sainsbury, Binomial,
+  Beta-Binomial, Metheringham and CANEX print methods) divided by
+  `sum(distribution$people)`, which for the other four models already
+  excludes the zero-contact row but for CANEX includes it, so the printed
+  average was silently computed over the whole population rather than over
+  those actually reached. `calc_canex()`'s own `$stats$avg_contacts` field
+  was never affected -- only the printed text was wrong. Fixed by dividing
+  by the `reach_people` value the function already receives.
 - Replaced exponential Sainsbury enumeration with exact dynamic convolution.
 - Corrected the Binomial and polarized limits of CANEX.
 - Added CANEX feasibility checks and diagnostics for truncated probability

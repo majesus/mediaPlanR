@@ -12,6 +12,7 @@
 #' @references
 #' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 #' contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
+#' (Sec. 3.1.1.4, formulas \[3.7\]-\[3.12\].)
 #'
 #' @param R1 Numeric. Reach after the first insertion (as a proportion between 0 and 1)
 #' @param R2 Numeric. Reach after the second insertion (as a proportion between 0 and 1)

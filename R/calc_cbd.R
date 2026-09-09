@@ -229,7 +229,7 @@ calc_cbd <- function(vehicles_data, duplications,
     other <- setdiff(remaining, v)
     other_subsets <- mbd_all_subsets(other)
     vp <- vehicle_bbd[[v]]
-    table <- mbd_peel_vehicle(table, other_subsets, v, vp$alpha, vp$beta,
+    table <- mbd_peel_vehicle(table, other_subsets, v, vp$alpha, vp$beta, vp$p,
                               insertions[v], tolerance)
     remaining <- other
     steps[[step]] <- data.frame(

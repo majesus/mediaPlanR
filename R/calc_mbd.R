@@ -113,6 +113,13 @@ mbd_exclusive_grid <- function(S, n, tolerance) {
 mbd_conditional_allocate <- function(exposed_mass, total_mass, alpha_c, beta_c) {
   if (total_mass <= 0) return(list(a = 1, b = 0))
   cc <- exposed_mass / total_mass
+  if (is.infinite(alpha_c)) {
+    # Binomial limit (alpha_c = beta_c = Inf): the "0" and "1" rows this
+    # splits between are identical Binomial distributions (see
+    # mbd_peel_vehicle()), so any split with a + b = 1 reproduces the same
+    # row; ab1/lower/upper below would otherwise divide Inf by Inf.
+    return(list(a = 1 - cc, b = cc))
+  }
   ab1 <- alpha_c + beta_c + 1
   lower <- alpha_c / ab1
   upper <- (alpha_c + 1) / ab1
@@ -131,7 +138,7 @@ mbd_conditional_allocate <- function(exposed_mass, total_mass, alpha_c, beta_c) 
 # what lets, e.g., the "B exposed" and "B not exposed" rows of a pseudo-
 # vehicle expand vehicle A differently. Single-insertion vehicles need no
 # split: exposure is already a deterministic 0/1 contact contribution.
-mbd_peel_vehicle <- function(table, other_keys_subsets, v, alpha_c, beta_c,
+mbd_peel_vehicle <- function(table, other_keys_subsets, v, alpha_c, beta_c, p_c,
                              vehicle_size, tolerance) {
   new_table <- vector("list", length(other_keys_subsets))
   names(new_table) <- vapply(other_keys_subsets, mbd_key, character(1))
@@ -148,10 +155,27 @@ mbd_peel_vehicle <- function(table, other_keys_subsets, v, alpha_c, beta_c,
     }
     return(new_table)
   }
-  alpha0 <- alpha_c; beta0 <- beta_c + 1
-  alpha1 <- alpha_c + 1; beta1 <- beta_c
-  dist0 <- extraDistr::dbbinom(0:vehicle_size, size = vehicle_size, alpha = alpha0, beta = beta0)
-  dist1 <- extraDistr::dbbinom(0:vehicle_size, size = vehicle_size, alpha = alpha1, beta = beta1)
+  if (is.infinite(alpha_c)) {
+    # Binomial limit: as alpha_c, beta_c -> Inf with alpha_c/(alpha_c+beta_c)
+    # fixed at p_c, both Beta(alpha_c, beta_c+1) and Beta(alpha_c+1, beta_c)
+    # converge to the same point mass at p_c, so conditioning on the "0" or
+    # "1" row leaves the vehicle's own distribution unchanged (no person-level
+    # heterogeneity to condition on). Computing this directly also avoids
+    # extraDistr::dbbinom(alpha = Inf, beta = Inf), which returns NaN.
+    dist0 <- dist1 <- stats::dbinom(0:vehicle_size, size = vehicle_size, prob = p_c)
+  } else if (alpha_c == 0 && beta_c == 0) {
+    # Polarized limit: Beta(0, beta_c+1) is a point mass at p=0 and
+    # Beta(alpha_c+1, 0) a point mass at p=1, so the "0" row is surely
+    # zero contacts and the "1" row is surely vehicle_size contacts
+    # (Cheong's all-or-nothing exposure).
+    dist0 <- c(1, numeric(vehicle_size))
+    dist1 <- c(numeric(vehicle_size), 1)
+  } else {
+    alpha0 <- alpha_c; beta0 <- beta_c + 1
+    alpha1 <- alpha_c + 1; beta1 <- beta_c
+    dist0 <- extraDistr::dbbinom(0:vehicle_size, size = vehicle_size, alpha = alpha0, beta = beta0)
+    dist1 <- extraDistr::dbbinom(0:vehicle_size, size = vehicle_size, alpha = alpha1, beta = beta1)
+  }
   for (i in seq_along(other_keys_subsets)) {
     os <- other_keys_subsets[[i]]
     col0 <- table[[mbd_key(os)]]
@@ -401,7 +425,7 @@ calc_mbd <- function(vehicles_data, duplications,
     other <- setdiff(remaining, v)
     other_subsets <- mbd_all_subsets(other)
     vp <- vehicle_bbd[[v]]
-    table <- mbd_peel_vehicle(table, other_subsets, v, vp$alpha, vp$beta,
+    table <- mbd_peel_vehicle(table, other_subsets, v, vp$alpha, vp$beta, vp$p,
                               insertions[v], tolerance)
     remaining <- other
     steps[[step]] <- data.frame(

@@ -55,7 +55,13 @@ print_reach_report <- function(title, description, reach_percent, reach_people,
 
   if (!is.null(distribution)) {
     contacts <- if (!is.null(distribution$contacts)) distribution$contacts else seq_along(distribution$percent)
-    average_contacts <- sum(contacts * distribution$people) / sum(distribution$people)
+    # Divide by reach_people, not sum(distribution$people): for Sainsbury,
+    # Binomial, Beta-Binomial and Metheringham the distribution already
+    # excludes the zero-contact row, so the two are identical; for CANEX
+    # (and any future model) whose distribution includes a zero-contact row,
+    # summing distribution$people would divide by the whole population
+    # instead of by those actually reached.
+    average_contacts <- sum(contacts * distribution$people) / reach_people
     cat("\nSUMMARY STATISTICS:\n")
     cat("--------------------\n")
     cat(sprintf("Average contacts per person reached: %.2f\n", average_contacts))

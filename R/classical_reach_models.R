@@ -326,6 +326,8 @@ calc_binomial <- function(audiences, population,
 #' @references
 #' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 #' contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
+#' (Sec. 3.1.2.5, formulas \[3.22\]-\[3.27\] for the model, and the A/B
+#' estimators on p. 134.)
 #'
 #' @param A1 Vehicle audience after the first insertion
 #' @param A2 Vehicle audience after the second insertion
@@ -432,17 +434,24 @@ calc_beta_binomial <- function(A1, A2, P, n) {
   R1 <- A1 / P
   R2 <- A2 / P
 
-  # Compute alpha and beta
-  alpha <- (R1 * (R2 - R1)) / (2 * R1 - R1^2 - R2)
-  beta <- (alpha * (1 - R1)) / R1
-
-  # Validate alpha and beta
-  if (is.na(alpha) || is.na(beta) || alpha <= 0 || beta <= 0) {
-    stop("Could not compute valid parameters from the data provided")
-  }
+  # Method-of-moments alpha and beta, via the same shared helper
+  # calc_canex()/calc_csd()/calc_msad()/calc_mbd() use. This also covers the
+  # binomial limit (R2 at the independence bound, alpha = beta = Inf) and the
+  # polarized limit (R2 = R1, alpha = beta = 0) explicitly instead of passing
+  # a non-finite alpha/beta on to extraDistr::dbbinom(), which silently
+  # returns NaN for the whole distribution at those exact boundaries.
+  params <- calculate_bbd_params(R1, R2)
 
   # Compute the contact distribution (P)
-  P_dist <- extraDistr::dbbinom(0:n, size = n, alpha = alpha, beta = beta)
+  P_dist <- if (params$type == "binomial_limit") {
+    stats::dbinom(0:n, size = n, prob = params$p)
+  } else if (params$type == "polarized_limit") {
+    out <- numeric(n + 1L)
+    out[c(1L, n + 1L)] <- c(1 - params$p, params$p)
+    out
+  } else {
+    extraDistr::dbbinom(0:n, size = n, alpha = params$alpha, beta = params$beta)
+  }
 
   # Compute the cumulative distribution (R)
   R_dist <- sapply(0:n, function(k) sum(P_dist[(k + 1):length(P_dist)]))
@@ -468,8 +477,8 @@ calc_beta_binomial <- function(A1, A2, P, n) {
       people = R_no_zero * P
     ),
     parameters = list(
-      alpha = alpha,
-      beta = beta,
+      alpha = params$alpha,
+      beta = params$beta,
       zero_contact_probability = P_dist[1] * 100
     )
   ), class = "reach_beta_binomial"))

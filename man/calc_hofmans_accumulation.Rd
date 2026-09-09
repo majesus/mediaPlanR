@@ -86,6 +86,7 @@ result <- calc_hofmans_accumulation(invalid_R1, R2, N = 5)
 \references{
 Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
+(Sec. 3.1.1.4, formulas [3.7]-[3.12].)
 }
 \seealso{
 \code{\link{calc_beta_binomial}} for estimates under the Beta-Binomial distribution

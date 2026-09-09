@@ -125,3 +125,31 @@ test_that("MBD has a concise print method", {
   expect_output(print(fit), "Multivariate Beta Binomial")
   expect_output(print(fit), "Probability sum")
 })
+
+test_that("MBD does not error or return NaN when a vehicle's own R1/R2 sit at the binomial or polarized limit (regression test)", {
+  # Peeling a vehicle whose own Beta-Binomial parameters are at alpha=beta=Inf
+  # (binomial limit) or alpha=beta=0 (polarized limit) used to call
+  # extraDistr::dbbinom() with those non-finite/degenerate values directly,
+  # producing NaN that later crashed mbd_conditional_allocate() with
+  # "missing value where TRUE/FALSE is needed".
+  dup <- matrix(c(NA, 0.05, 0.05, NA), nrow = 2, byrow = TRUE)
+
+  R1 <- 0.3
+  binomial_limit_vehicles <- data.frame(
+    insertions = c(2, 2),
+    R1 = c(R1, 0.20),
+    R2 = c(2 * R1 - R1^2, 0.35)
+  )
+  fit_binomial <- calc_mbd(binomial_limit_vehicles, dup, aggregation_order = 1:2)
+  expect_false(anyNA(fit_binomial$distribution$probability))
+  expect_equal(sum(fit_binomial$distribution$probability), 1, tolerance = 1e-9)
+
+  polarized_vehicles <- data.frame(
+    insertions = c(2, 2),
+    R1 = c(0.30, 0.20),
+    R2 = c(0.30, 0.35)
+  )
+  fit_polarized <- calc_mbd(polarized_vehicles, dup, aggregation_order = 1:2)
+  expect_false(anyNA(fit_polarized$distribution$probability))
+  expect_equal(sum(fit_polarized$distribution$probability), 1, tolerance = 1e-9)
+})

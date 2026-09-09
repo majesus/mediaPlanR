@@ -16,6 +16,29 @@ test_that("calc_sainsbury, calc_binomial and calc_beta_binomial return coherent 
   expect_true(res_bb$reach$percent > 0 && res_bb$reach$percent <= 100)
 })
 
+test_that("calc_beta_binomial handles the binomial and polarized limits instead of returning NaN (regression test)", {
+  # R2 exactly at the independence (binomial) limit 2*R1 - R1^2: alpha/beta
+  # are formally Inf/Inf, which extraDistr::dbbinom() silently turns into an
+  # all-NaN distribution unless routed through the Inf-aware binomial branch.
+  R1 <- 0.3
+  R2 <- 2 * R1 - R1^2
+  res_binom_limit <- calc_beta_binomial(A1 = R1 * 1e6, A2 = R2 * 1e6, P = 1e6, n = 5)
+  expect_false(anyNA(res_binom_limit$distribution$percent))
+  expect_equal(res_binom_limit$parameters$alpha, Inf)
+  expect_equal(res_binom_limit$parameters$beta, Inf)
+  expect_equal(res_binom_limit$distribution$percent,
+               stats::dbinom(1:5, size = 5, prob = R1) * 100, tolerance = 1e-9)
+
+  # R2 == R1: alpha == beta == 0, the fully polarized (all-or-nothing) limit.
+  res_polarized <- calc_beta_binomial(A1 = 3e5, A2 = 3e5, P = 1e6, n = 5)
+  expect_false(anyNA(res_polarized$distribution$percent))
+  expect_equal(res_polarized$parameters$alpha, 0)
+  expect_equal(res_polarized$parameters$beta, 0)
+  expect_equal(res_polarized$reach$percent, 30, tolerance = 1e-9)
+  expect_equal(res_polarized$distribution$percent[5], 30, tolerance = 1e-9)
+  expect_equal(sum(res_polarized$distribution$percent[1:4]), 0)
+})
+
 test_that("calc_metheringham computes A1/D/A2, derives alpha/beta, and returns reach", {
   duplication_matrix <- matrix(c(
     150000, 200000, 180000,

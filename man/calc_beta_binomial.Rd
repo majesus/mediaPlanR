@@ -104,6 +104,8 @@ print(paste("Distribution sum:", round(sum_dist +
 \references{
 Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la distribucion de
 contactos en la planificacion de medios publicitarios impresos. Tesis doctoral, Universidad de Valencia, Espana.
+(Sec. 3.1.2.5, formulas [3.22]-[3.27] for the model, and the A/B
+estimators on p. 134.)
 }
 \seealso{
 \code{\link{calc_sainsbury}} for estimates under the Sainsbury distribution
