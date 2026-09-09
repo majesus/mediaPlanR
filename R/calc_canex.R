@@ -196,7 +196,7 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'   to zero the negative probabilities that the truncated canonical
 #'   expansion can produce, and renormalizing the result so total
 #'   probability mass sums back to 1
-#'   \item Aggregates the joint distribution by total number of contacts and
+#'   \item Aggregates the joint distribution by total number of exposures and
 #'   calculates the reach and frequency metrics
 #' }
 #'
@@ -212,8 +212,8 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'   \item total_reach_people: Number of people reached
 #'   \item distribution: Data frame with columns contacts, percent, people
 #'   \item cumulative: Data frame with columns min_contacts, percent, people
-#'   \item stats: List with avg_contacts (average contacts among those
-#'   reached) and zero_contacts_prob (probability of zero contacts)
+#'   \item stats: List with avg_contacts (average exposures among those
+#'   reached) and zero_contacts_prob (probability of zero exposures)
 #'   \item diagnostics: Truncated negative mass, mass before renormalization,
 #'   and the smallest eigenvalue of the correlation matrix. These values let
 #'   you assess how much the second-order approximation had to be corrected.
@@ -356,16 +356,16 @@ calc_canex <- function(vehicles_data, duplications, population = 1000000) {
   report
 }
 
-# From a probability distribution by total number of contacts (columns
+# From a probability distribution by total number of exposures (columns
 # exposures, probability; not necessarily normalized to 1), calculates
-# reach, the contact distribution (and cumulative), and the CANEX model's
+# reach, the exposure distribution (and cumulative), and the CANEX model's
 # summary metrics. Returns a "reach_canex" object. Used internally.
 calculate_metrics <- function(distribution, population = 1000000) {
   if (!is.data.frame(distribution) ||
       !all(c("exposures", "probability") %in% names(distribution)) ||
       anyNA(distribution[c("exposures", "probability")]) ||
       any(distribution$probability < 0) || !0 %in% distribution$exposures) {
-    stop("distribution must contain non-negative probabilities and an explicit zero-contact row",
+    stop("distribution must contain non-negative probabilities and an explicit zero-exposure row",
          call. = FALSE)
   }
   if (!is.numeric(population) || length(population) != 1L ||
@@ -434,7 +434,7 @@ print.reach_canex <- function(x, ...) {
     "model that accounts for heterogeneity and duplications between vehicles",
     x$total_reach * 100, x$total_reach_people,
     distribution = x$distribution, cumulative = x$cumulative,
-    parameters = list("Probability of 0 contacts (%)" = x$stats$zero_contacts_prob * 100)
+    parameters = list("Probability of 0 exposures (%)" = x$stats$zero_contacts_prob * 100)
   )
   invisible(x)
 }

@@ -133,11 +133,11 @@ mbd_conditional_allocate <- function(exposed_mass, total_mass, alpha_c, beta_c) 
 # Peels vehicle `v` (one of the still-unexpanded vehicles) out of `table`, a
 # named list keyed by mbd_key() of the *other* remaining vehicles' exposure
 # subset, each holding a numeric vector over the pseudo-vehicle's current
-# contact levels (0, 1, 2, ...). Every level of every remaining pattern gets
+# exposure levels (0, 1, 2, ...). Every level of every remaining pattern gets
 # its own Beta-Binomial conditional split (Cheong 2007, pp. 65-72): this is
 # what lets, e.g., the "B exposed" and "B not exposed" rows of a pseudo-
 # vehicle expand vehicle A differently. Single-insertion vehicles need no
-# split: exposure is already a deterministic 0/1 contact contribution.
+# split: exposure is already a deterministic 0/1 exposure contribution.
 mbd_peel_vehicle <- function(table, other_keys_subsets, v, alpha_c, beta_c, p_c,
                              vehicle_size, tolerance) {
   new_table <- vector("list", length(other_keys_subsets))
@@ -166,7 +166,7 @@ mbd_peel_vehicle <- function(table, other_keys_subsets, v, alpha_c, beta_c, p_c,
   } else if (alpha_c == 0 && beta_c == 0) {
     # Polarized limit: Beta(0, beta_c+1) is a point mass at p=0 and
     # Beta(alpha_c+1, 0) a point mass at p=1, so the "0" row is surely
-    # zero contacts and the "1" row is surely vehicle_size contacts
+    # zero exposures and the "1" row is surely vehicle_size exposures
     # (Cheong's all-or-nothing exposure).
     dist0 <- c(1, numeric(vehicle_size))
     dist1 <- c(numeric(vehicle_size), 1)
@@ -238,7 +238,7 @@ mbd_safety_net <- function(distribution, tolerance) {
 #'   as people.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'
-#' @return A `reach_mbd` object containing reach, the complete contact
+#' @return A `reach_mbd` object containing reach, the complete exposure
 #'   distribution, the aggregation order used, and diagnostics, including
 #'   whether the final negative-probability safety net (Cheong's "MBD-ADJ")
 #'   had to be engaged and how much probability mass it redistributed.
@@ -281,7 +281,7 @@ mbd_safety_net <- function(distribution, tolerance) {
 #'
 #' In exchange, Cheong reports MBD as the most accurate of the eleven models
 #' tested for reach alone (comScore 2003 data, N=440 schedules), but only
-#' middling for the complete contact-frequency distribution, behind the
+#' middling for the complete exposure-frequency distribution, behind the
 #' already-implemented [calc_canex()] and the (not yet implemented)
 #' Conditional Beta Distribution model.
 #'

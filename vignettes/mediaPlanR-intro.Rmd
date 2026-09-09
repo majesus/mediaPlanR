@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 ## What mediaPlanR provides
 
 **mediaPlanR** brings together, in a single R package, the classical reach
-and contact-distribution models used in advertising media planning, along
+and exposure-distribution models used in advertising media planning, along
 with a validated planning core (plan, metrics, model comparison, and
 budget-constrained reach optimization).
 
@@ -52,7 +52,7 @@ reach <- estimate_reach(plan, model = "sainsbury")
 reach
 ```
 
-The returned distribution includes zero contacts. This lets you check that
+The returned distribution includes zero exposures. This lets you check that
 the probabilities sum to one, that reach equals `1 - P(X=0)`, and that
 average frequency matches impressions divided by people reached.
 
@@ -102,7 +102,7 @@ only offers `sainsbury`/`binomial` as its reach model -- the experimental NBD
 approximation is scoped to continuous exposure processes, not finite
 insertion schedules, and is not offered here.
 
-## The family of reach and contact-distribution models
+## The family of reach and exposure-distribution models
 
 All of these models answer the same question -- *what proportion of the
 target population is reached, and how many times, by a given media plan?*
@@ -178,9 +178,9 @@ personal exposure probability (or rate), heterogeneous across the
 population, but they differ in their distributional assumption: the former
 mixes a Binomial (n fixed insertions) with a Beta; the NBD mixes a Poisson
 with a Gamma. That difference is substantive: the NBD has unbounded support
-and is appropriate for page views, ad-server contacts, or other processes
+and is appropriate for page views, ad-server exposures, or other processes
 with continuous opportunities -- it should not be used to imply that a
-traditional, finite-insertion schedule can register more contacts than
+traditional, finite-insertion schedule can register more exposures than
 insertions.
 
 When individual observed counts are available, `fit_nbd_exposure()`
@@ -225,7 +225,7 @@ to four decimals. The function preserves the precision of its inputs.
 `calc_msad()` implements the structure described by Leckenby and Rice (1986)
 and Kim (2005): a per-vehicle BBD marginal, Morgensztern reach for each
 sub-schedule, and non-random convolution that preserves the marginals and
-sets the zero-contact probability to `1 - reach`.
+sets the zero-exposure probability to `1 - reach`.
 
 ```{r}
 data(msad_kim2005)
@@ -249,7 +249,7 @@ in the thesis.
 
 Observed data are always supplied by the analyst. For one schedule, they
 must be provided as a table with the columns `contacts` and `observed`,
-explicitly including zero contacts. Whether the values are counts,
+explicitly including zero exposures. Whether the values are counts,
 probabilities, or percentages must also be declared:
 
 ```{r}
@@ -277,7 +277,7 @@ The evaluator requires identical supports. It does not interpret an NBD open
 tail as an exact frequency: before evaluation, the observed and predicted
 tails must be collapsed at the same threshold. Besides Kim's historical
 AER/APE, it also returns absolute reach error, total variation, cell MAE,
-and mean-contact bias.
+and mean-exposure bias.
 
 ## The CANEX model: heterogeneity and jointly observed duplication
 
@@ -485,8 +485,8 @@ incomplete tests.
   print campaign. *Journal of Advertising Research*, 4(4), 23-28.
 - Waring, E. (1792). *Meditationes Algebraicae*. Cambridge.
 
-Lee & Burkart (1960) and Lee (1988), cited above for the audience-neta-
-acumulada Binomial model and for the detailed MSAD numerical example
+Lee & Burkart (1960) and Lee (1988), cited above for the net cumulative
+audience Binomial model and for the detailed MSAD numerical example
 respectively, are known to this package only at second hand, through Aldas
 Manzano (1998) and Kim (2005); their own full bibliographic details have not
 been independently verified and are therefore not listed as standalone

@@ -2,10 +2,10 @@
 # Shared console formatting for the "classical reach models" print methods
 # (Sainsbury, Binomial, Beta-Binomial, Metheringham, CANEX), so every model
 # that returns reach/distribution/cumulative reports it the same way: a
-# title, the headline reach, the full contact distribution, the cumulative
-# distribution, model-specific parameters, and average contacts per person
+# title, the headline reach, the full exposure distribution, the cumulative
+# distribution, model-specific parameters, and average exposures per person
 # reached. Models with a different return shape (e.g. Agostini, which has no
-# per-contact distribution, or the sequential-aggregation models, whose
+# per-exposure distribution, or the sequential-aggregation models, whose
 # distributions can run into the hundreds of cells) keep their own printing.
 print_reach_report <- function(title, description, reach_percent, reach_people,
                                distribution = NULL, cumulative = NULL,
@@ -31,11 +31,11 @@ print_reach_report <- function(title, description, reach_percent, reach_people,
 
   if (!is.null(distribution)) {
     contacts <- if (!is.null(distribution$contacts)) distribution$contacts else seq_along(distribution$percent)
-    cat("\nCONTACT DISTRIBUTION:\n")
+    cat("\nEXPOSURE DISTRIBUTION:\n")
     cat("----------------------\n")
-    cat("(Percentage of the population receiving exactly N contacts)\n")
+    cat("(Percentage of the population receiving exactly N exposures)\n")
     for (i in seq_along(distribution$percent)) {
-      cat(sprintf("%d contact%s: %.2f%% (%.0f people)\n",
+      cat(sprintf("%d exposure%s: %.2f%% (%.0f people)\n",
                   contacts[i], if (contacts[i] == 1) "" else "s",
                   distribution$percent[i], distribution$people[i]))
     }
@@ -45,9 +45,9 @@ print_reach_report <- function(title, description, reach_percent, reach_people,
     contacts <- if (!is.null(cumulative$min_contacts)) cumulative$min_contacts else seq_along(cumulative$percent)
     cat("\nCUMULATIVE DISTRIBUTION:\n")
     cat("-------------------------\n")
-    cat("(Percentage of the population receiving N or more contacts)\n")
+    cat("(Percentage of the population receiving N or more exposures)\n")
     for (i in seq_along(cumulative$percent)) {
-      cat(sprintf(">= %d contact%s: %.2f%% (%.0f people)\n",
+      cat(sprintf(">= %d exposure%s: %.2f%% (%.0f people)\n",
                   contacts[i], if (contacts[i] == 1) "" else "s",
                   cumulative$percent[i], cumulative$people[i]))
     }
@@ -57,14 +57,14 @@ print_reach_report <- function(title, description, reach_percent, reach_people,
     contacts <- if (!is.null(distribution$contacts)) distribution$contacts else seq_along(distribution$percent)
     # Divide by reach_people, not sum(distribution$people): for Sainsbury,
     # Binomial, Beta-Binomial and Metheringham the distribution already
-    # excludes the zero-contact row, so the two are identical; for CANEX
-    # (and any future model) whose distribution includes a zero-contact row,
+    # excludes the zero-exposure row, so the two are identical; for CANEX
+    # (and any future model) whose distribution includes a zero-exposure row,
     # summing distribution$people would divide by the whole population
     # instead of by those actually reached.
     average_contacts <- sum(contacts * distribution$people) / reach_people
     cat("\nSUMMARY STATISTICS:\n")
     cat("--------------------\n")
-    cat(sprintf("Average contacts per person reached: %.2f\n", average_contacts))
+    cat(sprintf("Average exposures per person reached: %.2f\n", average_contacts))
   }
 
   for (note in notes) cat(note, "\n", sep = "")

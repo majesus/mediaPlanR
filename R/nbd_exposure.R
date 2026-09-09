@@ -18,10 +18,10 @@ nbd_upper_tail <- function(q, mean_contacts, size) {
 #'
 #' Builds a Poisson-Gamma (Negative-Binomial) distribution for exposure counts.
 #' This is an unbounded count-process approximation intended for page views,
-#' ad-server contacts, or other continuous opportunity processes. It is not a
+#' ad-server exposures, or other continuous opportunity processes. It is not a
 #' finite-insertion reach model and does not represent cross-vehicle dependence.
 #'
-#' @param mean_contacts Positive expected contacts per person.
+#' @param mean_contacts Positive expected exposures per person.
 #' @param size Positive Gamma heterogeneity parameter. Smaller values imply
 #'   stronger heterogeneity. `Inf` gives the Poisson limit.
 #' @param report_max Positive integer at which the reported table becomes an
@@ -39,7 +39,7 @@ nbd_upper_tail <- function(q, mean_contacts, size) {
 #' distributed rate across people. Its variance is
 #' \eqn{\mu + \mu^2/size}. Because its support is unbounded, the final table row
 #' is explicitly labelled as an open tail. No tail mass is reassigned to an
-#' impossible exact contact count.
+#' impossible exact exposure count.
 #'
 #' Danaher (2007) provides direct media-planning support for Negative-Binomial
 #' page-view models and develops the multivariate extension needed to represent

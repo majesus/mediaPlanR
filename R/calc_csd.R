@@ -38,7 +38,7 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
       zero_probability < -tolerance || zero_probability > 1 + tolerance) {
     stop(sprintf(
       paste0("The second-order canonical expansion produced an invalid ",
-             "zero-contact probability (%.8f)."),
+             "zero-exposure probability (%.8f)."),
       zero_probability
     ), call. = FALSE)
   }
@@ -58,7 +58,7 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' (CSD): vehicle-level Beta-Binomial marginals are combined sequentially,
 #' while the target reach at every step is obtained from Danaher's second-order
 #' canonical expansion. The non-random convolution preserves both input
-#' margins and sets the zero-contact cell to one minus canonical reach.
+#' margins and sets the zero-exposure cell to one minus canonical reach.
 #'
 #' @param vehicles_data Data frame with columns `insertions`, `R1`, and `R2`.
 #'   `R1` is one-insertion reach and `R2` is two-insertion cumulative reach,
@@ -72,7 +72,7 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #'   people.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'
-#' @return A `reach_csd` object containing reach, the complete contact
+#' @return A `reach_csd` object containing reach, the complete exposure
 #'   distribution, cumulative probabilities, vehicle marginals, aggregation
 #'   steps, and numerical diagnostics.
 #'

@@ -30,7 +30,7 @@ as people.}
 \item{tolerance}{Positive numerical tolerance for probability constraints.}
 }
 \value{
-A \code{reach_cbd} object containing reach, the complete contact
+A \code{reach_cbd} object containing reach, the complete exposure
 distribution, the aggregation order used, and diagnostics, including
 whether the same negative-probability safety net \code{\link[=calc_mbd]{calc_mbd()}} uses had
 to be engaged.

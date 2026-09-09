@@ -32,7 +32,7 @@ as people.}
 \item{tolerance}{Positive numerical tolerance for probability constraints.}
 }
 \value{
-A \code{reach_mbd} object containing reach, the complete contact
+A \code{reach_mbd} object containing reach, the complete exposure
 distribution, the aggregation order used, and diagnostics, including
 whether the final negative-probability safety net (Cheong's "MBD-ADJ")
 had to be engaged and how much probability mass it redistributed.
@@ -87,7 +87,7 @@ insufficient on their own.
 
 In exchange, Cheong reports MBD as the most accurate of the eleven models
 tested for reach alone (comScore 2003 data, N=440 schedules), but only
-middling for the complete contact-frequency distribution, behind the
+middling for the complete exposure-frequency distribution, behind the
 already-implemented \code{\link[=calc_canex]{calc_canex()}} and the (not yet implemented)
 Conditional Beta Distribution model.
 }

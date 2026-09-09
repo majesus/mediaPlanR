@@ -4,7 +4,7 @@
 
 `mediaPlanR` provides reproducible cross-media reach, frequency and budget
 allocation in R. Version 2 introduces a validated planning object, complete
-contact distributions, explicit metric units and optimization results that say
+exposure distributions, explicit metric units and optimization results that say
 whether a global optimum was actually verified.
 
 ## Installation
@@ -38,7 +38,7 @@ comparison <- compare_reach_models(plan, c("sainsbury", "binomial"))
 
 All v2 reach results contain:
 
-- zero-to-N contact probabilities;
+- zero-to-N exposure probabilities;
 - cumulative N+ reach;
 - reach in probability, percent and people;
 - average frequency among reached people;
@@ -110,7 +110,7 @@ nbd_fit <- fit_nbd_exposure(counts)
 
 Observed distributions are supplied by the analyst; they are never inferred
 from model inputs. The table must contain `contacts` and `observed`, including
-the zero-contact cell, and its scale must be declared explicitly:
+the zero-exposure cell, and its scale must be declared explicitly:
 
 ```r
 observed <- data.frame(
@@ -148,11 +148,11 @@ not claim that its MSAD output was published by Kim.
 ## Reproducibility guarantees
 
 - Inputs are checked for units, bounds and logical compatibility.
-- Contact distributions are normalized and include zero contacts.
+- Exposure distributions are normalized and include zero exposures.
 - Exact optimization never exceeds the declared budget.
 - Model boundary cases have regression tests.
 - Observed-versus-predicted evaluations require declared scales and identical
-  contact support.
+  exposure support.
 
 ## References
 

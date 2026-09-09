@@ -13,7 +13,7 @@ nbd_exposure_distribution(
 )
 }
 \arguments{
-\item{mean_contacts}{Positive expected contacts per person.}
+\item{mean_contacts}{Positive expected exposures per person.}
 
 \item{size}{Positive Gamma heterogeneity parameter. Smaller values imply
 stronger heterogeneity. \code{Inf} gives the Poisson limit.}
@@ -34,7 +34,7 @@ conditional average frequency, and scope diagnostics.
 \description{
 Builds a Poisson-Gamma (Negative-Binomial) distribution for exposure counts.
 This is an unbounded count-process approximation intended for page views,
-ad-server contacts, or other continuous opportunity processes. It is not a
+ad-server exposures, or other continuous opportunity processes. It is not a
 finite-insertion reach model and does not represent cross-vehicle dependence.
 }
 \details{
@@ -42,7 +42,7 @@ The model assumes an individual Poisson exposure process with a Gamma-
 distributed rate across people. Its variance is
 \eqn{\mu + \mu^2/size}. Because its support is unbounded, the final table row
 is explicitly labelled as an open tail. No tail mass is reassigned to an
-impossible exact contact count.
+impossible exact exposure count.
 
 Danaher (2007) provides direct media-planning support for Negative-Binomial
 page-view models and develops the multivariate extension needed to represent

@@ -5,9 +5,9 @@
 #' used by the historical functions.
 #'
 #' @param first_reach Reach after one insertion, as a proportion.
-#' @param target_reach Target probability for exactly `frequency` contacts or
-#'   at least `frequency` contacts.
-#' @param frequency Positive contact threshold.
+#' @param target_reach Target probability for exactly `frequency` exposures or
+#'   at least `frequency` exposures.
+#' @param frequency Positive exposure threshold.
 #' @param max_insertions Maximum number of insertions considered.
 #' @param type `exact` or `at_least`.
 #' @param tolerance Desired absolute probability error.
@@ -86,7 +86,7 @@ calibrate_bbd <- function(first_reach, target_reach, frequency,
 
 #' @export
 print.bbd_calibration <- function(x, ...) {
-  cat(sprintf("Beta-Binomial calibration (%s %d contacts)\n", x$type, x$frequency))
+  cat(sprintf("Beta-Binomial calibration (%s %d exposures)\n", x$type, x$frequency))
   cat(sprintf("n=%d | alpha=%.6f | beta=%.6f\n",
               x$insertions, x$alpha, x$beta))
   cat(sprintf("Target=%.6f | Predicted=%.6f | Error=%.3g | Converged=%s\n",

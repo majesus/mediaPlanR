@@ -226,6 +226,18 @@ different name.
   `calc_beta_binomial()`) on the single `extraDistr::dbbinom()` already used
   everywhere else in the package.
 - Dropped the unused `readr` `Suggests` declaration.
+- Aligned the English documentation and printed output with the vocabulary
+  actually used by the cited primary English-language sources (Kim 2005,
+  Cheong 2007, Danaher 1991): "contact distribution" became "exposure
+  distribution", "contact opportunities" became "exposure opportunities",
+  and similar prose throughout. Kim and Cheong consistently write "reach",
+  "frequency (or exposure) distribution" and "exposure opportunity", never
+  "contact"; "contact" is the term Aldas Manzano (1998) uses in Spanish
+  ("distribucion de contactos"), following the French/Belgian tradition
+  (Agostini, Hofmans) rather than the US one. Return-value field and column
+  names (e.g. `contacts`, `contact_distribution`, `avg_contacts`,
+  `mean_contacts`) were deliberately left unchanged to avoid an API break;
+  only prose, `@param`/`@return` descriptions and `print()` labels changed.
 
 The `canex_example`, `csd_example`, `msad_example`, and `bbd_reach_example`
 datasets are original illustrative inputs, ready for `do.call()`.

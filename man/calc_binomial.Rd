@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{calc_binomial}
 \alias{calc_binomial}
-\title{Reach and contact distribution (and cumulative) under the Binomial model}
+\title{Reach and exposure distribution (and cumulative) under the Binomial model}
 \usage{
 calc_binomial(audiences, population, insertions = rep(1L, length(audiences)))
 }
@@ -25,7 +25,7 @@ A list of class "reach_binomial" containing:
 \item percent: Reach as a percentage
 \item people: Reach in number of people
 }
-\item distribution: List with the contact distribution:
+\item distribution: List with the exposure distribution:
 \itemize{
 \item percent: Vector with the probability of each number of exposures
 \item people: Vector with the number of people for each number of exposures
@@ -40,7 +40,7 @@ A list of class "reach_binomial" containing:
 }
 \description{
 Implements the Binomial model, developed by Lee and Burkart
-(1960) and reviewed by Chandon (1985), to calculate the reach and contact
+(1960) and reviewed by Chandon (1985), to calculate the reach and exposure
 distribution (and cumulative distribution) of a media plan with several
 vehicles. The Binomial model assumes random duplication \emph{and} random
 accumulation (repeat insertions in the same vehicle are also treated as
@@ -55,8 +55,8 @@ The Binomial model calculates:
 \enumerate{
 \item Reach, treating the plan as one hypothetical "average" vehicle whose
 audience is the simple mean of every vehicle's audience
-\item The contact distribution for each exposure level
-\item The cumulative contact distribution (exposed at least i times)
+\item The exposure distribution for each exposure level
+\item The cumulative exposure distribution (exposed at least i times)
 }
 
 The methodology includes:
@@ -65,7 +65,7 @@ The methodology includes:
 planned in each vehicle
 \item Computing the mean exposure probability across every insertion
 \item Applying the Binomial model for the plan's total number of insertions
-\item Computing the contact distributions (and cumulative)
+\item Computing the exposure distributions (and cumulative)
 }
 }
 \examples{

@@ -27,7 +27,7 @@ default upper bounds.}
 \item{target_reach}{Required effective reach, as a proportion, for
 \code{min_cost}.}
 
-\item{effective_frequency}{Minimum contacts defining effective reach.}
+\item{effective_frequency}{Minimum exposures defining effective reach.}
 
 \item{max_insertions}{Integer upper bound per channel.}
 

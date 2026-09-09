@@ -1,6 +1,6 @@
 #' @encoding UTF-8
 #' @title Fit a Beta-Binomial distribution to an external reach estimate
-#' @description Fits one Beta-Binomial contact distribution while preserving
+#' @description Fits one Beta-Binomial exposure distribution while preserving
 #' the insertion-weighted mean exposure probability and reproducing an external
 #' schedule-reach estimate. This is a univariate mean-zero calibration; it is
 #' not the Morgensztern Sequential Aggregation Distribution (MSAD).
@@ -62,7 +62,7 @@
 #'       \item RM: External reach used as the constraint
 #'       \item BBD: Beta-Binomial coverage
 #'     }
-#'   \item contact_distribution: Vector with the probabilities from 0 to N contacts
+#'   \item contact_distribution: Vector with the probabilities from 0 to N exposures
 #'   \item iteration_history: Data frame with the iteration history
 #' }
 #'
@@ -277,23 +277,23 @@ print.bbd_reach_fit <- function(x, ...) {
   cat(sprintf("\nConverged = %s",
               ifelse(x$parameters$converged, "Yes", "No")))
 
-  # Contact distribution
-  cat("\n\nCONTACT DISTRIBUTION:")
+  # Exposure distribution
+  cat("\n\nEXPOSURE DISTRIBUTION:")
   cat("\n-------------------------\n")
   dist_table <- data.frame(
-    'Contacts' = 0:x$parameters$N,
+    'Exposures' = 0:x$parameters$N,
     'Probability (%)' = sprintf("%.2f%%", x$contact_distribution * 100),
     'Cumulative (%)' = sprintf("%.2f%%", cumsum(x$contact_distribution) * 100)
   )
   print(dist_table)
 
   # Distribution statistics
-  cat("\nCONTACT STATISTICS:")
+  cat("\nEXPOSURE STATISTICS:")
   cat("\n--------------------")
   contacts <- 0:x$parameters$N
   mean_contacts <- sum(contacts * x$contact_distribution)
   var_contacts <- sum((contacts - mean_contacts)^2 * x$contact_distribution)
-  cat(sprintf("\nMean contacts = %.2f", mean_contacts))
+  cat(sprintf("\nMean exposures = %.2f", mean_contacts))
   cat(sprintf("\nStandard deviation = %.2f", sqrt(var_contacts)))
   cat(sprintf("\nMode = %d", which.max(x$contact_distribution) - 1))
   cat("\n\n")

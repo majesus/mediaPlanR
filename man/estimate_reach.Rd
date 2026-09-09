@@ -2,7 +2,7 @@
 % Please edit documentation in R/reach_core.R
 \name{estimate_reach}
 \alias{estimate_reach}
-\title{Estimate reach and contact distribution for a media plan}
+\title{Estimate reach and exposure distribution for a media plan}
 \usage{
 estimate_reach(plan, model = c("sainsbury", "binomial"))
 }

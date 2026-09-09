@@ -15,7 +15,7 @@ evaluate_exposure_model(
 }
 \arguments{
 \item{observed}{Data frame with columns \code{contacts} and \code{observed}. It must
-include an explicit zero-contact row and every integer contact level up to
+include an explicit zero-exposure row and every integer exposure level up to
 its maximum. For several schedules, also include the column named by
 \code{schedule_col}.}
 
@@ -59,7 +59,7 @@ and
 They are descriptive predictive-error measures, not inferential tests.
 
 Exact support equality is required. Open-tail NBD output is rejected because
-a cell such as \verb{10+} is not equivalent to an exact ten-contact cell. To
+a cell such as \verb{10+} is not equivalent to an exact ten-exposure cell. To
 evaluate a censored distribution, the analyst must first collapse observed
 and predicted tails identically and provide explicit data frames.
 }

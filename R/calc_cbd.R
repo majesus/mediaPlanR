@@ -61,7 +61,7 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #'   as people.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'
-#' @return A `reach_cbd` object containing reach, the complete contact
+#' @return A `reach_cbd` object containing reach, the complete exposure
 #'   distribution, the aggregation order used, and diagnostics, including
 #'   whether the same negative-probability safety net [calc_mbd()] uses had
 #'   to be engaged.

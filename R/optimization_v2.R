@@ -56,7 +56,7 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #' @param objective `max_reach` or `min_cost`.
 #' @param target_reach Required effective reach, as a proportion, for
 #'   `min_cost`.
-#' @param effective_frequency Minimum contacts defining effective reach.
+#' @param effective_frequency Minimum exposures defining effective reach.
 #' @param max_insertions Integer upper bound per channel.
 #' @param model `sainsbury` or `binomial`; see `estimate_reach()`. Candidate
 #'   allocations routinely place several insertions in the same vehicle, so

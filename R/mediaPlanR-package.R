@@ -1,7 +1,7 @@
 #' mediaPlanR: Reliable Cross-Media Reach and Frequency Planning
 #'
 #' @title Reliable Cross-Media Reach and Frequency Planning
-#' @description Validated plans, reproducible reach and contact-frequency
+#' @description Validated plans, reproducible reach and exposure-frequency
 #' distributions, target-audience metrics, and budget allocation.
 #' @author Manuel J. Sanchez-Franco \email{majesus@us.es}
 #' @references

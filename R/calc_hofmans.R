@@ -198,7 +198,7 @@ calc_hofmans_accumulation <- function(R1, R2, N, show_steps = TRUE) {
 #' every vehicle pair, Hofmans replaces it with a pairwise coefficient
 #' computed directly from each pair's own observed audiences and duplication
 #' -- no coefficient needs to be fitted from an external calibration data
-#' set. Like Agostini, it estimates total reach only, not the contact
+#' set. Like Agostini, it estimates total reach only, not the exposure
 #' distribution: \code{\link{calc_hofmans_accumulation}} above (an unrelated,
 #' same-author model for one vehicle with several insertions) is the one
 #' that produces a distribution.

@@ -39,7 +39,7 @@ test_that("print.reach_canex's printed average matches stats$avg_contacts (regre
   res <- calc_canex(vehicles, duplications, population = 1000000)
 
   expect_output(print(res),
-                sprintf("Average contacts per person reached: %.2f",
+                sprintf("Average exposures per person reached: %.2f",
                         res$stats$avg_contacts))
 })
 

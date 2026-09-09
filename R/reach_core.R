@@ -13,7 +13,7 @@ poisson_binomial_distribution <- function(probabilities) {
 new_reach_result <- function(probability, population, model, parameters = list()) {
   if (!is.numeric(probability) || length(probability) < 1L ||
       anyNA(probability) || any(!is.finite(probability)) || any(probability < -1e-12)) {
-    stop("The model produced an invalid contact distribution", call. = FALSE)
+    stop("The model produced an invalid exposure distribution", call. = FALSE)
   }
   probability <- pmax(probability, 0)
   probability <- probability / sum(probability)
@@ -49,7 +49,7 @@ new_reach_result <- function(probability, population, model, parameters = list()
   ), class = "media_reach")
 }
 
-#' Estimate reach and contact distribution for a media plan
+#' Estimate reach and exposure distribution for a media plan
 #'
 #' A `media_plan`-native front end for `calc_sainsbury()`/`calc_binomial()`:
 #' reads `audience`, `insertions`, and `population` from `plan` and calls the

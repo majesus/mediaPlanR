@@ -1,13 +1,13 @@
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Reach and contact distribution (and cumulative) under the Sainsbury model
+#' @title Reach and exposure distribution (and cumulative) under the Sainsbury model
 #' @description Implements the Sainsbury model, developed by E. J. Sainsbury at the
-#' London Press Exchange, to calculate reach and the contact distribution for a set
+#' London Press Exchange, to calculate reach and the exposure distribution for a set
 #' of advertising vehicles. The model assumes random duplication *and* random
 #' accumulation, homogeneous individual exposure probabilities, and heterogeneous
 #' vehicle exposure probabilities for a more precise estimate of reach and the
-#' contact distribution (and cumulative distribution). From the last two
+#' exposure distribution (and cumulative distribution). From the last two
 #' assumptions it follows that the probability of an individual being exposed to
 #' vehicle i is the ratio between vehicle i's audience (favourable cases) and the
 #' population (total cases). From the random-duplication and random-accumulation
@@ -35,8 +35,8 @@
 #'   \item Reach, treating duplication between vehicles (and, when `insertions`
 #'   is above one, accumulation within a vehicle) as the product of the
 #'   individual probabilities
-#'   \item The contact distribution for each exposure level i
-#'   \item The cumulative contact distribution (exposed at least i times)
+#'   \item The exposure distribution for each exposure level i
+#'   \item The cumulative exposure distribution (exposed at least i times)
 #' }
 #'
 #' The process includes:
@@ -45,7 +45,7 @@
 #'   probability once per insertion planned in it
 #'   \item Computing every possible combination of insertions
 #'   \item Estimating joint probabilities
-#'   \item Aggregating results: contact distribution (and cumulative)
+#'   \item Aggregating results: exposure distribution (and cumulative)
 #' }
 #'
 #' @return A list of class "reach_sainsbury" containing:
@@ -55,7 +55,7 @@
 #'       \item percent: Reach as a percentage
 #'       \item people: Reach in number of people
 #'     }
-#'   \item distribution: List with the contact distribution:
+#'   \item distribution: List with the exposure distribution:
 #'     \itemize{
 #'       \item percent: Vector with the probability of each number of exposures
 #'       \item people: Vector with the number of people for each number of exposures
@@ -75,7 +75,7 @@
 #'
 #' # Inspect the results
 #' print(result$reach$percent)  # Reach as a percentage
-#' print(result$distribution$people)  # People by number of contacts
+#' print(result$distribution$people)  # People by number of exposures
 #'
 #' # Same three vehicles, several insertions each
 #' calc_sainsbury(audiences, population, insertions = c(4, 6, 10))
@@ -155,9 +155,9 @@ calc_sainsbury <- function(audiences, population,
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Reach and contact distribution (and cumulative) under the Binomial model
+#' @title Reach and exposure distribution (and cumulative) under the Binomial model
 #' @description Implements the Binomial model, developed by Lee and Burkart
-#' (1960) and reviewed by Chandon (1985), to calculate the reach and contact
+#' (1960) and reviewed by Chandon (1985), to calculate the reach and exposure
 #' distribution (and cumulative distribution) of a media plan with several
 #' vehicles. The Binomial model assumes random duplication *and* random
 #' accumulation (repeat insertions in the same vehicle are also treated as
@@ -186,8 +186,8 @@ calc_sainsbury <- function(audiences, population,
 #' \enumerate{
 #'   \item Reach, treating the plan as one hypothetical "average" vehicle whose
 #'   audience is the simple mean of every vehicle's audience
-#'   \item The contact distribution for each exposure level
-#'   \item The cumulative contact distribution (exposed at least i times)
+#'   \item The exposure distribution for each exposure level
+#'   \item The cumulative exposure distribution (exposed at least i times)
 #' }
 #'
 #' The methodology includes:
@@ -196,7 +196,7 @@ calc_sainsbury <- function(audiences, population,
 #'   planned in each vehicle
 #'   \item Computing the mean exposure probability across every insertion
 #'   \item Applying the Binomial model for the plan's total number of insertions
-#'   \item Computing the contact distributions (and cumulative)
+#'   \item Computing the exposure distributions (and cumulative)
 #' }
 #'
 #' @return A list of class "reach_binomial" containing:
@@ -206,7 +206,7 @@ calc_sainsbury <- function(audiences, population,
 #'       \item percent: Reach as a percentage
 #'       \item people: Reach in number of people
 #'     }
-#'   \item distribution: List with the contact distribution:
+#'   \item distribution: List with the exposure distribution:
 #'     \itemize{
 #'       \item percent: Vector with the probability of each number of exposures
 #'       \item people: Vector with the number of people for each number of exposures
@@ -310,14 +310,14 @@ calc_binomial <- function(audiences, population,
 #__________________________________________________________#
 
 #' @encoding UTF-8
-#' @title Reach and contact distribution (and cumulative) under the Beta-Binomial model
+#' @title Reach and exposure distribution (and cumulative) under the Beta-Binomial model
 #' @description Implements the Beta-Binomial model to calculate net cumulative
-#' audience and the contact distribution (and cumulative distribution). The
+#' audience and the exposure distribution (and cumulative distribution). The
 #' Beta-Binomial model accounts for heterogeneity in individuals' exposure
 #' probability. It combines two steps: it models the success probability with a
 #' Beta distribution of shape parameters alpha and beta -- which reduces the data
 #' required for estimation to just two numbers -- and uses that probability in the
-#' Binomial distribution (mixed with the Beta distribution) to obtain the contact
+#' Binomial distribution (mixed with the Beta distribution) to obtain the exposure
 #' distribution (and cumulative distribution). It is useful when the success
 #' probability is not known a priori and can vary across individuals. The alpha
 #' and beta parameters let the shape of the distribution reflect the uncertainty
@@ -339,7 +339,7 @@ calc_binomial <- function(audiences, population,
 #' \enumerate{
 #'   \item Computes the alpha and beta parameters from A1 and A2
 #'   \item Models exposure heterogeneity with the Beta distribution
-#'   \item Combines the Beta distribution with the Binomial for the contact distribution
+#'   \item Combines the Beta distribution with the Binomial for the exposure distribution
 #'   \item Computes exact probabilities for each exposure level
 #' }
 #'
@@ -347,8 +347,8 @@ calc_binomial <- function(audiences, population,
 #' \itemize{
 #'   \item Estimating the duplication coefficients R1 and R2
 #'   \item Computing the model's alpha and beta parameters
-#'   \item Generating the contact distribution
-#'   \item Computing the contact distribution (and cumulative)
+#'   \item Generating the exposure distribution
+#'   \item Computing the exposure distribution (and cumulative)
 #' }
 #'
 #' @return A list of class "reach_beta_binomial" containing:
@@ -358,7 +358,7 @@ calc_binomial <- function(audiences, population,
 #'       \item percent: Reach as a percentage
 #'       \item people: Reach in number of people
 #'     }
-#'   \item distribution: List with the contact distribution:
+#'   \item distribution: List with the exposure distribution:
 #'     \itemize{
 #'       \item percent: Vector with the probability of each number of exposures
 #'       \item people: Vector with the number of people for each number of exposures
@@ -442,7 +442,7 @@ calc_beta_binomial <- function(A1, A2, P, n) {
   # returns NaN for the whole distribution at those exact boundaries.
   params <- calculate_bbd_params(R1, R2)
 
-  # Compute the contact distribution (P)
+  # Compute the exposure distribution (P)
   P_dist <- if (params$type == "binomial_limit") {
     stats::dbinom(0:n, size = n, prob = params$p)
   } else if (params$type == "polarized_limit") {
@@ -456,10 +456,10 @@ calc_beta_binomial <- function(A1, A2, P, n) {
   # Compute the cumulative distribution (R)
   R_dist <- sapply(0:n, function(k) sum(P_dist[(k + 1):length(P_dist)]))
 
-  # Total reach is 1 minus the probability of 0 contacts
+  # Total reach is 1 minus the probability of 0 exposures
   reach <- 1 - P_dist[1]
 
-  # Drop the 0-contact cell from the final distributions
+  # Drop the 0-exposure cell from the final distributions
   P_no_zero <- P_dist[-1]
   R_no_zero <- R_dist[-1]
 
@@ -519,7 +519,7 @@ print.reach_beta_binomial <- function(x, ...) {
     parameters = list(
       "Alpha (shape of the Beta distribution)" = x$parameters$alpha,
       "Beta (shape of the Beta distribution)" = x$parameters$beta,
-      "Probability of 0 contacts (%)" = x$parameters$zero_contact_probability
+      "Probability of 0 exposures (%)" = x$parameters$zero_contact_probability
     ),
     notes = sprintf("Theoretical mean of the Beta distribution: %.3f",
                     x$parameters$alpha / (x$parameters$alpha + x$parameters$beta))
@@ -529,7 +529,7 @@ print.reach_beta_binomial <- function(x, ...) {
 
 #__________________________________________________________#
 
-# Linearizes a symmetric matrix (e.g. of duplications or contact
+# Linearizes a symmetric matrix (e.g. of duplications or exposure
 # opportunities) by walking its upper triangle, including the diagonal, in
 # the order (1,1), (1,2), ..., (1,n), (2,2), (2,3), .... Used internally by
 # calc_metheringham().
@@ -544,7 +544,7 @@ matrix_to_vector <- function(m) {
   return(v)
 }
 
-# From the number of insertions per vehicle, computes the number of contact
+# From the number of insertions per vehicle, computes the number of exposure
 # opportunities between each pair of vehicles (off-diagonal) and within a
 # single vehicle (on the diagonal, as choose(insertions, 2)). Used internally
 # by calc_metheringham().
@@ -565,9 +565,9 @@ create_opportunity_matrix <- function(insertions) {
 }
 
 #' @encoding UTF-8
-#' @title Reach and contact distribution (and cumulative) under the Metheringham model
+#' @title Reach and exposure distribution (and cumulative) under the Metheringham model
 #' @description Implements Metheringham's (1964) model to calculate reach and
-#' the contact distribution (and cumulative distribution) for several
+#' the exposure distribution (and cumulative distribution) for several
 #' vehicles. Individuals have heterogeneous, Beta-distributed exposure
 #' probabilities; vehicles are treated as homogeneous, which makes the
 #' duplication problem between vehicles equivalent to an accumulation problem
@@ -577,7 +577,7 @@ create_opportunity_matrix <- function(insertions) {
 #' (A2 = 2 x A1 - D). A1 and A2 are then the same inputs
 #' \code{\link{calc_beta_binomial}} takes for one vehicle with several
 #' insertions, so this function estimates alpha and beta from them and
-#' evaluates the Beta-Binomial contact distribution for the plan's actual
+#' evaluates the Beta-Binomial exposure distribution for the plan's actual
 #' number of vehicles.
 #'
 #' @references
@@ -600,7 +600,7 @@ create_opportunity_matrix <- function(insertions) {
 #'   \item Cumulative audience after two insertions of the hypothetical
 #'   average vehicle: \eqn{A2 = 2 \times A1 - D}
 #'   \item Alpha and beta of the Beta-Binomial distribution implied by A1 and
-#'   A2, and the resulting reach and contact distribution for the plan's
+#'   A2, and the resulting reach and exposure distribution for the plan's
 #'   actual number of vehicles (via \code{\link{calc_beta_binomial}})
 #' }
 #'
@@ -611,7 +611,7 @@ create_opportunity_matrix <- function(insertions) {
 #'       \item percent: Reach as a percentage
 #'       \item people: Reach in number of people
 #'     }
-#'   \item distribution: List with the contact distribution:
+#'   \item distribution: List with the exposure distribution:
 #'     \itemize{
 #'       \item percent: Vector with the probability of each number of exposures
 #'       \item people: Vector with the number of people for each number of exposures
@@ -621,12 +621,12 @@ create_opportunity_matrix <- function(insertions) {
 #'       \item percent: Vector with cumulative probabilities
 #'       \item people: Vector with the number of people exposed at least i times
 #'     }
-#'   \item parameters: List with alpha, beta, and the probability of 0 contacts
+#'   \item parameters: List with alpha, beta, and the probability of 0 exposures
 #'   \item mean_audience: Insertion-weighted mean audience (A1)
 #'   \item mean_duplication: Opportunity-weighted mean duplication (D)
 #'   \item second_audience: Cumulative audience after two insertions of the
 #'         hypothetical average vehicle (A2)
-#'   \item opportunity_matrix: Matrix with the number of contact opportunities
+#'   \item opportunity_matrix: Matrix with the number of exposure opportunities
 #'         between pairs of insertions
 #'   \item opportunity_vector: Linearized version of the opportunity matrix
 #'   \item duplication_vector: Linearized version of the duplication matrix
@@ -702,7 +702,7 @@ calc_metheringham <- function(audiences, insertions, duplication_matrix, populat
   opportunity_vector <- matrix_to_vector(opportunity_matrix)
 
   if (sum(opportunity_vector) <= 0) {
-    stop("There are no contact opportunities between vehicles (check insertions)")
+    stop("There are no exposure opportunities between vehicles (check insertions)")
   }
 
   A1 <- sum(audiences * insertions) / sum(insertions)
@@ -740,14 +740,14 @@ print.reach_metheringham <- function(x, ...) {
     parameters = list(
       "Alpha (shape of the Beta distribution)" = x$parameters$alpha,
       "Beta (shape of the Beta distribution)" = x$parameters$beta,
-      "Probability of 0 contacts (%)" = x$parameters$zero_contact_probability,
+      "Probability of 0 exposures (%)" = x$parameters$zero_contact_probability,
       "Mean audience (A1, people)" = x$mean_audience,
       "Mean duplication (D, people)" = x$mean_duplication,
       "Cumulative audience after 2 insertions (A2, people)" = x$second_audience
     )
   )
 
-  cat("\nCONTACT OPPORTUNITY MATRIX:\n")
+  cat("\nEXPOSURE OPPORTUNITY MATRIX:\n")
   cat("---------------------------\n")
   print(x$opportunity_matrix)
   cat("Interpretation: number of possible insertion pairs between vehicles.\n")

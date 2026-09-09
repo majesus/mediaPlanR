@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{calc_sainsbury}
 \alias{calc_sainsbury}
-\title{Reach and contact distribution (and cumulative) under the Sainsbury model}
+\title{Reach and exposure distribution (and cumulative) under the Sainsbury model}
 \usage{
 calc_sainsbury(audiences, population, insertions = rep(1L, length(audiences)))
 }
@@ -25,7 +25,7 @@ A list of class "reach_sainsbury" containing:
 \item percent: Reach as a percentage
 \item people: Reach in number of people
 }
-\item distribution: List with the contact distribution:
+\item distribution: List with the exposure distribution:
 \itemize{
 \item percent: Vector with the probability of each number of exposures
 \item people: Vector with the number of people for each number of exposures
@@ -39,11 +39,11 @@ A list of class "reach_sainsbury" containing:
 }
 \description{
 Implements the Sainsbury model, developed by E. J. Sainsbury at the
-London Press Exchange, to calculate reach and the contact distribution for a set
+London Press Exchange, to calculate reach and the exposure distribution for a set
 of advertising vehicles. The model assumes random duplication \emph{and} random
 accumulation, homogeneous individual exposure probabilities, and heterogeneous
 vehicle exposure probabilities for a more precise estimate of reach and the
-contact distribution (and cumulative distribution). From the last two
+exposure distribution (and cumulative distribution). From the last two
 assumptions it follows that the probability of an individual being exposed to
 vehicle i is the ratio between vehicle i's audience (favourable cases) and the
 population (total cases). From the random-duplication and random-accumulation
@@ -57,8 +57,8 @@ The simplified Sainsbury model calculates:
 \item Reach, treating duplication between vehicles (and, when \code{insertions}
 is above one, accumulation within a vehicle) as the product of the
 individual probabilities
-\item The contact distribution for each exposure level i
-\item The cumulative contact distribution (exposed at least i times)
+\item The exposure distribution for each exposure level i
+\item The cumulative exposure distribution (exposed at least i times)
 }
 
 The process includes:
@@ -67,7 +67,7 @@ The process includes:
 probability once per insertion planned in it
 \item Computing every possible combination of insertions
 \item Estimating joint probabilities
-\item Aggregating results: contact distribution (and cumulative)
+\item Aggregating results: exposure distribution (and cumulative)
 }
 }
 \examples{
@@ -78,7 +78,7 @@ result <- calc_sainsbury(audiences, population)
 
 # Inspect the results
 print(result$reach$percent)  # Reach as a percentage
-print(result$distribution$people)  # People by number of contacts
+print(result$distribution$people)  # People by number of exposures
 
 # Same three vehicles, several insertions each
 calc_sainsbury(audiences, population, insertions = c(4, 6, 10))

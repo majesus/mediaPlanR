@@ -108,7 +108,7 @@ evaluation_validate_distribution <- function(data, value_column, scale,
   }
   keys <- paste(schedule, contacts, sep = "\r")
   if (anyDuplicated(keys)) {
-    stop(sprintf("%s contains duplicate schedule/contact rows.", label),
+    stop(sprintf("%s contains duplicate schedule/exposure rows.", label),
          call. = FALSE)
   }
 
@@ -119,7 +119,7 @@ evaluation_validate_distribution <- function(data, value_column, scale,
     if (!identical(schedule_contacts,
                    seq.int(0L, max(schedule_contacts)))) {
       stop(sprintf(
-        "%s schedule '%s' must explicitly contain every contact level from 0 to its maximum.",
+        "%s schedule '%s' must explicitly contain every exposure level from 0 to its maximum.",
         label, name
       ), call. = FALSE)
     }
@@ -166,7 +166,7 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' or fitted values as observations.
 #'
 #' @param observed Data frame with columns `contacts` and `observed`. It must
-#'   include an explicit zero-contact row and every integer contact level up to
+#'   include an explicit zero-exposure row and every integer exposure level up to
 #'   its maximum. For several schedules, also include the column named by
 #'   `schedule_col`.
 #' @param predicted Either a supported model result whose `distribution`
@@ -198,7 +198,7 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' They are descriptive predictive-error measures, not inferential tests.
 #'
 #' Exact support equality is required. Open-tail NBD output is rejected because
-#' a cell such as `10+` is not equivalent to an exact ten-contact cell. To
+#' a cell such as `10+` is not equivalent to an exact ten-exposure cell. To
 #' evaluate a censored distribution, the analyst must first collapse observed
 #' and predicted tails identically and provide explicit data frames.
 #'
@@ -370,7 +370,7 @@ print.exposure_model_evaluation <- function(x, ...) {
   cat(sprintf("Schedules: %d | Kim AER: %.3f%% | Kim APE: %.3f%%\n",
               x$summary$schedules, 100 * x$summary$kim_aer,
               100 * x$summary$kim_ape))
-  cat(sprintf("Mean total variation: %.5f | Mean contact bias: %.5f\n",
+  cat(sprintf("Mean total variation: %.5f | Mean exposure bias: %.5f\n",
               x$summary$mean_total_variation,
               x$summary$mean_contact_bias))
   invisible(x)

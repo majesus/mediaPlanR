@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{calc_beta_binomial}
 \alias{calc_beta_binomial}
-\title{Reach and contact distribution (and cumulative) under the Beta-Binomial model}
+\title{Reach and exposure distribution (and cumulative) under the Beta-Binomial model}
 \usage{
 calc_beta_binomial(A1, A2, P, n)
 }
@@ -24,7 +24,7 @@ A list of class "reach_beta_binomial" containing:
 \item percent: Reach as a percentage
 \item people: Reach in number of people
 }
-\item distribution: List with the contact distribution:
+\item distribution: List with the exposure distribution:
 \itemize{
 \item percent: Vector with the probability of each number of exposures
 \item people: Vector with the number of people for each number of exposures
@@ -44,12 +44,12 @@ A list of class "reach_beta_binomial" containing:
 }
 \description{
 Implements the Beta-Binomial model to calculate net cumulative
-audience and the contact distribution (and cumulative distribution). The
+audience and the exposure distribution (and cumulative distribution). The
 Beta-Binomial model accounts for heterogeneity in individuals' exposure
 probability. It combines two steps: it models the success probability with a
 Beta distribution of shape parameters alpha and beta -- which reduces the data
 required for estimation to just two numbers -- and uses that probability in the
-Binomial distribution (mixed with the Beta distribution) to obtain the contact
+Binomial distribution (mixed with the Beta distribution) to obtain the exposure
 distribution (and cumulative distribution). It is useful when the success
 probability is not known a priori and can vary across individuals. The alpha
 and beta parameters let the shape of the distribution reflect the uncertainty
@@ -60,7 +60,7 @@ The Beta-Binomial model:
 \enumerate{
 \item Computes the alpha and beta parameters from A1 and A2
 \item Models exposure heterogeneity with the Beta distribution
-\item Combines the Beta distribution with the Binomial for the contact distribution
+\item Combines the Beta distribution with the Binomial for the exposure distribution
 \item Computes exact probabilities for each exposure level
 }
 
@@ -68,8 +68,8 @@ The process includes:
 \itemize{
 \item Estimating the duplication coefficients R1 and R2
 \item Computing the model's alpha and beta parameters
-\item Generating the contact distribution
-\item Computing the contact distribution (and cumulative)
+\item Generating the exposure distribution
+\item Computing the exposure distribution (and cumulative)
 }
 }
 \note{

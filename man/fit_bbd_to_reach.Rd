@@ -54,12 +54,12 @@ A list of class \code{bbd_reach_fit} containing:
 \item RM: External reach used as the constraint
 \item BBD: Beta-Binomial coverage
 }
-\item contact_distribution: Vector with the probabilities from 0 to N contacts
+\item contact_distribution: Vector with the probabilities from 0 to N exposures
 \item iteration_history: Data frame with the iteration history
 }
 }
 \description{
-Fits one Beta-Binomial contact distribution while preserving
+Fits one Beta-Binomial exposure distribution while preserving
 the insertion-weighted mean exposure probability and reproducing an external
 schedule-reach estimate. This is a univariate mean-zero calibration; it is
 not the Morgensztern Sequential Aggregation Distribution (MSAD).

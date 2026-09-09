@@ -29,7 +29,7 @@ people. It does not affect the model estimates.}
 \item{tolerance}{Numerical tolerance used for probability constraints.}
 }
 \value{
-A \code{reach_msad} object containing the complete contact distribution,
+A \code{reach_msad} object containing the complete exposure distribution,
 cumulative reach, vehicle marginals, aggregation steps, and diagnostics.
 }
 \description{
@@ -49,14 +49,14 @@ For a subset of vehicles, Morgensztern reach is calculated as
 with \eqn{K_{ij}=(A_i+A_j)/(A_i+A_j-A_{ij})}. At every aggregation step,
 the joint table is conformed to the two input marginal distributions and
 to the Morgensztern union reach. Consequently, all probabilities remain
-non-negative, the margins are preserved, and the zero-contact probability
+non-negative, the margins are preserved, and the zero-exposure probability
 is exactly \code{1 - R_m}.
 
 MSAD is intended to reduce, not guarantee the elimination of, declining
 reach. The reach formula can also be incompatible with the supplied
 marginal distributions. In that case the function stops and reports the
 feasible interval instead of silently altering the target. Aggregation
-order can change the contact distribution even when final schedule reach is
+order can change the exposure distribution even when final schedule reach is
 unchanged.
 }
 \examples{

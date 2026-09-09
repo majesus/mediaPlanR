@@ -30,7 +30,7 @@ people.}
 \item{tolerance}{Positive numerical tolerance for probability constraints.}
 }
 \value{
-A \code{reach_csd} object containing reach, the complete contact
+A \code{reach_csd} object containing reach, the complete exposure
 distribution, cumulative probabilities, vehicle marginals, aggregation
 steps, and numerical diagnostics.
 }
@@ -39,7 +39,7 @@ Implements Kim's (2005) Canonical Sequential Aggregation Distribution
 (CSD): vehicle-level Beta-Binomial marginals are combined sequentially,
 while the target reach at every step is obtained from Danaher's second-order
 canonical expansion. The non-random convolution preserves both input
-margins and sets the zero-contact cell to one minus canonical reach.
+margins and sets the zero-exposure cell to one minus canonical reach.
 }
 \details{
 For a subset of vehicles, CSD estimates the all-zero probability as

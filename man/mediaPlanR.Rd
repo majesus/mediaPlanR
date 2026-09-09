@@ -6,7 +6,7 @@
 \alias{mediaPlanR-package}
 \title{Reliable Cross-Media Reach and Frequency Planning}
 \description{
-Validated plans, reproducible reach and contact-frequency
+Validated plans, reproducible reach and exposure-frequency
 distributions, target-audience metrics, and budget allocation.
 }
 \details{

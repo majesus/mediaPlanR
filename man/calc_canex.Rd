@@ -27,8 +27,8 @@ An object of class \code{"reach_canex"}: a list with components:
 \item total_reach_people: Number of people reached
 \item distribution: Data frame with columns contacts, percent, people
 \item cumulative: Data frame with columns min_contacts, percent, people
-\item stats: List with avg_contacts (average contacts among those
-reached) and zero_contacts_prob (probability of zero contacts)
+\item stats: List with avg_contacts (average exposures among those
+reached) and zero_contacts_prob (probability of zero exposures)
 \item diagnostics: Truncated negative mass, mass before renormalization,
 and the smallest eigenvalue of the correlation matrix. These values let
 you assess how much the second-order approximation had to be corrected.
@@ -50,7 +50,7 @@ The model follows these steps:
 to zero the negative probabilities that the truncated canonical
 expansion can produce, and renormalizing the result so total
 probability mass sums back to 1
-\item Aggregates the joint distribution by total number of contacts and
+\item Aggregates the joint distribution by total number of exposures and
 calculates the reach and frequency metrics
 }
 

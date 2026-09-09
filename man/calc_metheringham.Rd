@@ -3,7 +3,7 @@
 \encoding{UTF-8}
 \name{calc_metheringham}
 \alias{calc_metheringham}
-\title{Reach and contact distribution (and cumulative) under the Metheringham model}
+\title{Reach and exposure distribution (and cumulative) under the Metheringham model}
 \usage{
 calc_metheringham(audiences, insertions, duplication_matrix, population)
 }
@@ -24,7 +24,7 @@ A list of class "reach_metheringham" containing:
 \item percent: Reach as a percentage
 \item people: Reach in number of people
 }
-\item distribution: List with the contact distribution:
+\item distribution: List with the exposure distribution:
 \itemize{
 \item percent: Vector with the probability of each number of exposures
 \item people: Vector with the number of people for each number of exposures
@@ -34,12 +34,12 @@ A list of class "reach_metheringham" containing:
 \item percent: Vector with cumulative probabilities
 \item people: Vector with the number of people exposed at least i times
 }
-\item parameters: List with alpha, beta, and the probability of 0 contacts
+\item parameters: List with alpha, beta, and the probability of 0 exposures
 \item mean_audience: Insertion-weighted mean audience (A1)
 \item mean_duplication: Opportunity-weighted mean duplication (D)
 \item second_audience: Cumulative audience after two insertions of the
 hypothetical average vehicle (A2)
-\item opportunity_matrix: Matrix with the number of contact opportunities
+\item opportunity_matrix: Matrix with the number of exposure opportunities
 between pairs of insertions
 \item opportunity_vector: Linearized version of the opportunity matrix
 \item duplication_vector: Linearized version of the duplication matrix
@@ -47,7 +47,7 @@ between pairs of insertions
 }
 \description{
 Implements Metheringham's (1964) model to calculate reach and
-the contact distribution (and cumulative distribution) for several
+the exposure distribution (and cumulative distribution) for several
 vehicles. Individuals have heterogeneous, Beta-distributed exposure
 probabilities; vehicles are treated as homogeneous, which makes the
 duplication problem between vehicles equivalent to an accumulation problem
@@ -57,7 +57,7 @@ cumulative audience after two insertions of that average vehicle follows
 (A2 = 2 x A1 - D). A1 and A2 are then the same inputs
 \code{\link{calc_beta_binomial}} takes for one vehicle with several
 insertions, so this function estimates alpha and beta from them and
-evaluates the Beta-Binomial contact distribution for the plan's actual
+evaluates the Beta-Binomial exposure distribution for the plan's actual
 number of vehicles.
 }
 \details{
@@ -70,7 +70,7 @@ duplications, considering every combination between vehicles ii, ij
 \item Cumulative audience after two insertions of the hypothetical
 average vehicle: \eqn{A2 = 2 \times A1 - D}
 \item Alpha and beta of the Beta-Binomial distribution implied by A1 and
-A2, and the resulting reach and contact distribution for the plan's
+A2, and the resulting reach and exposure distribution for the plan's
 actual number of vehicles (via \code{\link{calc_beta_binomial}})
 }
 }

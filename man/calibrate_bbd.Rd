@@ -16,10 +16,10 @@ calibrate_bbd(
 \arguments{
 \item{first_reach}{Reach after one insertion, as a proportion.}
 
-\item{target_reach}{Target probability for exactly \code{frequency} contacts or
-at least \code{frequency} contacts.}
+\item{target_reach}{Target probability for exactly \code{frequency} exposures or
+at least \code{frequency} exposures.}
 
-\item{frequency}{Positive contact threshold.}
+\item{frequency}{Positive exposure threshold.}
 
 \item{max_insertions}{Maximum number of insertions considered.}
 
