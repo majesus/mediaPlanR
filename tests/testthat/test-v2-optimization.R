@@ -27,3 +27,41 @@ test_that("optimizer never silently exceeds budget", {
   expect_true(fit$metrics$totals$spend <= fit$budget)
 })
 
+test_that("greedy optimizer skips zero-cost channels with no reach gain", {
+  plan <- media_plan(data.frame(
+    channel = c("zero", "useful"), audience = c(0, 500),
+    insertions = c(1, 1), cost_per_insertion = c(0, 5)
+  ), population = 1000)
+
+  fit <- optimize_media_plan(
+    plan, budget = 5, max_insertions = c(1, 1), method = "greedy"
+  )
+
+  expect_equal(unname(fit$allocation), c(0, 1))
+  expect_equal(fit$reach$reach$probability, 0.5)
+})
+
+test_that("optimizer rejects non-finite search controls", {
+  plan <- media_plan(data.frame(
+    channel = "A", audience = 500, insertions = 1,
+    cost_per_insertion = 5
+  ), population = 1000)
+
+  expect_error(
+    optimize_media_plan(plan, 5, max_insertions = Inf),
+    "finite non-negative integer"
+  )
+  expect_error(
+    optimize_media_plan(plan, 5, effective_frequency = Inf),
+    "finite positive integer"
+  )
+  expect_error(
+    optimize_media_plan(plan, 5, objective = "min_cost", target_reach = NA_real_),
+    "finite target_reach"
+  )
+  expect_error(
+    optimize_media_plan(plan, 5, max_combinations = NA_real_),
+    "positive finite number"
+  )
+})
+

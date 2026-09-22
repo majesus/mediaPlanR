@@ -29,7 +29,8 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
       evaluated <- allocation_reach(plan, proposal, model, effective_frequency)
       gain <- evaluated$effective_reach - current$effective_reach
       cost <- plan$data$cost_per_insertion[i]
-      list(i = i, gain = gain, score = if (cost > 0) gain / cost else Inf,
+      score <- if (cost > 0) gain / cost else if (gain > 0) Inf else -Inf
+      list(i = i, gain = gain, score = score,
            evaluated = evaluated)
     })
     candidates <- Filter(Negate(is.null), candidates)
@@ -91,18 +92,25 @@ optimize_media_plan <- function(plan, budget,
     stop("budget must be one non-negative finite number", call. = FALSE)
   }
   if (!is.numeric(max_insertions) || length(max_insertions) != nrow(plan$data) ||
-      anyNA(max_insertions) || any(max_insertions < 0) ||
+      anyNA(max_insertions) || any(!is.finite(max_insertions)) ||
+      any(max_insertions < 0) ||
       any(max_insertions != round(max_insertions))) {
-    stop("max_insertions must provide one non-negative integer per channel", call. = FALSE)
+    stop("max_insertions must provide one finite non-negative integer per channel", call. = FALSE)
   }
   if (!is.numeric(effective_frequency) || length(effective_frequency) != 1L ||
-      effective_frequency < 1 || effective_frequency != round(effective_frequency)) {
-    stop("effective_frequency must be a positive integer", call. = FALSE)
+      !is.finite(effective_frequency) || effective_frequency < 1 ||
+      effective_frequency != round(effective_frequency)) {
+    stop("effective_frequency must be a finite positive integer", call. = FALSE)
   }
   if (objective == "min_cost" &&
       (is.null(target_reach) || !is.numeric(target_reach) ||
-       length(target_reach) != 1L || target_reach < 0 || target_reach > 1)) {
-    stop("min_cost requires target_reach between zero and one", call. = FALSE)
+       length(target_reach) != 1L || !is.finite(target_reach) ||
+       target_reach < 0 || target_reach > 1)) {
+    stop("min_cost requires a finite target_reach between zero and one", call. = FALSE)
+  }
+  if (!is.numeric(max_combinations) || length(max_combinations) != 1L ||
+      !is.finite(max_combinations) || max_combinations < 1) {
+    stop("max_combinations must be one positive finite number", call. = FALSE)
   }
 
   combinations <- prod(max_insertions + 1)
@@ -188,4 +196,3 @@ print.media_optimization <- function(x, ...) {
         row.names = FALSE)
   invisible(x)
 }
-
