@@ -128,10 +128,10 @@ test_that("MBD has a concise print method", {
 
 test_that("MBD does not error or return NaN when a vehicle's own R1/R2 sit at the binomial or polarized limit (regression test)", {
   # Peeling a vehicle whose own Beta-Binomial parameters are at alpha=beta=Inf
-  # (binomial limit) or alpha=beta=0 (polarized limit) used to call
-  # extraDistr::dbbinom() with those non-finite/degenerate values directly,
-  # producing NaN that later crashed mbd_conditional_allocate() with
-  # "missing value where TRUE/FALSE is needed".
+  # (binomial limit) or alpha=beta=0 (polarized limit) must not pass those
+  # non-finite or degenerate values to extraDistr::dbbinom(), which returns NaN
+  # there and would break the conditional allocation. Both limits are computed
+  # from their closed-form limiting distributions instead.
   dup <- matrix(c(NA, 0.05, 0.05, NA), nrow = 2, byrow = TRUE)
 
   R1 <- 0.3

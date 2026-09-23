@@ -77,7 +77,7 @@ test_that("CSD validates duplication and aggregation inputs", {
   )
   expect_error(
     calc_csd(inputs$vehicles_data, inputs$duplications, population = 0),
-    "positive finite"
+    "population must be one finite positive number"
   )
 })
 

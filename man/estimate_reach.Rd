@@ -9,26 +9,41 @@ estimate_reach(plan, model = c("sainsbury", "binomial"))
 \arguments{
 \item{plan}{A \code{media_plan} object.}
 
-\item{model}{\code{sainsbury} (default) runs \code{\link[=calc_sainsbury]{calc_sainsbury()}}: heterogeneous
-vehicle probabilities, combined via the exact Poisson-binomial
-convolution. \code{binomial} runs \code{\link[=calc_binomial]{calc_binomial()}}: every vehicle is treated
-as sharing the plan's average probability. Both assume random
-duplication \emph{and} random accumulation (a repeat insertion in the same
-vehicle is treated as independent, exactly like an insertion in a
-different vehicle) -- see \code{vignette("mediaPlanR-intro")}.}
+\item{model}{\code{"sainsbury"} (default) runs \code{\link[=calc_sainsbury]{calc_sainsbury()}}: heterogeneous
+vehicle probabilities combined by the exact Poisson-binomial convolution.
+\code{"binomial"} runs \code{\link[=calc_binomial]{calc_binomial()}}: every insertion has the plan's
+insertion-weighted mean probability. Both assume random duplication
+\emph{and} random accumulation (a repeat insertion in the same vehicle is as
+independent as an insertion in a different vehicle); see
+\code{vignette("mediaPlanR-intro")}.}
 }
 \value{
-A \code{media_reach} object with a complete zero-to-N distribution.
+A \code{media_reach} object: a list with the \code{model}, the \code{population},
+\code{reach} (a data frame with \code{probability}, \code{percent} and \code{people}),
+\code{distribution} (\code{contacts}, \code{probability}, \code{percent} and \code{people} for zero
+to \code{N} exposures), \code{cumulative} (\code{min_contacts}, \code{probability}, \code{percent}
+and \code{people} for at least \code{min_contacts} exposures), \code{average_frequency}
+(average exposures among the people reached) and model \code{parameters}.
 }
 \description{
-A \code{media_plan}-native front end for \code{calc_sainsbury()}/\code{calc_binomial()}:
-reads \code{audience}, \code{insertions}, and \code{population} from \code{plan} and calls the
-requested model directly, so the two share a single implementation.
+A \code{media_plan} front end for \code{\link[=calc_sainsbury]{calc_sainsbury()}} and \code{\link[=calc_binomial]{calc_binomial()}}: it
+reads \code{audience}, \code{insertions} and \code{population} from the plan and calls the
+requested model directly, so both share a single implementation.
+}
+\examples{
+plan <- media_plan(
+  data.frame(channel = c("TV", "Radio"), audience = c(300000, 180000),
+             insertions = c(4, 6), cost_per_insertion = c(18000, 3500)),
+  population = 1000000
+)
+estimate_reach(plan)
+estimate_reach(plan, model = "binomial")$distribution
+
 }
 \seealso{
 \code{\link[=calc_sainsbury]{calc_sainsbury()}} and \code{\link[=calc_binomial]{calc_binomial()}}, called directly by this
-function. For the experimental Negative-Binomial approximation, call
-\code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}} directly with your own \code{mean_contacts} --
-it is scoped to continuous exposure processes, not finite insertion
-schedules, so it is not offered here or in \code{\link[=optimize_media_plan]{optimize_media_plan()}}.
+function. For a Negative-Binomial count approximation, call
+\code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}} with your own \code{mean_contacts}: it is scoped
+to continuous exposure processes, not to finite insertion schedules, so it
+is not offered here or in \code{\link[=optimize_media_plan]{optimize_media_plan()}}.
 }

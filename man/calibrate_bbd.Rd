@@ -14,25 +14,52 @@ calibrate_bbd(
 )
 }
 \arguments{
-\item{first_reach}{Reach after one insertion, as a proportion.}
+\item{first_reach}{Reach after one insertion, as a proportion strictly
+between zero and one.}
 
-\item{target_reach}{Target probability for exactly \code{frequency} exposures or
-at least \code{frequency} exposures.}
+\item{target_reach}{Target probability, strictly between zero and one, of
+exactly \code{frequency} exposures (\code{type = "exact"}) or of at least
+\code{frequency} exposures (\code{type = "at_least"}).}
 
-\item{frequency}{Positive exposure threshold.}
+\item{frequency}{Positive integer exposure threshold.}
 
-\item{max_insertions}{Maximum number of insertions considered.}
+\item{max_insertions}{Maximum number of insertions considered, an integer
+of at least \code{frequency}.}
 
-\item{type}{\code{exact} or \code{at_least}.}
+\item{type}{\code{"at_least"} (default) or \code{"exact"}.}
 
-\item{tolerance}{Desired absolute probability error.}
+\item{tolerance}{Desired absolute probability error; it only determines the
+\code{converged} flag.}
 }
 \value{
-A \code{bbd_calibration} object with calibrated parameters, full
-distribution and diagnostics.
+A \code{bbd_calibration} object: a list with \code{alpha}, \code{beta},
+\code{concentration}, \code{insertions} (the selected \code{n}), \code{first_reach},
+\code{frequency}, \code{type}, \code{target_reach}, \code{predicted_reach}, \code{error},
+\code{converged}, the full \code{distribution} (\code{contacts}, \code{probability} and
+\code{cumulative_probability}) and the \code{candidates} evaluated for each \code{n}.
 }
 \description{
-The first-insertion reach fixes the Beta mean. The function then calibrates
-only its concentration, avoiding the million-point two-dimensional grids
-used by the historical functions.
+Calibrates a Beta-Binomial exposure distribution so that it reproduces a
+target effective reach. The reach after one insertion fixes the mean of
+the Beta distribution, and only its concentration is calibrated, by a
+one-dimensional search instead of a two-dimensional grid over both shape
+parameters.
+}
+\details{
+For every number of insertions \code{n} from \code{frequency} to \code{max_insertions}, the
+function searches for the concentration of the Beta-Binomial, with mean
+\code{first_reach}, whose probability equals \code{target_reach}, first on a grid of
+the log concentration and then by \code{\link[stats:optimize]{stats::optimize()}} around the best grid
+point. It returns the number of insertions with the smallest error, the
+smaller \code{n} in case of ties.
+}
+\examples{
+# A first insertion reaches 30\% and 2+ exposures should reach 20\%
+calibrate_bbd(first_reach = 0.30, target_reach = 0.20, frequency = 2,
+              max_insertions = 6)
+
+}
+\seealso{
+\code{\link[=calc_beta_binomial]{calc_beta_binomial()}} for the model itself and \code{\link[=fit_bbd_to_reach]{fit_bbd_to_reach()}}
+to fit a Beta-Binomial to a whole schedule's reach.
 }

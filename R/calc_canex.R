@@ -1,136 +1,30 @@
-# Computes alpha and beta of the Beta-Binomial by the method of moments from
-# R1 and R2. Explicitly represents the binomial limit (alpha = beta = Inf,
-# when R2 matches the reach under independence) and the polarized limit
-# (alpha = beta = 0, when R2 = R1). Used internally by: calc_canex(),
-# calc_csd(), calc_mbd(), calc_msad().
-calculate_bbd_params <- function(R1, R2) {
-  if (!is.numeric(R1) || !is.numeric(R2) || length(R1) != 1L ||
-      length(R2) != 1L || !is.finite(R1) || !is.finite(R2) ||
-      R1 <= 0 || R1 > 1 || R2 <= 0 || R2 > 1) {
-    stop("R1 and R2 must be numeric and lie in the interval (0, 1]")
-  }
-  if (R2 < R1) {
-    stop("R2 cannot be smaller than R1 (reach must be non-decreasing)")
-  }
-
-  independence_limit <- 2 * R1 - R1^2
-  if (R2 > independence_limit + 1e-10) {
-    stop("R2 is incompatible with a Beta-Binomial exposure model: it exceeds the independence limit")
-  }
-
-  denom <- 2 * R1 - R2 - R1^2
-  if (abs(denom) < 1e-9) {
-    return(list(alpha = Inf, beta = Inf, p = R1, type = "binomial_limit"))
-  }
-  if (abs(R2 - R1) < 1e-10) {
-    return(list(alpha = 0, beta = 0, p = R1, type = "polarized_limit"))
-  }
-
-  alpha <- R1 * (R2 - R1) / denom
-  beta <- alpha * (1 - R1) / R1
-  if (!is.finite(alpha) || !is.finite(beta) || alpha <= 0 || beta <= 0) {
-    stop("R1 and R2 do not imply valid Beta-Binomial parameters")
-  }
-  list(alpha = alpha, beta = beta, p = R1, type = "beta_binomial")
-}
-
-# Mean and variance of a Beta-Binomial(k, alpha, beta). Used internally.
-calculate_mean_variance <- function(k, alpha, beta) {
-  mean_val <- k * alpha / (alpha + beta)
-  variance <- k * alpha * beta * (alpha + beta + k) /
-    ((alpha + beta)^2 * (alpha + beta + 1))
-  list(mean = mean_val, variance = variance)
-}
-
-# P(X = x) for a Beta-Binomial(k, alpha, beta), on the log scale for
-# numerical stability. Used internally.
-calculate_marginal_prob <- function(x, k, alpha, beta) {
-  if (x < 0 || x > k) return(0)
-
-  log_num <- lgamma(k + 1) + lgamma(alpha + beta) +
-    lgamma(alpha + x) + lgamma(beta + k - x)
-  log_den <- lgamma(x + 1) + lgamma(k - x + 1) + lgamma(alpha) +
-    lgamma(beta) + lgamma(alpha + beta + k)
-
-  exp(log_num - log_den)
-}
-
-# Correlation coefficient between exposure to two vehicles, from their joint
-# exposure probability (pij) and their marginal probabilities (pi, pj); 0 if
-# either vehicle's variance is zero. Used internally.
-calculate_duplication <- function(pij, pi, pj) {
-  eps <- 1e-10
-  if (pi < eps || pi > 1 - eps || pj < eps || pj > 1 - eps) return(0)
-
-  denominator <- sqrt(pi * (1 - pi) * pj * (1 - pj))
-  if (denominator < eps) return(0)
-
-  (pij - pi * pj) / denominator
-}
-
-# Converts the raw duplication matrix (proportion of the population
-# simultaneously exposed to each pair of vehicles) into the correlation-
-# coefficient matrix that the CANEX model uses as its joint-probability
-# adjustment term. Used internally.
-transform_duplications <- function(duplications, vehicles_data) {
-  m <- nrow(duplications)
-  correlations <- diag(1, m)
-
-  for (i in seq_len(m)) {
-    for (j in seq_len(m)) {
-      if (i != j) {
-        correlations[i, j] <- calculate_duplication(
-          duplications[i, j], vehicles_data$R1[i], vehicles_data$R1[j]
-        )
-      }
-    }
-  }
-  correlations
-}
-
-#' @encoding UTF-8
-#' @title Validate CANEX model inputs
-#' @description Checks that the vehicle data, the duplication matrix, and the
-#' population meet the minimum CANEX model requirements, and estimates the
-#' size of the exposure-combination grid that will need to be evaluated.
-#' @param vehicles_data Data frame with columns k, R1, R2
-#' @param duplications Square matrix of raw duplications
-#' @param population Positive integer. Target population size
-#' @return Invisibly \code{NULL}. Called for its side effects (raises an
-#' error if any requirement is not met).
-#' @keywords internal
-#' @noRd
+# Checks the CANEX inputs and the size of the exposure-combination grid.
 validate_canex_inputs <- function(vehicles_data, duplications, population) {
   required_cols <- c("k", "R1", "R2")
   if (!is.data.frame(vehicles_data) || !all(required_cols %in% names(vehicles_data))) {
-    stop("vehicles_data must be a data.frame with columns k, R1 and R2")
+    stop("vehicles_data must be a data frame with columns k, R1 and R2.",
+         call. = FALSE)
   }
   m <- nrow(vehicles_data)
-  if (m < 1) {
-    stop("vehicles_data must contain at least one vehicle")
+  if (m < 1L) {
+    stop("vehicles_data must contain at least one vehicle.", call. = FALSE)
   }
-  if (any(vehicles_data$k < 1) || any(vehicles_data$k != round(vehicles_data$k))) {
-    stop("k must be a positive integer for each vehicle")
-  }
-  if (any(vehicles_data$R1 <= 0) || any(vehicles_data$R1 > 1) ||
-      any(vehicles_data$R2 <= 0) || any(vehicles_data$R2 > 1)) {
-    stop("R1 and R2 must lie in the interval (0, 1] for every vehicle")
-  }
+  assert_numeric_vector(vehicles_data$k, "vehicles_data$k", min = 1,
+                        integer = TRUE, length = m)
+  assert_numeric_vector(vehicles_data$R1, "vehicles_data$R1", min = 0,
+                        max = 1, min_open = TRUE, length = m)
+  assert_numeric_vector(vehicles_data$R2, "vehicles_data$R2", min = 0,
+                        max = 1, min_open = TRUE, length = m)
   if (any(vehicles_data$R2 < vehicles_data$R1)) {
-    stop("R2 cannot be smaller than R1 for any vehicle")
+    stop("R2 cannot be smaller than R1 for any vehicle.", call. = FALSE)
   }
-  if (!is.matrix(duplications) || nrow(duplications) != m || ncol(duplications) != m) {
-    stop("duplications must be a square matrix with dimension equal to the number of vehicles (", m, ")")
+  assert_symmetric_matrix(duplications, "duplications", m)
+  off_diagonal <- duplications[row(duplications) != col(duplications)]
+  if (any(off_diagonal < 0 | off_diagonal > 1)) {
+    stop("Every off-diagonal duplication must be a proportion between 0 and 1.",
+         call. = FALSE)
   }
-  if (any(duplications < 0 | duplications > 1)) {
-    stop("Every value in the duplication matrix must be between 0 and 1")
-  }
-  if (!isTRUE(all.equal(duplications, t(duplications), check.attributes = FALSE))) {
-    warning("duplications is not symmetric; its upper triangle will be used")
-  }
-  if (!is.numeric(population) || length(population) != 1 || population <= 0) {
-    stop("population must be a single positive number")
-  }
+  assert_number(population, "population", min = 0, min_open = TRUE)
 
   if (m >= 2L) {
     for (i in seq_len(m - 1L)) {
@@ -139,17 +33,18 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
         lower <- max(0, vehicles_data$R1[i] + vehicles_data$R1[j] - 1)
         upper <- min(vehicles_data$R1[i], vehicles_data$R1[j])
         if (pij < lower - 1e-10 || pij > upper + 1e-10) {
-          stop(sprintf("Duplication [%d,%d] is outside its feasible Frechet bounds [%.6f, %.6f]",
+          stop(sprintf("Duplication [%d,%d] is outside its Frechet bounds [%.6f, %.6f].",
                        i, j, lower, upper), call. = FALSE)
         }
       }
     }
     corr <- transform_duplications(duplications, vehicles_data)
-    corr[lower.tri(corr)] <- t(corr)[lower.tri(corr)]
     min_eigenvalue <- min(eigen(corr, symmetric = TRUE, only.values = TRUE)$values)
     if (min_eigenvalue < -1e-8) {
-      stop(sprintf("Pairwise duplications imply a non-positive-semidefinite correlation matrix (minimum eigenvalue %.6g)",
-                   min_eigenvalue), call. = FALSE)
+      stop(sprintf(paste0("Pairwise duplications imply a correlation matrix ",
+                          "that is not positive semidefinite (minimum ",
+                          "eigenvalue %.6g)."), min_eigenvalue),
+           call. = FALSE)
     }
   }
 
@@ -163,114 +58,110 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
         "computational limit of the CANEX model for large schedules."
       ),
       total_combinations
-    ))
+    ), call. = FALSE)
   }
 
   invisible(NULL)
 }
 
-#' @encoding UTF-8
-#' @title Calculate the CANEX model (Canonical Expansion Model)
-#' @description Implements Danaher's (1991) canonical expansion model to
-#' calculate the reach and frequency distribution of a multi-vehicle
-#' schedule, explicitly accounting for each vehicle's exposure heterogeneity
-#' (via Beta-Binomial) and the observed duplications between vehicles (via a
-#' second-order correlation term).
+#' Canonical Expansion model (CANEX)
 #'
-#' @param vehicles_data Data frame with each media vehicle's data:
-#' \itemize{
-#'   \item k: Number of insertions for the vehicle (positive integer)
-#'   \item R1: Reach after the first insertion (0-1)
-#'   \item R2: Reach after the second insertion (0-1)
-#' }
-#' @param duplications Square matrix where element \verb{[i,j]} is the
-#' proportion of the population simultaneously exposed to vehicles i and j
-#' @param population Integer. Target population size (defaults to 1,000,000)
+#' Implements Danaher's (1991) canonical expansion model for the reach and
+#' exposure distribution of a multi-vehicle schedule. Each vehicle's exposure
+#' distribution is a Beta-Binomial, which accounts for the heterogeneity of
+#' individuals, and the observed duplication between vehicles enters through a
+#' second-order correlation term.
+#'
+#' @param vehicles_data Data frame with one row per vehicle and columns
+#'   \itemize{
+#'     \item `k`: number of insertions in the vehicle (a positive integer);
+#'     \item `R1`: reach after the first insertion, as a proportion in (0, 1];
+#'     \item `R2`: cumulative reach after the second insertion, as a
+#'       proportion with `R1 <= R2 <= 2 * R1 - R1^2`.
+#'   }
+#' @param duplications Symmetric matrix whose element `[i, j]` is the
+#'   proportion of the population exposed to one insertion in each of vehicles
+#'   `i` and `j`. The diagonal is ignored.
+#' @param population Population size, in people. It only scales the reported
+#'   number of people; the default is 1,000,000.
 #'
 #' @details
 #' The model follows these steps:
 #' \enumerate{
-#'   \item Computes each vehicle's Beta-Binomial parameters (alpha, beta)
-#'   \item Transforms the raw duplication matrix into correlations
-#'   \item Generates the joint exposure probability distribution, truncating
-#'   to zero the negative probabilities that the truncated canonical
-#'   expansion can produce, and renormalizing the result so total
-#'   probability mass sums back to 1
-#'   \item Aggregates the joint distribution by total number of exposures and
-#'   calculates the reach and frequency metrics
+#'   \item It computes each vehicle's Beta-Binomial parameters from `R1` and
+#'   `R2` by the method of moments.
+#'   \item It turns the duplications into canonical correlations,
+#'   \eqn{r_{ij} = (p_{ij} - p_i p_j) / \sqrt{p_i (1 - p_i) p_j (1 - p_j)}},
+#'   with \eqn{p_i} the one-insertion reach of vehicle \eqn{i} and \eqn{p_{ij}}
+#'   the duplication of vehicles \eqn{i} and \eqn{j}.
+#'   \item It evaluates, for every combination of exposure levels, the joint
+#'   probability \eqn{\prod_i f_i(x_i) \{1 + \sum_{i<j} r_{ij} (x_i - \mu_i)
+#'   (x_j - \mu_j) / (\sigma_i \sigma_j)\}}, where \eqn{f_i}, \eqn{\mu_i} and
+#'   \eqn{\sigma_i^2} are the Beta-Binomial probability function, mean and
+#'   variance of vehicle \eqn{i}. Only second-order terms are kept.
+#'   \item It sets to zero the negative probabilities that the truncated
+#'   expansion can produce, renormalizes the joint distribution to sum to one,
+#'   and sums it over the total number of exposures.
 #' }
+#' The number of combinations, \eqn{\prod_i (k_i + 1)}, grows exponentially
+#' with the number of vehicles and insertions. The model is therefore intended
+#' for small and medium schedules, and the function stops with an informative
+#' error above 2,000,000 combinations instead of exhausting memory.
 #'
-#' The number of exposure combinations to evaluate grows exponentially with
-#' the number of vehicles and insertions (\code{prod(k_i + 1)}), so the model
-#' is intended for small- or medium-sized schedules; for large schedules the
-#' function stops with an informative error instead of exhausting available
-#' memory.
-#'
-#' @return An object of class \code{"reach_canex"}: a list with components:
+#' @return A list of class `"reach_canex"` with components:
 #' \itemize{
-#'   \item total_reach: Proportion of the population reached (0-1)
-#'   \item total_reach_people: Number of people reached
-#'   \item distribution: Data frame with columns contacts, percent, people
-#'   \item cumulative: Data frame with columns min_contacts, percent, people
-#'   \item stats: List with avg_contacts (average exposures among those
-#'   reached) and zero_contacts_prob (probability of zero exposures)
-#'   \item diagnostics: Truncated negative mass, mass before renormalization,
-#'   and the smallest eigenvalue of the correlation matrix. These values let
-#'   you assess how much the second-order approximation had to be corrected.
+#'   \item `population`: the population size used.
+#'   \item `reach`: list with `probability`, `percent` and `people`.
+#'   \item `average_frequency`: average number of exposures among the people
+#'     reached.
+#'   \item `distribution`: data frame with `contacts` (total exposures, from
+#'     zero), `probability`, `percent`, `people` and `cumulative_probability`
+#'     (the probability of at least that many exposures).
+#'   \item `diagnostics`: list with `negative_mass_truncated` (probability mass
+#'     that was negative before truncation), `mass_before_renormalization` and
+#'     `correlation_min_eigenvalue` (the smallest eigenvalue of the
+#'     correlation matrix). They show how much the second-order approximation
+#'     had to be corrected.
 #' }
 #'
 #' @examples
-#' # Two vehicles (values taken from a model reference case)
+#' # Two vehicles, two insertions each
+#' data(canex_example)
+#' result <- do.call(calc_canex, canex_example)
+#' result
+#' result$diagnostics
+#'
+#' # Inputs of the first two vehicles of Kim's (2005) worked example
+#' # (Tables 4.2.2.1 and 4.2.2.2), with a population of 500,000 people
 #' vehicles <- data.frame(
 #'   k = c(2, 2),
-#'   R1 = c(0.4902, 0.033),
+#'   R1 = c(0.4902, 0.0333),
 #'   R2 = c(0.5805, 0.0502)
 #' )
-#' duplications <- matrix(
-#'   c(1.000, 0.0157,
-#'     0.0157, 1.000),
-#'   nrow = 2, byrow = TRUE
-#' )
-#' results <- calc_canex(vehicles, duplications)
-#' print(results)
-#'
-#' # Three vehicles with a custom population
-#' vehicles2 <- data.frame(
-#'   k = c(2, 2, 2),
-#'   R1 = c(0.4902, 0.033, 0.0300),
-#'   R2 = c(0.5805, 0.0502, 0.0371)
-#' )
-#' duplications2 <- matrix(
-#'   c(1.000, 0.0157, 0.0139,
-#'     0.0157, 1.000, 0.0003,
-#'     0.0139, 0.0003, 1.000),
-#'   nrow = 3, byrow = TRUE
-#' )
-#' results2 <- calc_canex(vehicles2, duplications2, population = 500000)
-#' total_reach <- results2$total_reach
-#' avg_contacts <- results2$stats$avg_contacts
+#' duplications <- matrix(c(NA, 0.0157, 0.0157, NA), nrow = 2)
+#' calc_canex(vehicles, duplications, population = 500000)$reach
 #'
 #' @seealso
-#' \code{\link{calc_beta_binomial}} for the univariate model (a single vehicle)
-#' \code{\link{calc_cbd}}, whose between-vehicle step reuses this same
-#' canonical expansion, extended to insertion-level Beta-Binomial expansion
+#' [calc_beta_binomial()] for the univariate model (one vehicle), and
+#' [calc_csd()] and [calc_cbd()], whose between-vehicle step reuses this
+#' canonical expansion.
 #'
 #' @references
 #' Danaher, P. J. (1991). A canonical expansion model for multivariate media
 #' exposure distributions: A generalization of the "duplication of viewing
 #' law". Journal of Marketing Research, 28(3), 361-367.
+#' \doi{10.1177/002224379102800311}
 #'
-#' @importFrom stats aggregate
+#' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
+#' Doctoral dissertation, The University of Texas at Austin, pp. 56-58.
+#'
 #' @export
 calc_canex <- function(vehicles_data, duplications, population = 1000000) {
   validate_canex_inputs(vehicles_data, duplications, population)
 
   m <- nrow(vehicles_data)
   correlations <- transform_duplications(duplications, vehicles_data)
-  correlation_matrix <- correlations
-  correlation_matrix[lower.tri(correlation_matrix)] <-
-    t(correlation_matrix)[lower.tri(correlation_matrix)]
-  min_eigenvalue <- min(eigen(correlation_matrix, symmetric = TRUE,
+  min_eigenvalue <- min(eigen(correlations, symmetric = TRUE,
                               only.values = TRUE)$values)
 
   bbd_params <- lapply(seq_len(m), function(i) {
@@ -337,8 +228,9 @@ calc_canex <- function(vehicles_data, duplications, population = 1000000) {
   base_prob[!is.finite(base_prob)] <- 0
   dup_term[!is.finite(dup_term)] <- 0
 
-  # Adjusted joint probability, truncated at 0 (see @details). Diagnostics
-  # expose how much the second-order approximation had to be corrected.
+  # Adjusted joint probability, truncated at zero (see Details). The
+  # diagnostics expose how much the second-order approximation had to be
+  # corrected.
   raw_joint_prob <- base_prob * (1 + dup_term)
   negative_mass <- -sum(pmin(raw_joint_prob, 0))
   joint_prob <- pmax(0, raw_joint_prob)
@@ -347,7 +239,7 @@ calc_canex <- function(vehicles_data, duplications, population = 1000000) {
   agg <- stats::aggregate(joint_prob, by = list(exposures = total_exposures), FUN = sum)
   names(agg) <- c("exposures", "probability")
 
-  report <- calculate_metrics(agg, population)
+  report <- build_canex_result(agg, population)
   report$diagnostics <- list(
     negative_mass_truncated = negative_mass,
     mass_before_renormalization = sum(joint_prob),
@@ -356,85 +248,62 @@ calc_canex <- function(vehicles_data, duplications, population = 1000000) {
   report
 }
 
-# From a probability distribution by total number of exposures (columns
-# exposures, probability; not necessarily normalized to 1), calculates
-# reach, the exposure distribution (and cumulative), and the CANEX model's
-# summary metrics. Returns a "reach_canex" object. Used internally.
-calculate_metrics <- function(distribution, population = 1000000) {
-  if (!is.data.frame(distribution) ||
-      !all(c("exposures", "probability") %in% names(distribution)) ||
-      anyNA(distribution[c("exposures", "probability")]) ||
-      any(distribution$probability < 0) || !0 %in% distribution$exposures) {
-    stop("distribution must contain non-negative probabilities and an explicit zero-exposure row",
-         call. = FALSE)
-  }
-  if (!is.numeric(population) || length(population) != 1L ||
-      !is.finite(population) || population <= 0) {
-    stop("population must be one positive finite number", call. = FALSE)
-  }
+# From a distribution by total number of exposures (columns exposures and
+# probability, with an explicit zero row, not necessarily normalized), builds
+# the "reach_canex" object: reach, average frequency among the people reached
+# and the exposure distribution with its cumulative probabilities.
+build_canex_result <- function(distribution, population) {
   distribution <- distribution[order(distribution$exposures), ]
 
-  # The truncated canonical expansion can leave total probability mass below
-  # 1 after truncating negative probabilities to 0; it is renormalized so
-  # the distribution sums back to 1.
+  # The truncated canonical expansion can leave total probability mass
+  # different from one after negative probabilities are set to zero; the
+  # distribution is renormalized.
   total_prob <- sum(distribution$probability)
   if (total_prob > 0 && abs(total_prob - 1) > 1e-6) {
     distribution$probability <- distribution$probability / total_prob
   }
+  probability <- distribution$probability
+  cumulative <- rev(cumsum(rev(probability)))
 
-  distribution$percent <- distribution$probability * 100
-  distribution$people <- round(distribution$probability * population)
-
-  cumulative_people <- vapply(distribution$exposures, function(n) {
-    sum(distribution$people[distribution$exposures >= n])
-  }, numeric(1))
-
-  cumulative_dist <- data.frame(
-    min_contacts = distribution$exposures,
-    people = cumulative_people,
-    percent = (cumulative_people / population) * 100
-  )
-
-  reach_prob <- 1 - distribution$probability[1]
-  reach_people <- round(reach_prob * population)
-
-  avg_contacts <- if (reach_prob > 1e-9) {
-    sum(distribution$exposures * distribution$probability) / reach_prob
+  reach_probability <- 1 - probability[1L]
+  average_frequency <- if (reach_probability > 1e-9) {
+    sum(distribution$exposures * probability) / reach_probability
   } else {
     0
   }
 
-  report <- list(
-    total_reach = reach_prob,
-    total_reach_people = reach_people,
+  structure(list(
+    population = population,
+    reach = list(
+      probability = reach_probability,
+      percent = 100 * reach_probability,
+      people = population * reach_probability
+    ),
+    average_frequency = average_frequency,
     distribution = data.frame(
       contacts = distribution$exposures,
-      percent = distribution$percent,
-      people = distribution$people
-    ),
-    cumulative = data.frame(
-      min_contacts = cumulative_dist$min_contacts,
-      percent = cumulative_dist$percent,
-      people = cumulative_dist$people
-    ),
-    stats = list(
-      avg_contacts = avg_contacts,
-      zero_contacts_prob = distribution$probability[1]
+      probability = probability,
+      percent = 100 * probability,
+      people = population * probability,
+      cumulative_probability = cumulative
     )
-  )
-
-  class(report) <- "reach_canex"
-  report
+  ), class = "reach_canex")
 }
 
 #' @export
 print.reach_canex <- function(x, ...) {
+  cumulative <- list(
+    min_contacts = x$distribution$contacts,
+    percent = 100 * x$distribution$cumulative_probability,
+    people = x$population * x$distribution$cumulative_probability
+  )
   print_reach_report(
     "CANEX MODEL (Canonical Expansion)",
-    "model that accounts for heterogeneity and duplications between vehicles",
-    x$total_reach * 100, x$total_reach_people,
-    distribution = x$distribution, cumulative = x$cumulative,
-    parameters = list("Probability of 0 exposures (%)" = x$stats$zero_contacts_prob * 100)
+    "heterogeneous vehicles with observed duplication between vehicles",
+    x$reach$percent, x$reach$people,
+    distribution = x$distribution, cumulative = cumulative,
+    parameters = list("Probability of 0 exposures (%)" =
+                        x$distribution$percent[1L])
   )
   invisible(x)
 }

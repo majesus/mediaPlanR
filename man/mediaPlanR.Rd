@@ -4,18 +4,36 @@
 \name{mediaPlanR}
 \alias{mediaPlanR}
 \alias{mediaPlanR-package}
-\title{Reliable Cross-Media Reach and Frequency Planning}
+\title{mediaPlanR: Reliable Cross-Media Reach and Frequency Planning}
 \description{
-Validated plans, reproducible reach and exposure-frequency
-distributions, target-audience metrics, and budget allocation.
+Reproducible tools for cross-media reach, contact-frequency distributions,
+target-audience metrics and budget-constrained reach optimization. The
+package combines a validated media-plan data contract with the classical
+reach and exposure-distribution models of the media-planning literature.
 }
-\details{
-mediaPlanR: Reliable Cross-Media Reach and Frequency Planning
+\section{Planning workflow}{
+
+\code{\link[=media_plan]{media_plan()}} creates a validated plan, \code{\link[=plan_metrics]{plan_metrics()}} and
+\code{\link[=audience_metrics]{audience_metrics()}} compute its metrics, \code{\link[=estimate_reach]{estimate_reach()}} and
+\code{\link[=compare_reach_models]{compare_reach_models()}} estimate reach and the exposure distribution, and
+\code{\link[=optimize_media_plan]{optimize_media_plan()}} allocates insertions under a budget.
 }
+
+\section{Reach and exposure-distribution models}{
+
+Plans with random duplication: \code{\link[=calc_sainsbury]{calc_sainsbury()}}, \code{\link[=calc_binomial]{calc_binomial()}}.
+One vehicle with several insertions: \code{\link[=calc_beta_binomial]{calc_beta_binomial()}},
+\code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}. Several vehicles with one insertion each:
+\code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}, \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}}. Several
+vehicles with several insertions: \code{\link[=calc_metheringham]{calc_metheringham()}}, \code{\link[=calc_canex]{calc_canex()}},
+\code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}. Fitting and
+validation: \code{\link[=fit_bbd_to_reach]{fit_bbd_to_reach()}}, \code{\link[=calibrate_bbd]{calibrate_bbd()}}, \code{\link[=fit_nbd_exposure]{fit_nbd_exposure()}},
+\code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}} and \code{\link[=evaluate_exposure_model]{evaluate_exposure_model()}}.
+}
+
 \references{
-\href{https://github.com/majesus/mediaPlanR}{Repositorio en GitHub}
-The package DOI is pending. Verified DOIs are included for individual
-model references where available.
+The models follow the primary sources cited in each function's help page.
+Development version and issue tracker: \url{https://github.com/majesus/mediaPlanR}.
 }
 \seealso{
 Useful links:
@@ -26,5 +44,5 @@ Useful links:
 
 }
 \author{
-Manuel J. Sanchez-Franco \email{majesus@us.es}
+Manuel J. Sánchez-Franco \email{majesus@us.es}
 }

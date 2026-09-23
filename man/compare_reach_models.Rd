@@ -9,12 +9,23 @@ compare_reach_models(plan, models = c("sainsbury", "binomial"))
 \arguments{
 \item{plan}{A \code{media_plan} object.}
 
-\item{models}{Character vector containing \code{sainsbury} and/or \code{binomial}.
-See \code{estimate_reach()}.}
+\item{models}{Character vector containing \code{"sainsbury"} and/or
+\code{"binomial"}; see \code{\link[=estimate_reach]{estimate_reach()}}.}
 }
 \value{
-A data frame with one row per model.
+A data frame with one row per model and columns \code{model},
+\code{reach_probability}, \code{reach_percent}, \code{reach_people} and
+\code{average_frequency}.
 }
 \description{
 Compare reach estimates under several models
+}
+\examples{
+plan <- media_plan(
+  data.frame(channel = c("TV", "Radio"), audience = c(300000, 180000),
+             insertions = c(4, 6), cost_per_insertion = c(18000, 3500)),
+  population = 1000000
+)
+compare_reach_models(plan)
+
 }

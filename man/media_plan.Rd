@@ -18,22 +18,47 @@ media_plan(
 \arguments{
 \item{data}{A data frame with one row per channel or vehicle.}
 
-\item{population}{Positive size of the planning universe.}
+\item{population}{Positive size of the planning universe, in people.}
 
-\item{channel, audience, insertions, cost_per_insertion}{Column names in
-\code{data}. Audience is people per insertion and cost is currency per
-insertion.}
+\item{channel, audience, insertions, cost_per_insertion}{Names of the columns
+of \code{data} that hold the channel label, the audience in people per
+insertion, the number of planned insertions (a non-negative integer) and
+the cost in currency units per insertion. Channel labels must be
+non-empty and unique.}
 
-\item{target_audience}{Optional column containing people in the target
-audience per insertion. It must not exceed \code{audience}.}
+\item{target_audience}{Optional name of a column of \code{data} with the people
+in the target audience per insertion. It cannot exceed \code{audience}.}
 
-\item{currency}{ISO-style currency label used only for reporting.}
+\item{currency}{Currency label used in printed output. It does not affect
+any calculation.}
 }
 \value{
-An object of class \code{media_plan}.
+An object of class \code{media_plan}: a list with the validated channel
+table \code{data} (columns \code{channel}, \code{audience}, \code{insertions},
+\code{cost_per_insertion} and, if supplied, \code{target_audience}), the
+\code{population} and the \code{currency}.
 }
 \description{
-\code{media_plan()} is the main data contract in mediaPlanR 2.0. It stores all
-quantities in explicit units and keeps channel-level inputs separate from
+\code{media_plan()} is the main data contract of mediaPlanR. It stores every
+quantity in explicit units and keeps channel-level inputs separate from
 derived metrics.
+}
+\examples{
+plan <- media_plan(
+  data.frame(
+    channel = c("TV", "Radio", "Digital"),
+    audience = c(300000, 180000, 120000),
+    insertions = c(4, 6, 10),
+    cost_per_insertion = c(18000, 3500, 1200),
+    target_audience = c(180000, 90000, 84000)
+  ),
+  population = 1000000,
+  target_audience = "target_audience"
+)
+plan
+
+}
+\seealso{
+\code{\link[=plan_metrics]{plan_metrics()}}, \code{\link[=estimate_reach]{estimate_reach()}} and \code{\link[=optimize_media_plan]{optimize_media_plan()}}
+take a \code{media_plan} object.
 }

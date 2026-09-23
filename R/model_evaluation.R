@@ -45,14 +45,11 @@ evaluation_prediction_data <- function(predicted, predicted_scale) {
   if ("probability" %in% names(distribution)) {
     value_column <- "probability"
     detected_scale <- "probability"
-  } else if ("percentage" %in% names(distribution)) {
-    value_column <- "percentage"
-    detected_scale <- "percent"
   } else if ("percent" %in% names(distribution)) {
     value_column <- "percent"
     detected_scale <- "percent"
   } else {
-    stop("The model object's distribution has no probability or percentage column.",
+    stop("The model object's distribution has no probability or percent column.",
          call. = FALSE)
   }
   if (!identical(predicted_scale, "auto") &&
@@ -169,10 +166,11 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #'   include an explicit zero-exposure row and every integer exposure level up to
 #'   its maximum. For several schedules, also include the column named by
 #'   `schedule_col`.
-#' @param predicted Either a supported model result whose `distribution`
-#'   contains `contacts` and `probability`/`percent` (the legacy `percentage`
-#'   column name is also accepted), or a data frame with columns `contacts`
-#'   and `predicted`. Data-frame predictions must use the
+#' @param predicted Either a supported model result whose `distribution` is a
+#'   data frame with `contacts` and `probability` or `percent` columns (for
+#'   example the results of [calc_csd()], [calc_msad()], [calc_cbd()],
+#'   [calc_mbd()], [calc_canex()] and [estimate_reach()]), or a data frame with
+#'   columns `contacts` and `predicted`. Data-frame predictions must use the
 #'   same schedule column when `schedule_col` is supplied.
 #' @param observed_scale Required declaration of the `observed` column:
 #'   `"count"`, `"probability"`, or `"percent"`. Counts may be weighted and

@@ -13,76 +13,88 @@ calc_msad(
 )
 }
 \arguments{
-\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1}, and \code{R2}.
-\code{R1} is single-insertion reach and \code{R2} is two-insertion cumulative reach,
-both as proportions. \code{R2} may be \code{NA} only when \code{insertions} is one.}
+\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2}.
+\code{R1} is the reach after one insertion and \code{R2} the cumulative reach after
+two insertions, as proportions. \code{R2} may be \code{NA} only when \code{insertions}
+is one.}
 
-\item{duplications}{Symmetric matrix of pairwise single-insertion audience
-duplication proportions. Its diagonal is ignored.}
+\item{duplications}{Symmetric matrix of pairwise one-insertion audience
+duplications, as proportions of the population. The diagonal is ignored.}
 
 \item{aggregation_order}{Either \code{"audience_desc"} (Kim's larger-audience-
-first rule), \code{"given"}, or a permutation of row indices.}
+first rule), \code{"given"} (the row order), or a permutation of the row
+indices.}
 
-\item{population}{Positive population used to express probabilities as
-people. It does not affect the model estimates.}
+\item{population}{Positive population used only to express probabilities
+as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
-\item{tolerance}{Numerical tolerance used for probability constraints.}
+\item{tolerance}{Positive numerical tolerance for probability constraints.}
 }
 \value{
-A \code{reach_msad} object containing the complete exposure distribution,
-cumulative reach, vehicle marginals, aggregation steps, and diagnostics.
+A \code{reach_msad} object: a list with \code{reach} (\code{probability}, \code{percent}
+and \code{people}), \code{average_frequency}, the complete exposure \code{distribution}
+(\code{contacts}, \code{probability}, \code{percent}, \code{people} and
+\code{cumulative_probability}), the \code{vehicle_marginals}, the one-insertion
+\code{vehicle_reach}, the \code{aggregation_order} and \code{aggregation_rule}, the
+aggregation \code{steps} and numerical \code{diagnostics}.
 }
 \description{
 Implements the MSAD structure described by Leckenby and Rice (1986) and
-Kim (2005): each vehicle is expanded with a Beta-Binomial marginal,
-schedule reach is estimated with the Morgensztern formula, and the
-marginals are sequentially combined using a non-random, margin-preserving
-convolution whose zero cell equals one minus the estimated schedule reach.
+Kim (2005): each vehicle is expanded with a Beta-Binomial marginal, the
+reach of every sub-schedule is estimated with the Morgensztern formula, and
+the marginals are combined sequentially with a non-random,
+margin-preserving convolution whose zero cell equals one minus that reach.
 Kim specifies the MSAD algorithm but refers readers to Lee (1988) for its
 complete worked numerical example; Kim's own three-vehicle example is CSD,
 not MSAD.
 }
 \details{
-For a subset of vehicles, Morgensztern reach is calculated as
-\deqn{R_m = (\sum_i R_{n_i})^2 / [\sum_i R_{n_i} +
-\sum_{i<j} K_{ij} A_{ij}R_{n_i}R_{n_j}/(A_iA_j)]}
-with \eqn{K_{ij}=(A_i+A_j)/(A_i+A_j-A_{ij})}. At every aggregation step,
-the joint table is conformed to the two input marginal distributions and
-to the Morgensztern union reach. Consequently, all probabilities remain
-non-negative, the margins are preserved, and the zero-exposure probability
-is exactly \code{1 - R_m}.
+For a subset of vehicles, the Morgensztern reach is
+\deqn{R_m = \frac{(\sum_i R_{n_i})^2}{\sum_i R_{n_i} +
+\sum_{i<j} K_{ij} A_{ij} R_{n_i} R_{n_j} / (A_i A_j)},}
+with \eqn{K_{ij}=(A_i+A_j)/(A_i+A_j-A_{ij})}, where \eqn{R_{n_i}} is the
+reach of vehicle \eqn{i} for its own \eqn{n_i} insertions, \eqn{A_i} its
+one-insertion audience and \eqn{A_{ij}} the one-insertion duplication of
+vehicles \eqn{i} and \eqn{j}. At every aggregation step the joint table is
+conformed to the two input marginal distributions and to the Morgensztern
+union reach. Consequently all probabilities remain non-negative, the
+margins are preserved, and the zero-exposure probability is exactly
+\eqn{1 - R_m}.
 
-MSAD is intended to reduce, not guarantee the elimination of, declining
-reach. The reach formula can also be incompatible with the supplied
-marginal distributions. In that case the function stops and reports the
-feasible interval instead of silently altering the target. Aggregation
-order can change the exposure distribution even when final schedule reach is
-unchanged.
+MSAD is intended to reduce, but does not guarantee the elimination of,
+declining reach. The reach formula can also be incompatible with the
+supplied marginal distributions. In that case the function stops and reports
+the feasible interval instead of silently altering the target. The
+aggregation order can change the exposure distribution even when the final
+schedule reach is unchanged.
 }
 \examples{
 # MSAD calculation derived from the inputs of Kim's CSD example. The
 # resulting MSAD values are not presented by Kim as a published benchmark.
-vehicles <- data.frame(
-  insertions = c(2, 2, 2),
-  R1 = c(0.4902, 0.0333, 0.0300),
-  R2 = c(0.5805, 0.0502, 0.0371)
-)
-duplication <- matrix(
-  c(NA, 0.0157, 0.0139,
-    0.0157, NA, 0.0003,
-    0.0139, 0.0003, NA),
-  nrow = 3, byrow = TRUE
-)
-result <- calc_msad(vehicles, duplication, aggregation_order = 1:3)
+data(msad_kim2005)
+result <- do.call(calc_msad, msad_kim2005)
 result$reach
 
 }
 \references{
-Leckenby, J. D., & Rice, M. D. (1986). The Declining Reach Phenomenon in
-Exposure Distribution Models. Journal of Advertising, 15(3), 13-20.
+Leckenby, J. D., & Rice, M. D. (1986). The declining reach phenomenon in
+exposure distribution models. Journal of Advertising, 15(3), 13-20.
 \doi{10.1080/00913367.1986.10673014}
 
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
-Doctoral dissertation, The University of Texas at Austin, pp. 65-71.
-Kim identifies the detailed MSAD numerical example as Lee (1988), pp. 81-101.
+Doctoral dissertation, The University of Texas at Austin, pp. 65-71. Kim
+identifies the detailed MSAD numerical example as Lee, H.-K. (1988),
+Sequential aggregation advertising media models, unpublished doctoral
+dissertation, The University of Texas at Austin, pp. 81-101.
+
+Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
+distribución de contactos en la planificación de medios publicitarios
+impresos (Models for determining reach and exposure distribution in print
+media planning). Doctoral dissertation, Universidad de Valencia, Spain.
+Section 3.3.2.2, equation 3.106, for the Morgensztern reach formula.
+}
+\seealso{
+\code{\link[=calc_csd]{calc_csd()}} for the canonical alternative and \code{\link[=calc_mbd]{calc_mbd()}} and
+\code{\link[=calc_cbd]{calc_cbd()}} for models that peel vehicles into insertion-level
+distributions.
 }

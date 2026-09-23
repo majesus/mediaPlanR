@@ -13,99 +13,88 @@ calc_mbd(
 )
 }
 \arguments{
-\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1}, and \code{R2},
-using the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R2} may be \code{NA} only when
-\code{insertions} is one).}
+\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2},
+with the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R2} may be \code{NA} only when
+\code{insertions} is one). At most 12 vehicles are supported.}
 
 \item{duplications}{Symmetric matrix of pairwise one-insertion audience
-duplication proportions. Diagonal values are ignored.}
+duplications, as proportions of the population. The diagonal is ignored.}
 
 \item{aggregation_order}{Either \code{"audience_desc"} (Cheong's rule: vehicles
 are aggregated in decreasing order of audience and duplication
-magnitude), \code{"given"}, or a permutation of row indices. Vehicles are
-peeled off starting from the \emph{last} position in this order, matching
-Cheong's own worked examples.}
+magnitude), \code{"given"} (the row order), or a permutation of the row
+indices. Vehicles are peeled off starting from the \emph{last} position of this
+order, as in Cheong's worked examples.}
 
 \item{population}{Positive population used only to express probabilities
-as people.}
+as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
 \item{tolerance}{Positive numerical tolerance for probability constraints.}
 }
 \value{
-A \code{reach_mbd} object containing reach, the complete exposure
-distribution, the aggregation order used, and diagnostics, including
-whether the final negative-probability safety net (Cheong's "MBD-ADJ")
-had to be engaged and how much probability mass it redistributed.
+A \code{reach_mbd} object: a list with \code{reach} (\code{probability}, \code{percent}
+and \code{people}), \code{average_frequency}, the complete exposure \code{distribution}
+(\code{contacts}, \code{probability}, \code{percent}, \code{people} and
+\code{cumulative_probability}), the \code{aggregation_order} and \code{aggregation_rule},
+the peeling \code{steps} and \code{diagnostics}, which report whether the final
+negative-probability safety net (Cheong's "MBD-ADJ") had to be engaged and
+how much probability mass it redistributed (\code{negative_mass_adjusted},
+\code{cells_adjusted}).
 }
 \description{
 Implements Cheong's (2007) Multivariate Beta Binomial Distribution (MBD).
-Vehicle co-exposure probabilities for pairs (observed) and for three or
-more vehicles (imputed from a Beta-Binomial fitted to the subset's own
-mean audience and mean pairwise duplication) are combined into the full
-\eqn{2^m} joint zero/one exposure grid via Waring's (1792) inclusion-
-exclusion theorem. Vehicles are then peeled off one at a time, in reverse
-aggregation order: each remaining exposure pattern's own row is expanded
-from a zero/one state into the peeled vehicle's own insertion-level
-Beta-Binomial distribution using a row-specific conditional allocation,
-and the two component distributions are convolved into a growing
-pseudo-vehicle.
+Vehicle co-exposure probabilities for pairs (observed) and for three or more
+vehicles (imputed from a Beta-Binomial fitted to the subset's own mean
+audience and mean pairwise duplication) are combined into the full
+\eqn{2^m} joint zero/one exposure grid by Waring's (1792) inclusion-exclusion
+theorem. Vehicles are then peeled off one at a time, in reverse aggregation
+order: each remaining exposure pattern's row is expanded from a zero/one
+state into the peeled vehicle's own insertion-level Beta-Binomial
+distribution by a row-specific conditional allocation, and the two component
+distributions are convolved into a growing pseudo-vehicle.
 }
 \details{
-\code{calc_mbd()} (Cheong 2007) is unrelated to \code{fit_bbd_to_reach()} (which
-fits one Beta-Binomial to an externally given reach target). The two are
-easy to confuse by name alone: MBD is Cheong's (2007) \emph{Multivariate} Beta
-Binomial Distribution described here, while \code{fit_bbd_to_reach()} fits a
-\emph{single-vehicle} Beta-Binomial.
+\code{calc_mbd()} (Cheong, 2007) is unrelated to \code{\link[=fit_bbd_to_reach]{fit_bbd_to_reach()}}, which fits
+one Beta-Binomial to an externally given reach. MBD is the \emph{Multivariate}
+Beta Binomial Distribution of several vehicles described here, whereas
+\code{\link[=fit_bbd_to_reach]{fit_bbd_to_reach()}} fits a single Beta-Binomial to a whole schedule.
 }
 \section{What is, and is not, guaranteed}{
-Cheong's own dissertation reports that the inclusion-exclusion grid can
-produce small negative cell probabilities once four or more vehicles are
-combined, because the co-exposure probability of three or more vehicles is
-\emph{imputed} (there is no closed-form multivariate distribution behind it),
-not observed. Cheong's worked four-vehicle example is fully corrected by a
-first-order consistency check (every combined-exposure probability is
-shrunk to remain below each of its immediate subsets); the five-vehicle
-example is not, and the dissertation explicitly states that resolving this
-in general would require increasingly complex higher-order checks that
-were never implemented, proposing iterative proportional fitting as
-unstarted future work. \code{calc_mbd()} therefore applies exactly the checks
-Cheong specifies (first-order only) and, exactly as Cheong's own MBD-ADJ
-variant does, zeroes any cell that is still negative afterwards and
-redistributes that mass proportionally across the non-negative cells of
-the final collapsed distribution. This is reported in \code{diagnostics}
-(\code{negative_mass_adjusted}, \code{cells_adjusted}); a non-zero value means the
-result for that specific schedule relies on this fallback rather than on a
-value Cheong verified as internally consistent without it.
+Cheong's dissertation reports that the inclusion-exclusion grid can produce
+small negative cell probabilities once four or more vehicles are combined,
+because the co-exposure probability of three or more vehicles is \emph{imputed}
+(no closed-form multivariate distribution stands behind it) rather than
+observed. Cheong's four-vehicle example is fully corrected by a first-order
+consistency check (every combined-exposure probability is shrunk to remain
+below each of its immediate subsets); the five-vehicle example is not, and
+the dissertation states that resolving this in general would need
+increasingly complex higher-order checks that were never implemented,
+proposing iterative proportional fitting as future work. \code{calc_mbd()}
+therefore applies exactly the checks Cheong specifies (first order only)
+and, like Cheong's MBD-ADJ variant, sets any cell that is still negative to
+zero and redistributes that mass proportionally across the non-negative
+cells of the final collapsed distribution. This is reported in
+\code{diagnostics}; a non-zero value means the result for that schedule relies on
+this fallback rather than on a value Cheong verified as internally
+consistent without it. The function warns for four or more vehicles, the
+range where Cheong's own checks are known to be insufficient by themselves.
 
 Cheong also reports that the aggregation order can change the collapsed
 distribution, that this was not investigated systematically, and that the
-model was only tested computationally up to 12-13 vehicles because of the
-exponential cost of the exposure grid. \code{calc_mbd()} stops with an
-informative error above \code{max_vehicles} for this reason, and warns for four
-or more vehicles, the range where Cheong's own checks are known to become
-insufficient on their own.
+model was tested computationally only up to 12-13 vehicles because of the
+exponential cost of the exposure grid. \code{calc_mbd()} stops above 12 vehicles
+for this reason.
 
-In exchange, Cheong reports MBD as the most accurate of the eleven models
-tested for reach alone (comScore 2003 data, N=440 schedules), but only
-middling for the complete exposure-frequency distribution, behind the
-already-implemented \code{\link[=calc_canex]{calc_canex()}} and the (not yet implemented)
-Conditional Beta Distribution model.
+Cheong reports MBD as the most accurate of the eleven models tested for
+reach alone (comScore 2003 data, 440 schedules) but not for the complete
+exposure distribution, where \code{\link[=calc_canex]{calc_canex()}} and the Conditional Beta
+Distribution model (\code{\link[=calc_cbd]{calc_cbd()}}) were more accurate.
 }
 
 \examples{
-# Cheong (2007), Chapter 4.2: three-vehicle conceptual example.
-vehicles <- data.frame(
-  insertions = c(2, 1, 3),
-  R1 = c(0.146, 0.110, 0.252),
-  R2 = c(0.191, NA, 0.318)
-)
-duplication <- matrix(
-  c(NA, 0.032, 0.063,
-    0.032, NA, 0.041,
-    0.063, 0.041, NA),
-  nrow = 3, byrow = TRUE
-)
-result <- calc_mbd(vehicles, duplication, aggregation_order = 1:3)
+# Cheong (2007), Chapter 4.2: three-vehicle conceptual example
+data(mbd_cheong2007)
+result <- do.call(calc_mbd, mbd_cheong2007)
 result$reach
 result$distribution
 
@@ -118,8 +107,8 @@ Austin.
 Waring, E. (1792). Meditationes Algebraicae. Cambridge.
 }
 \seealso{
-\code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_msad]{calc_msad()}} for sequential aggregation models
-with a completely verified reference example; \code{\link[=calc_cbd]{calc_cbd()}} for the
-model sharing this function's exact within-vehicle peeling step, with a
-different (canonical-expansion, not imputed) between-vehicle step.
+\code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_msad]{calc_msad()}} for sequential aggregation models,
+and \code{\link[=calc_cbd]{calc_cbd()}} for the model that shares this function's within-vehicle
+peeling step with a canonical-expansion between-vehicle step instead of an
+imputed one.
 }

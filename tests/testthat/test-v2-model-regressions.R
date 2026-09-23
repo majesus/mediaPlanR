@@ -5,8 +5,8 @@ test_that("CANEX handles the binomial and polarized BBD limits exactly", {
   polarized <- calc_canex(
     data.frame(k = 2, R1 = 0.2, R2 = 0.2), matrix(1, 1, 1), 1000
   )
-  expect_equal(independent$total_reach, 0.36, tolerance = 1e-12)
-  expect_equal(polarized$total_reach, 0.2, tolerance = 1e-12)
+  expect_equal(independent$reach$probability, 0.36, tolerance = 1e-12)
+  expect_equal(polarized$reach$probability, 0.2, tolerance = 1e-12)
   expect_named(independent$diagnostics,
                c("negative_mass_truncated", "mass_before_renormalization",
                  "correlation_min_eigenvalue"))
@@ -22,19 +22,12 @@ test_that("CANEX rejects impossible pairwise duplication", {
   expect_error(calc_canex(vehicles, impossible), "Frechet bounds")
 })
 
-test_that("BBD-to-reach distribution and reported coverage use identical final parameters", {
-  result <- fit_bbd_to_reach(c(5, 7, 4), c(500000, 550000, 600000),
-                             RM = 550000, universe = 1000000, A0 = 0.1)
-  distribution_reach <- (1 - result$contact_distribution[1]) * 1000000
-  expect_true(result$parameters$converged)
-  expect_equal(result$coverage$BBD, 550000, tolerance = 100)
-  expect_equal(distribution_reach, result$coverage$BBD, tolerance = 1e-8)
-})
-
-test_that("Hofmans return value matches its documented contract", {
-  result <- calc_hofmans_accumulation(0.06, 0.103, 5, show_steps = FALSE)
+test_that("Hofmans accumulation return value matches its documented contract", {
+  result <- calc_hofmans_accumulation(0.06, 0.103, 5)
   expect_s3_class(result, "reach_hofmans_accumulation")
-  expect_named(result$parameters, c("k", "d", "alpha"))
+  expect_named(result, c("results", "parameters", "plot"))
+  expect_named(result$parameters, c("k", "d", "alpha", "R3"))
+  expect_named(result$results, c("N", "RN"))
 })
 
 test_that("one-dimensional BBD calibration preserves R1 and reaches its target", {
@@ -47,4 +40,13 @@ test_that("one-dimensional BBD calibration preserves R1 and reaches its target",
   expect_true(fit$converged)
   expect_equal(fit$alpha / (fit$alpha + fit$beta), 0.4, tolerance = 1e-12)
   expect_equal(fit$predicted_reach, target, tolerance = 1e-5)
+})
+
+test_that("BBD calibration validates its arguments", {
+  expect_error(calibrate_bbd(NA, 0.5, 2, 6), "first_reach")
+  expect_error(calibrate_bbd(0.3, 1, 2, 6), "target_reach")
+  expect_error(calibrate_bbd(0.3, 0.5, NA, 6), "frequency")
+  expect_error(calibrate_bbd(0.3, 0.5, 3, NA), "max_insertions")
+  expect_error(calibrate_bbd(0.3, 0.5, 3, 2), "max_insertions")
+  expect_output(print(calibrate_bbd(0.3, 0.2, 2, 4)), "Beta-Binomial calibration")
 })

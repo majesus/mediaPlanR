@@ -55,39 +55,49 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' Canonical Sequential Aggregation Distribution model
 #'
 #' Implements Kim's (2005) Canonical Sequential Aggregation Distribution
-#' (CSD): vehicle-level Beta-Binomial marginals are combined sequentially,
-#' while the target reach at every step is obtained from Danaher's second-order
-#' canonical expansion. The non-random convolution preserves both input
-#' margins and sets the zero-exposure cell to one minus canonical reach.
+#' (CSD): the Beta-Binomial marginal of each vehicle is combined sequentially
+#' with the vehicles already aggregated, while the reach at every step comes
+#' from Danaher's second-order canonical expansion. The non-random convolution
+#' preserves both marginal distributions and sets the zero-exposure cell to one
+#' minus the canonical reach.
 #'
-#' @param vehicles_data Data frame with columns `insertions`, `R1`, and `R2`.
-#'   `R1` is one-insertion reach and `R2` is two-insertion cumulative reach,
-#'   expressed as proportions. `R2` may be `NA` only when `insertions` is one.
+#' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`.
+#'   `R1` is the reach after one insertion and `R2` the cumulative reach after
+#'   two insertions, as proportions. `R2` may be `NA` only when `insertions`
+#'   is one.
 #' @param duplications Symmetric matrix of pairwise one-insertion audience
-#'   duplication proportions. Diagonal values are ignored.
-#' @param aggregation_order Either `"audience_desc"`, `"given"`, or a
-#'   permutation of row indices. Use an explicit permutation when reproducing
+#'   duplications, as proportions of the population. The diagonal is ignored.
+#' @param aggregation_order Either `"audience_desc"` (vehicles in decreasing
+#'   order of one-insertion reach), `"given"` (the row order), or a
+#'   permutation of the row indices. Use an explicit permutation to reproduce
 #'   a published aggregation criterion such as Kim's TD forward example.
-#' @param population Positive population used only to express probabilities as
-#'   people.
+#' @param population Positive population used only to express probabilities
+#'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'
-#' @return A `reach_csd` object containing reach, the complete exposure
-#'   distribution, cumulative probabilities, vehicle marginals, aggregation
-#'   steps, and numerical diagnostics.
+#' @return A `reach_csd` object: a list with `reach` (`probability`, `percent`
+#'   and `people`), `average_frequency`, the complete exposure `distribution`
+#'   (`contacts`, `probability`, `percent`, `people` and
+#'   `cumulative_probability`), the `vehicle_marginals`, the one-insertion
+#'   `vehicle_reach`, the canonical `correlation_matrix`, the
+#'   `aggregation_order` and `aggregation_rule`, the aggregation `steps` and
+#'   numerical `diagnostics`.
 #'
 #' @details
 #' For a subset of vehicles, CSD estimates the all-zero probability as
 #' \deqn{P(0,\ldots,0)=\prod_i f_i(0)\left[1+\sum_{i<j}\rho_{ij}
 #' \frac{(0-\mu_i)(0-\mu_j)}{\sigma_i\sigma_j}\right],}
-#' where `f_i` is the Beta-Binomial marginal and `rho_ij` is obtained from the
-#' observed one-insertion duplication. Reach is one minus this probability.
+#' where \eqn{f_i}, \eqn{\mu_i} and \eqn{\sigma_i} are the Beta-Binomial
+#' probability function, mean and standard deviation of vehicle \eqn{i}, and
+#' \eqn{\rho_{ij}} is the canonical correlation obtained from the observed
+#' one-insertion duplication. Reach is one minus this probability.
 #'
-#' The canonical expansion is a second-order approximation. Unlike the legacy
-#' full-grid CANEX implementation, `calc_csd()` does not truncate or
-#' renormalize an invalid canonical target. It stops if the resulting reach is
-#' not a probability or is incompatible with the two margins being combined.
-#' This makes approximation failure visible to the analyst.
+#' The canonical expansion is a second-order approximation. Unlike
+#' [calc_canex()], which truncates negative probabilities and renormalizes the
+#' full joint grid, `calc_csd()` does not alter an invalid canonical target: it
+#' stops if the resulting reach is not a probability or is incompatible with
+#' the two margins being combined. This makes approximation failure visible to
+#' the analyst.
 #'
 #' Kim's worked example rounds intermediate values to four decimals. Exact
 #' calculations from the published inputs therefore differ by a few hundredths
@@ -104,95 +114,28 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' Doctoral dissertation, The University of Texas at Austin, pp. 78-97.
 #'
 #' @examples
-#' # Kim (2005), Tables 4.2.2.1-4.2.2.10: TD forward order.
-#' vehicles <- data.frame(
-#'   insertions = c(2, 2, 2),
-#'   R1 = c(0.4902, 0.0333, 0.0300),
-#'   R2 = c(0.5805, 0.0502, 0.0371)
-#' )
-#' duplication <- matrix(
-#'   c(NA, 0.0157, 0.0139,
-#'     0.0157, NA, 0.0003,
-#'     0.0139, 0.0003, NA),
-#'   nrow = 3, byrow = TRUE
-#' )
-#' result <- calc_csd(vehicles, duplication, aggregation_order = 1:3)
+#' # Kim (2005), Tables 4.2.2.1-4.2.2.10: TD forward order
+#' data(csd_kim2005)
+#' result <- do.call(calc_csd, csd_kim2005)
 #' result$reach
 #' result$distribution
 #'
-#' @seealso [calc_canex()] for a full-grid canonical expansion and
-#'   [calc_msad()] for the Morgensztern sequential alternative; [calc_cbd()]
-#'   for a different sequential architecture built on this same canonical
-#'   expansion at the (0,1) level.
+#' @seealso [calc_canex()] for the full-grid canonical expansion,
+#'   [calc_msad()] for the Morgensztern sequential alternative and
+#'   [calc_cbd()] for a different sequential architecture built on the same
+#'   canonical expansion at the (0,1) level.
 #' @export
 calc_csd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),
                      population = 1, tolerance = 1e-10) {
-  required <- c("insertions", "R1", "R2")
-  if (!is.data.frame(vehicles_data) || !all(required %in% names(vehicles_data)) ||
-      nrow(vehicles_data) < 2L) {
-    stop("vehicles_data must contain at least two rows and columns insertions, R1, and R2.",
-         call. = FALSE)
-  }
-  n <- nrow(vehicles_data)
-  insertions <- vehicles_data$insertions
-  R1 <- vehicles_data$R1
-  R2 <- vehicles_data$R2
-  if (!is.numeric(insertions) || anyNA(insertions) ||
-      any(!is.finite(insertions)) ||
-      any(insertions < 1 | insertions != round(insertions))) {
-    stop("insertions must contain positive finite integers.", call. = FALSE)
-  }
-  if (!is.numeric(R1) || anyNA(R1) || any(!is.finite(R1)) ||
-      any(R1 <= 0 | R1 >= 1)) {
-    stop("R1 must contain finite proportions strictly between zero and one.",
-         call. = FALSE)
-  }
-  needs_R2 <- insertions >= 2L
-  if (!is.numeric(R2) || anyNA(R2[needs_R2]) ||
-      any(!is.finite(R2[needs_R2]))) {
-    stop("R2 must be finite for every vehicle with at least two insertions.",
-         call. = FALSE)
-  }
-  invisible(lapply(which(needs_R2), function(i) {
-    calculate_bbd_params(R1[i], R2[i])
-  }))
-
-  if (!is.matrix(duplications) || !is.numeric(duplications) ||
-      !identical(dim(duplications), c(n, n))) {
-    stop("duplications must be a numeric square matrix matching vehicles_data.",
-         call. = FALSE)
-  }
-  off_diagonal <- row(duplications) != col(duplications)
-  if (anyNA(duplications[off_diagonal]) ||
-      any(!is.finite(duplications[off_diagonal])) ||
-      !isTRUE(all.equal(duplications[upper.tri(duplications)],
-                        t(duplications)[upper.tri(duplications)],
-                        tolerance = tolerance, check.attributes = FALSE))) {
-    stop("duplications must be finite and symmetric outside its diagonal.",
-         call. = FALSE)
-  }
-  for (i in seq_len(n - 1L)) {
-    for (j in (i + 1L):n) {
-      lower <- max(0, R1[i] + R1[j] - 1)
-      upper <- min(R1[i], R1[j])
-      if (duplications[i, j] < lower - tolerance ||
-          duplications[i, j] > upper + tolerance) {
-        stop(sprintf(
-          "duplication [%d,%d] is outside its Frechet bounds [%.8f, %.8f].",
-          i, j, lower, upper
-        ), call. = FALSE)
-      }
-    }
-  }
-  if (!is.numeric(population) || length(population) != 1L ||
-      !is.finite(population) || population <= 0) {
-    stop("population must be one positive finite number.", call. = FALSE)
-  }
-  if (!is.numeric(tolerance) || length(tolerance) != 1L ||
-      !is.finite(tolerance) || tolerance <= 0) {
-    stop("tolerance must be one positive finite number.", call. = FALSE)
-  }
+  input <- validate_sequential_inputs(vehicles_data, duplications,
+                                      aggregation_order, population, tolerance)
+  n <- input$n
+  insertions <- input$insertions
+  R1 <- input$R1
+  R2 <- input$R2
+  order_index <- input$order_index
+  order_rule <- input$order_rule
 
   correlation_matrix <- diag(1, n)
   for (i in seq_len(n - 1L)) {
@@ -212,29 +155,8 @@ calc_csd <- function(vehicles_data, duplications,
     ), call. = FALSE)
   }
 
-  if (is.numeric(aggregation_order)) {
-    if (length(aggregation_order) != n || anyNA(aggregation_order) ||
-        any(!is.finite(aggregation_order)) ||
-        any(aggregation_order != round(aggregation_order))) {
-      stop("A numeric aggregation_order must contain integer row indices.",
-           call. = FALSE)
-    }
-    order_index <- as.integer(aggregation_order)
-    if (!identical(sort(order_index), seq_len(n))) {
-      stop("A numeric aggregation_order must be a permutation of row indices.",
-           call. = FALSE)
-    }
-    order_rule <- "custom"
-  } else {
-    aggregation_order <- match.arg(aggregation_order)
-    order_index <- if (aggregation_order == "audience_desc") {
-      order(-R1, seq_len(n))
-    } else seq_len(n)
-    order_rule <- aggregation_order
-  }
-
   marginals <- lapply(seq_len(n), function(i) {
-    msad_vehicle_distribution(insertions[i], R1[i], R2[i])
+    vehicle_exposure_distribution(insertions[i], R1[i], R2[i])
   })
   vehicle_reach <- vapply(marginals, function(x) 1 - x[1L], numeric(1))
 

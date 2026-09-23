@@ -19,10 +19,11 @@ include an explicit zero-exposure row and every integer exposure level up to
 its maximum. For several schedules, also include the column named by
 \code{schedule_col}.}
 
-\item{predicted}{Either a supported model result whose \code{distribution}
-contains \code{contacts} and \code{probability}/\code{percent} (the legacy \code{percentage}
-column name is also accepted), or a data frame with columns \code{contacts}
-and \code{predicted}. Data-frame predictions must use the
+\item{predicted}{Either a supported model result whose \code{distribution} is a
+data frame with \code{contacts} and \code{probability} or \code{percent} columns (for
+example the results of \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}},
+\code{\link[=calc_mbd]{calc_mbd()}}, \code{\link[=calc_canex]{calc_canex()}} and \code{\link[=estimate_reach]{estimate_reach()}}), or a data frame with
+columns \code{contacts} and \code{predicted}. Data-frame predictions must use the
 same schedule column when \code{schedule_col} is supplied.}
 
 \item{observed_scale}{Required declaration of the \code{observed} column:

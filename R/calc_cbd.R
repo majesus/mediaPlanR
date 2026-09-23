@@ -35,179 +35,113 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 
 #' Conditional Beta Distribution model
 #'
-#' Implements the Conditional Beta Distribution (CBD), developed by Leckenby
-#' and Kim and reported in Kim (1994), for several vehicles with several
-#' insertions each. Between-vehicle duplication is modelled first, at the
-#' single-insertion (0,1) level, via Danaher's (1991a) second-order canonical
-#' expansion -- the same mechanism \code{\link{calc_canex}}/\code{\link{calc_csd}}
-#' use. Vehicles are then peeled off one at a time, in reverse aggregation
-#' order, each expanded from its (0,1) exposure state into its own
-#' insertion-level Beta-Binomial distribution via Danaher's (1992a)
-#' conditional convolution -- the identical mechanism \code{\link{calc_mbd}}
-#' uses for its own peeling step. CBD and MBD therefore share their
-#' within-vehicle expansion exactly; they differ only in how the initial
-#' (0,1) joint grid is built (canonical expansion here, Waring's
-#' inclusion-exclusion for MBD).
+#' Implements the Conditional Beta Distribution (CBD) of Leckenby and Kim,
+#' reported in Kim (1994) and reviewed in Kim (2005), for several vehicles with
+#' several insertions each. Between-vehicle duplication is modeled first, at
+#' the one-insertion (0,1) level, by Danaher's (1991) second-order canonical
+#' expansion -- the mechanism [calc_canex()] and [calc_csd()] use. Vehicles are
+#' then peeled off one at a time, in reverse aggregation order, and each is
+#' expanded from its (0,1) exposure state into its own insertion-level
+#' Beta-Binomial distribution by Danaher's (1992a) conditional convolution --
+#' the mechanism [calc_mbd()] uses for its own peeling step. CBD and MBD
+#' therefore share their within-vehicle expansion exactly and differ only in how
+#' the initial (0,1) joint grid is built: canonical expansion here, Waring's
+#' inclusion-exclusion theorem for MBD.
 #'
-#' @param vehicles_data Data frame with columns `insertions`, `R1`, and `R2`,
-#'   using the same convention as [calc_csd()]/[calc_mbd()] (`R2` may be
-#'   `NA` only when `insertions` is one).
+#' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
+#'   with the same convention as [calc_csd()] and [calc_mbd()] (`R2` may be
+#'   `NA` only when `insertions` is one). At most 12 vehicles are supported.
 #' @param duplications Symmetric matrix of pairwise one-insertion audience
-#'   duplication proportions. Diagonal values are ignored.
-#' @param aggregation_order Either `"audience_desc"`, `"given"`, or a
-#'   permutation of row indices. Vehicles are peeled off starting from the
-#'   *last* position in this order, matching [calc_mbd()]'s convention.
+#'   duplications, as proportions of the population. The diagonal is ignored.
+#' @param aggregation_order Either `"audience_desc"` (vehicles in decreasing
+#'   order of one-insertion reach), `"given"` (the row order), or a
+#'   permutation of the row indices. Vehicles are peeled off starting from the
+#'   *last* position of this order, as in [calc_mbd()].
 #' @param population Positive population used only to express probabilities
-#'   as people.
+#'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'
-#' @return A `reach_cbd` object containing reach, the complete exposure
-#'   distribution, the aggregation order used, and diagnostics, including
-#'   whether the same negative-probability safety net [calc_mbd()] uses had
-#'   to be engaged.
+#' @return A `reach_cbd` object: a list with `reach` (`probability`, `percent`
+#'   and `people`), `average_frequency`, the complete exposure `distribution`
+#'   (`contacts`, `probability`, `percent`, `people` and
+#'   `cumulative_probability`), the `aggregation_order` and `aggregation_rule`,
+#'   the peeling `steps` and `diagnostics`, which include whether the
+#'   negative-probability safety net of [calc_mbd()] had to be engaged
+#'   (`negative_mass_adjusted`, `cells_adjusted`).
 #'
 #' @details
-#' Unlike [calc_mbd()], CBD's between-vehicle step needs no imputation for
-#' three or more vehicles: the canonical expansion gives every cell of the
-#' (0,1) grid directly from pairwise correlations alone, with no
-#' higher-order terms and no Beta-Binomial-based guess for triples or
-#' larger. Kim (2005) reviews CBD's specification (pp.59-64) as an existing
-#' model -- rather than walking through a numerical example of it the way
-#' she does for her own CSD -- so, unlike [calc_csd()], there is no
-#' published worked example to validate this implementation against
-#' directly. It is validated instead by construction: the (0,1) grid it
-#' builds satisfies the same margin-recovery property already checked for
-#' [calc_canex()]/[calc_csd()] (summing out every other vehicle reproduces
-#' each vehicle's own Bernoulli(R1) marginal exactly), and its peeling step
-#' is the identical, separately-validated mechanism used by [calc_mbd()].
+#' Unlike [calc_mbd()], the between-vehicle step of CBD needs no imputation
+#' for three or more vehicles: the canonical expansion gives every cell of the
+#' (0,1) grid directly from the pairwise correlations. For binary exposure the
+#' expansion uses the mean \eqn{R_{1i}} and variance \eqn{R_{1i}(1 - R_{1i})}
+#' of each vehicle's one-insertion exposure, which is the single-insertion
+#' case of the Beta-Binomial mean and variance in Kim (2005, pp. 60-61); this
+#' guarantees that summing out all other vehicles returns each vehicle's own
+#' Bernoulli marginal exactly.
 #'
-#' Because the canonical expansion can assign small negative probabilities
-#' to some (0,1) cells -- the same known limitation documented for
-#' [calc_canex()]/[calc_csd()] -- `calc_cbd()` applies the same final
-#' safety net [calc_mbd()] does: any cell still negative after peeling is
-#' zeroed and that mass is redistributed proportionally. This is reported in
-#' `diagnostics` (`negative_mass_adjusted`, `cells_adjusted`).
+#' Kim (2005, pp. 59-64) reviews the specification of CBD as an existing model
+#' but does not present a numerical example of it, as it does for CSD, so there
+#' is no published worked example to validate this implementation against
+#' directly. The implementation is validated by construction: the (0,1) grid
+#' recovers each vehicle's own `R1` as its exact marginal, its peeling step is
+#' the separately validated mechanism of [calc_mbd()], and with zero
+#' correlation the model reduces to the exact convolution of the vehicles' own
+#' Beta-Binomial marginals.
 #'
-#' The peeling step has the same exponential cost as [calc_mbd()]'s, so
-#' `calc_cbd()` applies the same practical cap (`max_vehicles`, default 12).
+#' Because the canonical expansion can assign small negative probabilities to
+#' some (0,1) cells -- the limitation documented for [calc_canex()] -- any
+#' cell that is still negative after peeling is set to zero and that mass is
+#' redistributed proportionally, as in the final safety net of [calc_mbd()].
+#' This is reported in `diagnostics`.
+#'
+#' The peeling step has the exponential cost of [calc_mbd()], so the number of
+#' vehicles is limited to 12.
 #'
 #' @references
+#' Kim, H. (1994). A conditional beta distribution model for advertising
+#' reach/frequency estimation. Unpublished doctoral dissertation, The
+#' University of Texas at Austin.
+#'
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
-#' Doctoral dissertation, The University of Texas at Austin, pp. 59-64
-#' (reviewing Leckenby, J. D., & Kim, H. G. (1994), unpublished, as the
-#' primary source of CBD's specification).
+#' Doctoral dissertation, The University of Texas at Austin, pp. 59-64.
 #'
 #' Danaher, P. J. (1991). A canonical expansion model for multivariate media
 #' exposure distributions: A generalization of the "duplication of viewing
 #' law". Journal of Marketing Research, 28(3), 361-367.
 #' \doi{10.1177/002224379102800311}
 #'
+#' Danaher, P. J. (1992a). A Markov-chain model for multivariate
+#' magazine-exposure distributions. Journal of Business & Economic Statistics,
+#' 10(4), 401-407. \doi{10.1080/07350015.1992.10509915}
+#'
 #' @examples
-#' # Same three-vehicle inputs as calc_csd()'s Kim (2005) example, to compare
-#' # CBD directly against CSD and CANEX on identical data.
-#' vehicles <- data.frame(
-#'   insertions = c(2, 2, 2),
-#'   R1 = c(0.4902, 0.0333, 0.0300),
-#'   R2 = c(0.5805, 0.0502, 0.0371)
-#' )
-#' duplication <- matrix(
-#'   c(NA, 0.0157, 0.0139,
-#'     0.0157, NA, 0.0003,
-#'     0.0139, 0.0003, NA),
-#'   nrow = 3, byrow = TRUE
-#' )
-#' result <- calc_cbd(vehicles, duplication, aggregation_order = 1:3)
+#' # Same three-vehicle inputs as the CSD example of Kim (2005), so that CBD
+#' # can be compared with CSD and CANEX on identical data
+#' data(csd_kim2005)
+#' result <- do.call(calc_cbd, csd_kim2005)
 #' result$reach
 #' result$distribution
 #'
-#' @seealso [calc_mbd()] for the same within-vehicle mechanism with a
-#'   different (imputed) between-vehicle step; [calc_canex()] and
-#'   [calc_csd()] for the canonical expansion this model's first step reuses.
+#' @seealso [calc_mbd()] for the same within-vehicle mechanism with an imputed
+#'   between-vehicle step, and [calc_canex()] and [calc_csd()] for the canonical
+#'   expansion that this model's first step reuses.
 #' @export
 calc_cbd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),
                      population = 1, tolerance = 1e-8) {
-  required <- c("insertions", "R1", "R2")
-  if (!is.data.frame(vehicles_data) || !all(required %in% names(vehicles_data)) ||
-      nrow(vehicles_data) < 2L) {
-    stop("vehicles_data must contain at least two rows and columns insertions, R1, and R2.",
-         call. = FALSE)
-  }
-  n <- nrow(vehicles_data)
-  max_vehicles <- 12L
-  if (n > max_vehicles) {
-    stop(sprintf(paste0(
-      "calc_cbd() supports at most %d vehicles. Its peeling step has the ",
-      "same exponential cost as calc_mbd()'s, for which Cheong (2007) only ",
-      "tested computationally up to 12-13 vehicles."), max_vehicles),
-      call. = FALSE)
-  }
-  insertions <- vehicles_data$insertions
-  R1 <- vehicles_data$R1
-  R2 <- vehicles_data$R2
-  if (!is.numeric(insertions) || anyNA(insertions) || any(!is.finite(insertions)) ||
-      any(insertions < 1 | insertions != round(insertions))) {
-    stop("insertions must contain positive finite integers.", call. = FALSE)
-  }
-  if (!is.numeric(R1) || anyNA(R1) || any(!is.finite(R1)) || any(R1 <= 0 | R1 >= 1)) {
-    stop("R1 must contain finite proportions strictly between zero and one.", call. = FALSE)
-  }
-  needs_R2 <- insertions >= 2L
-  if (!is.numeric(R2) || anyNA(R2[needs_R2]) || any(!is.finite(R2[needs_R2]))) {
-    stop("R2 must be finite for every vehicle with at least two insertions.", call. = FALSE)
-  }
+  input <- validate_sequential_inputs(vehicles_data, duplications,
+                                      aggregation_order, population, tolerance,
+                                      max_vehicles = 12L, caller = "calc_cbd")
+  n <- input$n
+  insertions <- input$insertions
+  R1 <- input$R1
+  R2 <- input$R2
+  order_index <- input$order_index
+  order_rule <- input$order_rule
   vehicle_bbd <- lapply(seq_len(n), function(i) {
-    if (needs_R2[i]) calculate_bbd_params(R1[i], R2[i])
+    if (insertions[i] >= 2L) calculate_bbd_params(R1[i], R2[i])
     else list(alpha = NA_real_, beta = NA_real_, p = R1[i], type = "single_insertion")
   })
-
-  if (!is.matrix(duplications) || !is.numeric(duplications) ||
-      !identical(dim(duplications), c(n, n))) {
-    stop("duplications must be a numeric square matrix matching vehicles_data.", call. = FALSE)
-  }
-  off_diagonal <- row(duplications) != col(duplications)
-  if (anyNA(duplications[off_diagonal]) || any(!is.finite(duplications[off_diagonal])) ||
-      !isTRUE(all.equal(duplications[upper.tri(duplications)],
-                        t(duplications)[upper.tri(duplications)],
-                        tolerance = tolerance, check.attributes = FALSE))) {
-    stop("duplications must be finite and symmetric outside its diagonal.", call. = FALSE)
-  }
-  for (i in seq_len(n - 1L)) {
-    for (j in (i + 1L):n) {
-      lower <- max(0, R1[i] + R1[j] - 1)
-      upper <- min(R1[i], R1[j])
-      if (duplications[i, j] < lower - tolerance || duplications[i, j] > upper + tolerance) {
-        stop(sprintf("duplication [%d,%d] is outside its Frechet bounds [%.8f, %.8f].",
-                     i, j, lower, upper), call. = FALSE)
-      }
-    }
-  }
-  if (!is.numeric(population) || length(population) != 1L || !is.finite(population) ||
-      population <= 0) {
-    stop("population must be one positive finite number.", call. = FALSE)
-  }
-  if (!is.numeric(tolerance) || length(tolerance) != 1L || !is.finite(tolerance) ||
-      tolerance <= 0) {
-    stop("tolerance must be one positive finite number.", call. = FALSE)
-  }
-
-  if (is.numeric(aggregation_order)) {
-    if (length(aggregation_order) != n || anyNA(aggregation_order) ||
-        any(!is.finite(aggregation_order)) || any(aggregation_order != round(aggregation_order))) {
-      stop("A numeric aggregation_order must contain integer row indices.", call. = FALSE)
-    }
-    order_index <- as.integer(aggregation_order)
-    if (!identical(sort(order_index), seq_len(n))) {
-      stop("A numeric aggregation_order must be a permutation of row indices.", call. = FALSE)
-    }
-    order_rule <- "custom"
-  } else {
-    aggregation_order <- match.arg(aggregation_order)
-    order_index <- if (aggregation_order == "audience_desc") {
-      order(-R1, seq_len(n))
-    } else seq_len(n)
-    order_rule <- aggregation_order
-  }
 
   correlation_matrix <- diag(1, n)
   for (i in seq_len(n - 1L)) {

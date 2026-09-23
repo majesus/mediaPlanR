@@ -84,8 +84,8 @@ test_that("calc_cbd validates inputs and caps the number of vehicles", {
 })
 
 test_that("calc_cbd does not error or return NaN when a vehicle's own R1/R2 sit at the binomial or polarized limit (regression test)", {
-  # Same shared mbd_peel_vehicle() mechanism and same fix as calc_mbd()'s
-  # equivalent regression test.
+  # calc_cbd() shares the mbd_peel_vehicle() mechanism with calc_mbd(), so it
+  # must handle the same two limits as calc_mbd()'s equivalent test.
   dup <- matrix(c(NA, 0.05, 0.05, NA), nrow = 2, byrow = TRUE)
 
   R1 <- 0.3

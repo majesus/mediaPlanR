@@ -38,7 +38,7 @@ nbd_upper_tail <- function(q, mean_contacts, size) {
 #' The model assumes an individual Poisson exposure process with a Gamma-
 #' distributed rate across people. Its variance is
 #' \eqn{\mu + \mu^2/size}. Because its support is unbounded, the final table row
-#' is explicitly labelled as an open tail. No tail mass is reassigned to an
+#' is explicitly labeled as an open tail. No tail mass is reassigned to an
 #' impossible exact exposure count.
 #'
 #' Danaher (2007) provides direct media-planning support for Negative-Binomial

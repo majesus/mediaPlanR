@@ -1,12 +1,12 @@
 #__________________________________________________________#
-# Shared console formatting for the "classical reach models" print methods
-# (Sainsbury, Binomial, Beta-Binomial, Metheringham, CANEX), so every model
-# that returns reach/distribution/cumulative reports it the same way: a
-# title, the headline reach, the full exposure distribution, the cumulative
-# distribution, model-specific parameters, and average exposures per person
-# reached. Models with a different return shape (e.g. Agostini, which has no
-# per-exposure distribution, or the sequential-aggregation models, whose
-# distributions can run into the hundreds of cells) keep their own printing.
+# Shared console formatting for the print methods of the classical reach
+# models (Sainsbury, Binomial, Beta-Binomial, Metheringham, CANEX and the ad
+# hoc reach-only formulas of Agostini and Hofmans), so every model reports the
+# same way: a title, the headline reach, model-specific parameters and, when
+# the model returns them, the full exposure distribution, the cumulative
+# distribution and the average exposures per person reached. The
+# sequential-aggregation models (CSD, MSAD, CBD, MBD), whose distributions can
+# run into the hundreds of cells, keep their own compact printing.
 print_reach_report <- function(title, description, reach_percent, reach_people,
                                distribution = NULL, cumulative = NULL,
                                parameters = NULL, notes = character(0)) {
@@ -24,7 +24,7 @@ print_reach_report <- function(title, description, reach_percent, reach_people,
     for (nm in names(parameters)) {
       val <- parameters[[nm]]
       if (is.numeric(val) && length(val) == 1L) {
-        cat(sprintf("%s: %s\n", nm, format(val, digits = 4, nsmall = 0, big.mark = ",")))
+        cat(sprintf("%s: %s\n", nm, format(val, digits = 4, big.mark = ",", scientific = FALSE)))
       }
     }
   }

@@ -51,26 +51,40 @@ new_reach_result <- function(probability, population, model, parameters = list()
 
 #' Estimate reach and exposure distribution for a media plan
 #'
-#' A `media_plan`-native front end for `calc_sainsbury()`/`calc_binomial()`:
-#' reads `audience`, `insertions`, and `population` from `plan` and calls the
-#' requested model directly, so the two share a single implementation.
+#' A `media_plan` front end for [calc_sainsbury()] and [calc_binomial()]: it
+#' reads `audience`, `insertions` and `population` from the plan and calls the
+#' requested model directly, so both share a single implementation.
 #'
 #' @param plan A `media_plan` object.
-#' @param model `sainsbury` (default) runs [calc_sainsbury()]: heterogeneous
-#'   vehicle probabilities, combined via the exact Poisson-binomial
-#'   convolution. `binomial` runs [calc_binomial()]: every vehicle is treated
-#'   as sharing the plan's average probability. Both assume random
-#'   duplication *and* random accumulation (a repeat insertion in the same
-#'   vehicle is treated as independent, exactly like an insertion in a
-#'   different vehicle) -- see `vignette("mediaPlanR-intro")`.
+#' @param model `"sainsbury"` (default) runs [calc_sainsbury()]: heterogeneous
+#'   vehicle probabilities combined by the exact Poisson-binomial convolution.
+#'   `"binomial"` runs [calc_binomial()]: every insertion has the plan's
+#'   insertion-weighted mean probability. Both assume random duplication
+#'   *and* random accumulation (a repeat insertion in the same vehicle is as
+#'   independent as an insertion in a different vehicle); see
+#'   `vignette("mediaPlanR-intro")`.
 #'
-#' @return A `media_reach` object with a complete zero-to-N distribution.
+#' @return A `media_reach` object: a list with the `model`, the `population`,
+#'   `reach` (a data frame with `probability`, `percent` and `people`),
+#'   `distribution` (`contacts`, `probability`, `percent` and `people` for zero
+#'   to `N` exposures), `cumulative` (`min_contacts`, `probability`, `percent`
+#'   and `people` for at least `min_contacts` exposures), `average_frequency`
+#'   (average exposures among the people reached) and model `parameters`.
+#'
+#' @examples
+#' plan <- media_plan(
+#'   data.frame(channel = c("TV", "Radio"), audience = c(300000, 180000),
+#'              insertions = c(4, 6), cost_per_insertion = c(18000, 3500)),
+#'   population = 1000000
+#' )
+#' estimate_reach(plan)
+#' estimate_reach(plan, model = "binomial")$distribution
 #'
 #' @seealso [calc_sainsbury()] and [calc_binomial()], called directly by this
-#'   function. For the experimental Negative-Binomial approximation, call
-#'   [nbd_exposure_distribution()] directly with your own `mean_contacts` --
-#'   it is scoped to continuous exposure processes, not finite insertion
-#'   schedules, so it is not offered here or in [optimize_media_plan()].
+#'   function. For a Negative-Binomial count approximation, call
+#'   [nbd_exposure_distribution()] with your own `mean_contacts`: it is scoped
+#'   to continuous exposure processes, not to finite insertion schedules, so it
+#'   is not offered here or in [optimize_media_plan()].
 #'
 #' @export
 estimate_reach <- function(plan, model = c("sainsbury", "binomial")) {
@@ -102,14 +116,27 @@ print.media_reach <- function(x, ...) {
 #' Compare reach estimates under several models
 #'
 #' @param plan A `media_plan` object.
-#' @param models Character vector containing `sainsbury` and/or `binomial`.
-#'   See `estimate_reach()`.
-#' @return A data frame with one row per model.
+#' @param models Character vector containing `"sainsbury"` and/or
+#'   `"binomial"`; see [estimate_reach()].
+#'
+#' @return A data frame with one row per model and columns `model`,
+#'   `reach_probability`, `reach_percent`, `reach_people` and
+#'   `average_frequency`.
+#'
+#' @examples
+#' plan <- media_plan(
+#'   data.frame(channel = c("TV", "Radio"), audience = c(300000, 180000),
+#'              insertions = c(4, 6), cost_per_insertion = c(18000, 3500)),
+#'   population = 1000000
+#' )
+#' compare_reach_models(plan)
+#'
 #' @export
 compare_reach_models <- function(plan, models = c("sainsbury", "binomial")) {
   allowed <- c("sainsbury", "binomial")
-  if (!length(models) || any(!models %in% allowed)) {
-    stop("Unknown reach model", call. = FALSE)
+  if (!is.character(models) || !length(models) || any(!models %in% allowed)) {
+    stop("Unknown reach model. Use \"sainsbury\" and/or \"binomial\".",
+         call. = FALSE)
   }
   results <- lapply(models, function(model) estimate_reach(plan, model))
   data.frame(

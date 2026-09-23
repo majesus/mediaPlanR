@@ -2,7 +2,7 @@
 % Please edit documentation in R/audience_metrics.R
 \name{audience_metrics}
 \alias{audience_metrics}
-\title{Calculate target-audience quality metrics}
+\title{Target-audience quality metrics}
 \usage{
 audience_metrics(
   gross_audience,
@@ -12,20 +12,55 @@ audience_metrics(
 )
 }
 \arguments{
-\item{gross_audience}{Gross audience of each channel in people.}
+\item{gross_audience}{Gross audience of each channel, in people.}
 
-\item{target_audience}{Audience belonging to the target in people.}
+\item{target_audience}{Audience belonging to the target, in people.}
 
-\item{gross_universe}{Total planning universe in people.}
+\item{gross_universe}{Total planning universe, in people.}
 
-\item{target_universe}{Target population in the universe, in people.}
+\item{target_universe}{Target population within the universe, in people.}
 }
 \value{
-A data frame containing target composition, target rating,
-selectivity and affinity index.
+A data frame with one row per channel and columns
+\itemize{
+\item \code{gross_audience} and \code{target_audience}, as supplied;
+\item \code{target_composition}: share of the gross audience that belongs to
+the target, \code{target_audience / gross_audience} (\code{NA} when the gross
+audience is zero);
+\item \code{target_rating}: share of the target universe reached,
+\code{target_audience / target_universe};
+\item \code{gross_rating}: share of the gross universe reached,
+\code{gross_audience / gross_universe};
+\item \code{affinity_index}: affinity, as defined above (\code{NA} when the gross
+audience is zero).
+}
 }
 \description{
-Separates target composition from affinity. This prevents the common error
-of multiplying gross audience by an affinity index and obtaining a target
-audience larger than the gross audience.
+Separates target composition, target rating and affinity. This prevents the
+common error of multiplying a gross audience by an affinity index and
+obtaining a target audience larger than the gross audience.
+}
+\details{
+All inputs must be finite and logically compatible: the target audience
+cannot exceed the gross audience or the target universe, the gross audience
+cannot exceed the gross universe, and the target universe cannot exceed the
+gross universe. Scalars are recycled to a common length.
+
+The affinity index compares the target's share of a channel's audience with
+the target's share of the universe,
+\deqn{\mathrm{affinity} = 100 \times \frac{T / G}{T_u / G_u},}
+where \eqn{T} and \eqn{G} are the target and gross audiences and \eqn{T_u}
+and \eqn{G_u} the target and gross universes. Algebraically this equals the
+target rating divided by the gross rating, \eqn{100 \times (T / T_u) /
+(G / G_u)}, so the two readings of affinity always coincide and only one
+column is returned. An index above 100 means the channel over-delivers the
+target relative to the universe.
+}
+\examples{
+audience_metrics(
+  gross_audience = c(300000, 180000),
+  target_audience = c(180000, 90000),
+  gross_universe = 1000000,
+  target_universe = 400000
+)
 }

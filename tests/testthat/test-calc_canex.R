@@ -1,46 +1,59 @@
-test_that("calc_canex reproduces the reference value from the model's original implementation", {
-  # Reference values (same parametrization as the original CANEX model
-  # calculator): 2 vehicles, k=2 each, with 0.0157 duplication.
-  vehicles <- data.frame(k = c(2, 2), R1 = c(0.4902, 0.033), R2 = c(0.5805, 0.0502))
-  duplications <- matrix(c(1, 0.0157, 0.0157, 1), nrow = 2, byrow = TRUE)
+kim_two_vehicles <- function() {
+  # First two vehicles of Kim (2005), Tables 4.2.2.1 and 4.2.2.2
+  list(
+    vehicles = data.frame(k = c(2, 2), R1 = c(0.4902, 0.033), R2 = c(0.5805, 0.0502)),
+    duplications = matrix(c(1, 0.0157, 0.0157, 1), nrow = 2, byrow = TRUE)
+  )
+}
 
-  res <- calc_canex(vehicles, duplications, population = 1000000)
+test_that("calc_canex reproduces the reference value of the canonical expansion", {
+  inputs <- kim_two_vehicles()
+  res <- calc_canex(inputs$vehicles, inputs$duplications, population = 1000000)
 
   expect_s3_class(res, "reach_canex")
-  expect_equal(res$total_reach * 100, 60.2057, tolerance = 1e-3)
-  expect_equal(res$total_reach_people, 602057, tolerance = 1)
-  expect_equal(res$stats$avg_contacts, 1.7380, tolerance = 1e-3)
+  expect_equal(res$reach$percent, 60.2057, tolerance = 1e-3)
+  expect_equal(res$reach$probability * 1e6, res$reach$people, tolerance = 1e-9)
+  expect_equal(res$reach$people, 602057, tolerance = 1)
+  expect_equal(res$average_frequency, 1.7380, tolerance = 1e-3)
 })
 
-test_that("calc_canex's distribution always sums to 100% (even after truncating negative probabilities)", {
+test_that("calc_canex's distribution sums to 100% even after truncating negative probabilities", {
   vehicles <- data.frame(k = c(2, 2, 2),
-                          R1 = c(0.4902, 0.033, 0.03),
-                          R2 = c(0.5805, 0.0502, 0.0371))
+                         R1 = c(0.4902, 0.033, 0.03),
+                         R2 = c(0.5805, 0.0502, 0.0371))
   duplications <- matrix(c(1, 0.0157, 0.0139,
-                            0.0157, 1, 0.0003,
-                            0.0139, 0.0003, 1), nrow = 3, byrow = TRUE)
+                           0.0157, 1, 0.0003,
+                           0.0139, 0.0003, 1), nrow = 3, byrow = TRUE)
 
   res <- calc_canex(vehicles, duplications, population = 500000)
-  expect_equal(sum(res$distribution$percent), 100, tolerance = 1e-6)
-  expect_equal(sum(res$distribution$people), 500000, tolerance = 1)
+  expect_equal(sum(res$distribution$percent), 100, tolerance = 1e-9)
+  expect_equal(sum(res$distribution$people), 500000, tolerance = 1e-6)
+  expect_equal(res$distribution$cumulative_probability[1], 1, tolerance = 1e-12)
+  expect_true(all(diff(res$distribution$cumulative_probability) <= 0))
 })
 
-test_that("print.reach_canex fires correctly via print() (regression test for the missing S3 class bug)", {
-  vehicles <- data.frame(k = c(1, 1), R1 = c(0.3, 0.2), R2 = c(0.4, 0.3))
-  duplications <- matrix(c(1, 0.05, 0.05, 1), nrow = 2)
-  res <- calc_canex(vehicles, duplications)
+test_that("calc_canex does not round people, so every scale stays consistent", {
+  inputs <- kim_two_vehicles()
+  res <- calc_canex(inputs$vehicles, inputs$duplications, population = 50)
+
+  expect_equal(res$distribution$people, 50 * res$distribution$probability, tolerance = 1e-12)
+  expect_equal(res$reach$people, 50 * res$reach$probability, tolerance = 1e-12)
+  expect_false(all(res$distribution$people == round(res$distribution$people)))
+  expect_equal(res$distribution$percent, 100 * res$distribution$probability)
+  # Cumulative probability at one exposure is exactly the reach
+  expect_equal(res$distribution$cumulative_probability[2], res$reach$probability,
+               tolerance = 1e-12)
+})
+
+test_that("print.reach_canex reports the average over the people reached", {
+  inputs <- kim_two_vehicles()
+  res <- calc_canex(inputs$vehicles, inputs$duplications, population = 1000000)
 
   expect_output(print(res), "CANEX MODEL")
-})
-
-test_that("print.reach_canex's printed average matches stats$avg_contacts (regression test: CANEX's distribution includes the zero-contact row, unlike the other models sharing print_reach_report())", {
-  vehicles <- data.frame(k = c(2, 2), R1 = c(0.4902, 0.033), R2 = c(0.5805, 0.0502))
-  duplications <- matrix(c(1, 0.0157, 0.0157, 1), nrow = 2, byrow = TRUE)
-  res <- calc_canex(vehicles, duplications, population = 1000000)
-
+  # The distribution includes the zero-exposure row, so the printed average
+  # must divide by the people reached and not by the population.
   expect_output(print(res),
-                sprintf("Average exposures per person reached: %.2f",
-                        res$stats$avg_contacts))
+                sprintf("Average exposures per person reached: %.2f", res$average_frequency))
 })
 
 test_that("calc_canex validates its inputs", {
@@ -48,12 +61,24 @@ test_that("calc_canex validates its inputs", {
   dup_ok <- matrix(c(1, 0.0157, 0.0157, 1), nrow = 2)
 
   expect_error(calc_canex(data.frame(k = c(0, 2), R1 = c(0.1, 0.2), R2 = c(0.2, 0.3)),
-                           matrix(c(1, 0, 0, 1), 2)),
-               "positive integer")
-  expect_error(calc_canex(vehicles_ok, matrix(1, nrow = 3, ncol = 2)),
-               "square")
-  expect_error(calc_canex(vehicles_ok, dup_ok, population = -10),
-               "positive")
+                          matrix(c(1, 0, 0, 1), 2)), "positive integers")
+  expect_error(calc_canex(vehicles_ok, matrix(1, nrow = 3, ncol = 2)), "2 x 2 matrix")
+  expect_error(calc_canex(vehicles_ok, dup_ok, population = -10), "population")
+  expect_error(calc_canex(vehicles_ok, dup_ok, population = NA), "population")
+  expect_error(calc_canex(vehicles_ok[, c("k", "R1")], dup_ok), "columns k, R1 and R2")
+  expect_error(calc_canex(transform(vehicles_ok, R1 = c(NA, 0.033)), dup_ok), "R1")
+  asymmetric <- dup_ok
+  asymmetric[1, 2] <- 0.02
+  expect_error(calc_canex(vehicles_ok, asymmetric), "symmetric")
+  expect_error(calc_canex(vehicles_ok, matrix(c(1, 1.5, 1.5, 1), 2)), "between 0 and 1")
+})
+
+test_that("calc_canex ignores the diagonal of the duplication matrix", {
+  inputs <- kim_two_vehicles()
+  with_na <- inputs$duplications
+  diag(with_na) <- NA
+  expect_equal(calc_canex(inputs$vehicles, with_na)$reach$percent,
+               calc_canex(inputs$vehicles, inputs$duplications)$reach$percent)
 })
 
 test_that("calc_canex stops with an informative error if the combination grid is excessive", {

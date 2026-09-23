@@ -1,37 +1,57 @@
 #' Calibrate a Beta-Binomial effective-reach model
 #'
-#' The first-insertion reach fixes the Beta mean. The function then calibrates
-#' only its concentration, avoiding the million-point two-dimensional grids
-#' used by the historical functions.
+#' Calibrates a Beta-Binomial exposure distribution so that it reproduces a
+#' target effective reach. The reach after one insertion fixes the mean of
+#' the Beta distribution, and only its concentration is calibrated, by a
+#' one-dimensional search instead of a two-dimensional grid over both shape
+#' parameters.
 #'
-#' @param first_reach Reach after one insertion, as a proportion.
-#' @param target_reach Target probability for exactly `frequency` exposures or
-#'   at least `frequency` exposures.
-#' @param frequency Positive exposure threshold.
-#' @param max_insertions Maximum number of insertions considered.
-#' @param type `exact` or `at_least`.
-#' @param tolerance Desired absolute probability error.
+#' @param first_reach Reach after one insertion, as a proportion strictly
+#'   between zero and one.
+#' @param target_reach Target probability, strictly between zero and one, of
+#'   exactly `frequency` exposures (`type = "exact"`) or of at least
+#'   `frequency` exposures (`type = "at_least"`).
+#' @param frequency Positive integer exposure threshold.
+#' @param max_insertions Maximum number of insertions considered, an integer
+#'   of at least `frequency`.
+#' @param type `"at_least"` (default) or `"exact"`.
+#' @param tolerance Desired absolute probability error; it only determines the
+#'   `converged` flag.
 #'
-#' @return A `bbd_calibration` object with calibrated parameters, full
-#' distribution and diagnostics.
+#' @details
+#' For every number of insertions `n` from `frequency` to `max_insertions`, the
+#' function searches for the concentration of the Beta-Binomial, with mean
+#' `first_reach`, whose probability equals `target_reach`, first on a grid of
+#' the log concentration and then by [stats::optimize()] around the best grid
+#' point. It returns the number of insertions with the smallest error, the
+#' smaller `n` in case of ties.
+#'
+#' @return A `bbd_calibration` object: a list with `alpha`, `beta`,
+#'   `concentration`, `insertions` (the selected `n`), `first_reach`,
+#'   `frequency`, `type`, `target_reach`, `predicted_reach`, `error`,
+#'   `converged`, the full `distribution` (`contacts`, `probability` and
+#'   `cumulative_probability`) and the `candidates` evaluated for each `n`.
+#'
+#' @examples
+#' # A first insertion reaches 30% and 2+ exposures should reach 20%
+#' calibrate_bbd(first_reach = 0.30, target_reach = 0.20, frequency = 2,
+#'               max_insertions = 6)
+#'
+#' @seealso [calc_beta_binomial()] for the model itself and [fit_bbd_to_reach()]
+#'   to fit a Beta-Binomial to a whole schedule's reach.
 #' @export
 calibrate_bbd <- function(first_reach, target_reach, frequency,
                           max_insertions, type = c("at_least", "exact"),
                           tolerance = 1e-6) {
   type <- match.arg(type)
-  scalar_probability <- function(x, name) {
-    if (!is.numeric(x) || length(x) != 1L || !is.finite(x) || x <= 0 || x >= 1) {
-      stop(name, " must be one number strictly between zero and one", call. = FALSE)
-    }
-  }
-  scalar_probability(first_reach, "first_reach")
-  scalar_probability(target_reach, "target_reach")
-  if (!is.numeric(frequency) || length(frequency) != 1L || frequency < 1 ||
-      frequency != round(frequency) || !is.numeric(max_insertions) ||
-      length(max_insertions) != 1L || max_insertions < frequency ||
-      max_insertions != round(max_insertions)) {
-    stop("frequency and max_insertions must be compatible positive integers", call. = FALSE)
-  }
+  assert_number(first_reach, "first_reach", min = 0, max = 1,
+                min_open = TRUE, max_open = TRUE)
+  assert_number(target_reach, "target_reach", min = 0, max = 1,
+                min_open = TRUE, max_open = TRUE)
+  assert_number(frequency, "frequency", min = 1, integer = TRUE)
+  assert_number(max_insertions, "max_insertions", min = frequency,
+                integer = TRUE)
+  assert_number(tolerance, "tolerance", min = 0, min_open = TRUE)
 
   probability_at <- function(log_concentration, n) {
     concentration <- exp(log_concentration)
@@ -93,4 +113,3 @@ print.bbd_calibration <- function(x, ...) {
               x$target_reach, x$predicted_reach, x$error, x$converged))
   invisible(x)
 }
-

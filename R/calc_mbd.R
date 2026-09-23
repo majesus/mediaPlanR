@@ -213,77 +213,76 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' Multivariate Beta Binomial Distribution model
 #'
 #' Implements Cheong's (2007) Multivariate Beta Binomial Distribution (MBD).
-#' Vehicle co-exposure probabilities for pairs (observed) and for three or
-#' more vehicles (imputed from a Beta-Binomial fitted to the subset's own
-#' mean audience and mean pairwise duplication) are combined into the full
-#' \eqn{2^m} joint zero/one exposure grid via Waring's (1792) inclusion-
-#' exclusion theorem. Vehicles are then peeled off one at a time, in reverse
-#' aggregation order: each remaining exposure pattern's own row is expanded
-#' from a zero/one state into the peeled vehicle's own insertion-level
-#' Beta-Binomial distribution using a row-specific conditional allocation,
-#' and the two component distributions are convolved into a growing
-#' pseudo-vehicle.
+#' Vehicle co-exposure probabilities for pairs (observed) and for three or more
+#' vehicles (imputed from a Beta-Binomial fitted to the subset's own mean
+#' audience and mean pairwise duplication) are combined into the full
+#' \eqn{2^m} joint zero/one exposure grid by Waring's (1792) inclusion-exclusion
+#' theorem. Vehicles are then peeled off one at a time, in reverse aggregation
+#' order: each remaining exposure pattern's row is expanded from a zero/one
+#' state into the peeled vehicle's own insertion-level Beta-Binomial
+#' distribution by a row-specific conditional allocation, and the two component
+#' distributions are convolved into a growing pseudo-vehicle.
 #'
-#' @param vehicles_data Data frame with columns `insertions`, `R1`, and `R2`,
-#'   using the same convention as [calc_csd()] (`R2` may be `NA` only when
-#'   `insertions` is one).
+#' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
+#'   with the same convention as [calc_csd()] (`R2` may be `NA` only when
+#'   `insertions` is one). At most 12 vehicles are supported.
 #' @param duplications Symmetric matrix of pairwise one-insertion audience
-#'   duplication proportions. Diagonal values are ignored.
+#'   duplications, as proportions of the population. The diagonal is ignored.
 #' @param aggregation_order Either `"audience_desc"` (Cheong's rule: vehicles
 #'   are aggregated in decreasing order of audience and duplication
-#'   magnitude), `"given"`, or a permutation of row indices. Vehicles are
-#'   peeled off starting from the *last* position in this order, matching
-#'   Cheong's own worked examples.
+#'   magnitude), `"given"` (the row order), or a permutation of the row
+#'   indices. Vehicles are peeled off starting from the *last* position of this
+#'   order, as in Cheong's worked examples.
 #' @param population Positive population used only to express probabilities
-#'   as people.
+#'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'
-#' @return A `reach_mbd` object containing reach, the complete exposure
-#'   distribution, the aggregation order used, and diagnostics, including
-#'   whether the final negative-probability safety net (Cheong's "MBD-ADJ")
-#'   had to be engaged and how much probability mass it redistributed.
+#' @return A `reach_mbd` object: a list with `reach` (`probability`, `percent`
+#'   and `people`), `average_frequency`, the complete exposure `distribution`
+#'   (`contacts`, `probability`, `percent`, `people` and
+#'   `cumulative_probability`), the `aggregation_order` and `aggregation_rule`,
+#'   the peeling `steps` and `diagnostics`, which report whether the final
+#'   negative-probability safety net (Cheong's "MBD-ADJ") had to be engaged and
+#'   how much probability mass it redistributed (`negative_mass_adjusted`,
+#'   `cells_adjusted`).
 #'
 #' @details
-#' `calc_mbd()` (Cheong 2007) is unrelated to `fit_bbd_to_reach()` (which
-#' fits one Beta-Binomial to an externally given reach target). The two are
-#' easy to confuse by name alone: MBD is Cheong's (2007) *Multivariate* Beta
-#' Binomial Distribution described here, while `fit_bbd_to_reach()` fits a
-#' *single-vehicle* Beta-Binomial.
+#' `calc_mbd()` (Cheong, 2007) is unrelated to [fit_bbd_to_reach()], which fits
+#' one Beta-Binomial to an externally given reach. MBD is the *Multivariate*
+#' Beta Binomial Distribution of several vehicles described here, whereas
+#' [fit_bbd_to_reach()] fits a single Beta-Binomial to a whole schedule.
 #'
 #' # What is, and is not, guaranteed
 #'
-#' Cheong's own dissertation reports that the inclusion-exclusion grid can
-#' produce small negative cell probabilities once four or more vehicles are
-#' combined, because the co-exposure probability of three or more vehicles is
-#' *imputed* (there is no closed-form multivariate distribution behind it),
-#' not observed. Cheong's worked four-vehicle example is fully corrected by a
-#' first-order consistency check (every combined-exposure probability is
-#' shrunk to remain below each of its immediate subsets); the five-vehicle
-#' example is not, and the dissertation explicitly states that resolving this
-#' in general would require increasingly complex higher-order checks that
-#' were never implemented, proposing iterative proportional fitting as
-#' unstarted future work. `calc_mbd()` therefore applies exactly the checks
-#' Cheong specifies (first-order only) and, exactly as Cheong's own MBD-ADJ
-#' variant does, zeroes any cell that is still negative afterwards and
-#' redistributes that mass proportionally across the non-negative cells of
-#' the final collapsed distribution. This is reported in `diagnostics`
-#' (`negative_mass_adjusted`, `cells_adjusted`); a non-zero value means the
-#' result for that specific schedule relies on this fallback rather than on a
-#' value Cheong verified as internally consistent without it.
+#' Cheong's dissertation reports that the inclusion-exclusion grid can produce
+#' small negative cell probabilities once four or more vehicles are combined,
+#' because the co-exposure probability of three or more vehicles is *imputed*
+#' (no closed-form multivariate distribution stands behind it) rather than
+#' observed. Cheong's four-vehicle example is fully corrected by a first-order
+#' consistency check (every combined-exposure probability is shrunk to remain
+#' below each of its immediate subsets); the five-vehicle example is not, and
+#' the dissertation states that resolving this in general would need
+#' increasingly complex higher-order checks that were never implemented,
+#' proposing iterative proportional fitting as future work. `calc_mbd()`
+#' therefore applies exactly the checks Cheong specifies (first order only)
+#' and, like Cheong's MBD-ADJ variant, sets any cell that is still negative to
+#' zero and redistributes that mass proportionally across the non-negative
+#' cells of the final collapsed distribution. This is reported in
+#' `diagnostics`; a non-zero value means the result for that schedule relies on
+#' this fallback rather than on a value Cheong verified as internally
+#' consistent without it. The function warns for four or more vehicles, the
+#' range where Cheong's own checks are known to be insufficient by themselves.
 #'
 #' Cheong also reports that the aggregation order can change the collapsed
 #' distribution, that this was not investigated systematically, and that the
-#' model was only tested computationally up to 12-13 vehicles because of the
-#' exponential cost of the exposure grid. `calc_mbd()` stops with an
-#' informative error above `max_vehicles` for this reason, and warns for four
-#' or more vehicles, the range where Cheong's own checks are known to become
-#' insufficient on their own.
+#' model was tested computationally only up to 12-13 vehicles because of the
+#' exponential cost of the exposure grid. `calc_mbd()` stops above 12 vehicles
+#' for this reason.
 #'
-#' In exchange, Cheong reports MBD as the most accurate of the eleven models
-#' tested for reach alone (comScore 2003 data, N=440 schedules), but only
-#' middling for the complete exposure-frequency distribution, behind the
-#' already-implemented [calc_canex()] and the (not yet implemented)
-#' Conditional Beta Distribution model.
+#' Cheong reports MBD as the most accurate of the eleven models tested for
+#' reach alone (comScore 2003 data, 440 schedules) but not for the complete
+#' exposure distribution, where [calc_canex()] and the Conditional Beta
+#' Distribution model ([calc_cbd()]) were more accurate.
 #'
 #' @references
 #' Cheong, Y. (2007). Multivariate Beta Binomial Distribution Model as a Web
@@ -293,94 +292,33 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' Waring, E. (1792). Meditationes Algebraicae. Cambridge.
 #'
 #' @examples
-#' # Cheong (2007), Chapter 4.2: three-vehicle conceptual example.
-#' vehicles <- data.frame(
-#'   insertions = c(2, 1, 3),
-#'   R1 = c(0.146, 0.110, 0.252),
-#'   R2 = c(0.191, NA, 0.318)
-#' )
-#' duplication <- matrix(
-#'   c(NA, 0.032, 0.063,
-#'     0.032, NA, 0.041,
-#'     0.063, 0.041, NA),
-#'   nrow = 3, byrow = TRUE
-#' )
-#' result <- calc_mbd(vehicles, duplication, aggregation_order = 1:3)
+#' # Cheong (2007), Chapter 4.2: three-vehicle conceptual example
+#' data(mbd_cheong2007)
+#' result <- do.call(calc_mbd, mbd_cheong2007)
 #' result$reach
 #' result$distribution
 #'
-#' @seealso [calc_csd()] and [calc_msad()] for sequential aggregation models
-#'   with a completely verified reference example; [calc_cbd()] for the
-#'   model sharing this function's exact within-vehicle peeling step, with a
-#'   different (canonical-expansion, not imputed) between-vehicle step.
+#' @seealso [calc_csd()] and [calc_msad()] for sequential aggregation models,
+#'   and [calc_cbd()] for the model that shares this function's within-vehicle
+#'   peeling step with a canonical-expansion between-vehicle step instead of an
+#'   imputed one.
 #' @export
 calc_mbd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),
                      population = 1, tolerance = 1e-8) {
-  required <- c("insertions", "R1", "R2")
-  if (!is.data.frame(vehicles_data) || !all(required %in% names(vehicles_data)) ||
-      nrow(vehicles_data) < 2L) {
-    stop("vehicles_data must contain at least two rows and columns insertions, R1, and R2.",
-         call. = FALSE)
-  }
-  n <- nrow(vehicles_data)
-  max_vehicles <- 12L
-  if (n > max_vehicles) {
-    stop(sprintf(paste0(
-      "calc_mbd() supports at most %d vehicles. Cheong (2007) only tested ",
-      "the model computationally up to 12-13 vehicles because the exposure ",
-      "grid grows exponentially; beyond that the result would be both slow ",
-      "and unverified against any published benchmark."), max_vehicles),
-      call. = FALSE)
-  }
-  insertions <- vehicles_data$insertions
-  R1 <- vehicles_data$R1
-  R2 <- vehicles_data$R2
-  if (!is.numeric(insertions) || anyNA(insertions) || any(!is.finite(insertions)) ||
-      any(insertions < 1 | insertions != round(insertions))) {
-    stop("insertions must contain positive finite integers.", call. = FALSE)
-  }
-  if (!is.numeric(R1) || anyNA(R1) || any(!is.finite(R1)) || any(R1 <= 0 | R1 >= 1)) {
-    stop("R1 must contain finite proportions strictly between zero and one.", call. = FALSE)
-  }
-  needs_R2 <- insertions >= 2L
-  if (!is.numeric(R2) || anyNA(R2[needs_R2]) || any(!is.finite(R2[needs_R2]))) {
-    stop("R2 must be finite for every vehicle with at least two insertions.", call. = FALSE)
-  }
+  input <- validate_sequential_inputs(vehicles_data, duplications,
+                                      aggregation_order, population, tolerance,
+                                      max_vehicles = 12L, caller = "calc_mbd")
+  n <- input$n
+  insertions <- input$insertions
+  R1 <- input$R1
+  R2 <- input$R2
+  order_index <- input$order_index
+  order_rule <- input$order_rule
   vehicle_bbd <- lapply(seq_len(n), function(i) {
-    if (needs_R2[i]) calculate_bbd_params(R1[i], R2[i])
+    if (insertions[i] >= 2L) calculate_bbd_params(R1[i], R2[i])
     else list(alpha = NA_real_, beta = NA_real_, p = R1[i], type = "single_insertion")
   })
-
-  if (!is.matrix(duplications) || !is.numeric(duplications) ||
-      !identical(dim(duplications), c(n, n))) {
-    stop("duplications must be a numeric square matrix matching vehicles_data.", call. = FALSE)
-  }
-  off_diagonal <- row(duplications) != col(duplications)
-  if (anyNA(duplications[off_diagonal]) || any(!is.finite(duplications[off_diagonal])) ||
-      !isTRUE(all.equal(duplications[upper.tri(duplications)],
-                        t(duplications)[upper.tri(duplications)],
-                        tolerance = tolerance, check.attributes = FALSE))) {
-    stop("duplications must be finite and symmetric outside its diagonal.", call. = FALSE)
-  }
-  for (i in seq_len(n - 1L)) {
-    for (j in (i + 1L):n) {
-      lower <- max(0, R1[i] + R1[j] - 1)
-      upper <- min(R1[i], R1[j])
-      if (duplications[i, j] < lower - tolerance || duplications[i, j] > upper + tolerance) {
-        stop(sprintf("duplication [%d,%d] is outside its Frechet bounds [%.8f, %.8f].",
-                     i, j, lower, upper), call. = FALSE)
-      }
-    }
-  }
-  if (!is.numeric(population) || length(population) != 1L || !is.finite(population) ||
-      population <= 0) {
-    stop("population must be one positive finite number.", call. = FALSE)
-  }
-  if (!is.numeric(tolerance) || length(tolerance) != 1L || !is.finite(tolerance) ||
-      tolerance <= 0) {
-    stop("tolerance must be one positive finite number.", call. = FALSE)
-  }
 
   if (n >= 4L) {
     warning(paste0(
@@ -391,24 +329,6 @@ calc_mbd <- function(vehicles_data, duplications,
       "order checks were identified as necessary but never implemented). ",
       "Check diagnostics$negative_mass_adjusted and diagnostics$cells_adjusted."),
       call. = FALSE)
-  }
-
-  if (is.numeric(aggregation_order)) {
-    if (length(aggregation_order) != n || anyNA(aggregation_order) ||
-        any(!is.finite(aggregation_order)) || any(aggregation_order != round(aggregation_order))) {
-      stop("A numeric aggregation_order must contain integer row indices.", call. = FALSE)
-    }
-    order_index <- as.integer(aggregation_order)
-    if (!identical(sort(order_index), seq_len(n))) {
-      stop("A numeric aggregation_order must be a permutation of row indices.", call. = FALSE)
-    }
-    order_rule <- "custom"
-  } else {
-    aggregation_order <- match.arg(aggregation_order)
-    order_index <- if (aggregation_order == "audience_desc") {
-      order(-R1, seq_len(n))
-    } else seq_len(n)
-    order_rule <- aggregation_order
   }
 
   S <- mbd_coexposure_sums(R1, duplications, tolerance)

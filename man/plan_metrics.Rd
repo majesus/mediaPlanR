@@ -2,19 +2,50 @@
 % Please edit documentation in R/media_plan.R
 \name{plan_metrics}
 \alias{plan_metrics}
-\title{Calculate unambiguous media-plan metrics}
+\title{Media-plan metrics}
 \usage{
 plan_metrics(plan, reach = NULL)
 }
 \arguments{
 \item{plan}{A \code{media_plan} object.}
 
-\item{reach}{Optional unique reach in people. When supplied, cost per
-thousand reached and average frequency are included.}
+\item{reach}{Optional unique reach of the plan, in people (for example
+\code{estimate_reach(plan)$reach$people}). When supplied, average frequency
+and cost per thousand people reached are added to the plan totals.}
 }
 \value{
-A \code{media_plan_metrics} object containing channel and plan metrics.
+A \code{media_plan_metrics} object: a list with \code{by_channel} (a data frame
+of channel-level metrics), \code{totals} (a list with \code{impressions}, \code{spend},
+\code{grps}, \code{cpm_impressions} and, when \code{reach} is supplied, \code{reach},
+\code{reach_percent}, \code{average_frequency} and \code{cost_per_thousand_reached}) and
+the \code{currency}.
 }
 \description{
-Calculate unambiguous media-plan metrics
+Computes impressions, spend, rating points and cost ratios for every
+channel and for the whole plan, with an explicit denominator for each
+quantity.
+}
+\details{
+For each channel, \code{impressions} is \code{audience * insertions}, \code{spend} is
+\code{cost_per_insertion * insertions}, \code{rating_points} (gross rating points) is
+\code{impressions / population * 100}, \code{grp_share} is the channel's share of the
+plan's rating points, \code{cpm_impressions} is the cost per thousand
+impressions and \code{cost_per_rating_point} is \code{spend / rating_points}. When the
+plan has a target audience, \code{target_impressions} and \code{target_composition}
+(\code{target_audience / audience}) are added.
+}
+\examples{
+plan <- media_plan(
+  data.frame(channel = c("TV", "Radio"), audience = c(300000, 180000),
+             insertions = c(4, 6), cost_per_insertion = c(18000, 3500)),
+  population = 1000000
+)
+plan_metrics(plan)
+
+# Add reach-based metrics
+plan_metrics(plan, reach = estimate_reach(plan)$reach$people)$totals
+
+}
+\seealso{
+\code{\link[=media_plan]{media_plan()}}, \code{\link[=estimate_reach]{estimate_reach()}}
 }

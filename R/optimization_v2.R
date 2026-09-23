@@ -1,10 +1,19 @@
+# Reach and effective reach (at least `effective_frequency` exposures) of one
+# allocation of insertions. It evaluates the same Sainsbury or Binomial
+# distribution as estimate_reach() without building the full result object, so
+# that the search can evaluate many allocations quickly.
 allocation_reach <- function(plan, allocation, model, effective_frequency = 1L) {
-  candidate <- plan
-  candidate$data$insertions <- allocation
-  result <- estimate_reach(candidate, model = model)
-  idx <- match(effective_frequency, result$cumulative$min_contacts)
-  effective <- if (is.na(idx)) 0 else result$cumulative$probability[idx]
-  list(result = result, effective_reach = effective)
+  probabilities <- rep(plan$data$audience / plan$population, allocation)
+  n <- length(probabilities)
+  if (n == 0L) return(list(reach = 0, effective_reach = 0))
+  distribution <- if (model == "sainsbury") {
+    poisson_binomial_distribution(probabilities)
+  } else {
+    stats::dbinom(0:n, size = n, prob = mean(probabilities))
+  }
+  effective <- if (effective_frequency > n) 0 else
+    sum(distribution[(effective_frequency + 1L):(n + 1L)])
+  list(reach = 1 - distribution[1L], effective_reach = effective)
 }
 
 enumerate_allocations <- function(max_insertions) {
@@ -13,68 +22,128 @@ enumerate_allocations <- function(max_insertions) {
   as.matrix(grid)
 }
 
+# Greedy search. Each step adds the move with the best gain in effective reach
+# per unit of cost. A move adds between one and `effective_frequency`
+# insertions to a single channel: with an effective frequency of f, fewer than
+# f insertions in total cannot create any effective reach, so single-insertion
+# moves alone would see no gain and stop at once.
 greedy_allocation <- function(plan, budget, max_insertions, model,
                               effective_frequency, target_reach = NULL) {
+  cost <- plan$data$cost_per_insertion
   allocation <- integer(nrow(plan$data))
   trace <- list()
+  current <- allocation_reach(plan, allocation, model, effective_frequency)
   repeat {
-    current <- allocation_reach(plan, allocation, model, effective_frequency)
-    if (!is.null(target_reach) && current$effective_reach >= target_reach) break
-    current_spend <- sum(allocation * plan$data$cost_per_insertion)
-    candidates <- lapply(seq_along(allocation), function(i) {
-      if (allocation[i] >= max_insertions[i] ||
-          current_spend + plan$data$cost_per_insertion[i] > budget) return(NULL)
-      proposal <- allocation
-      proposal[i] <- proposal[i] + 1L
-      evaluated <- allocation_reach(plan, proposal, model, effective_frequency)
-      gain <- evaluated$effective_reach - current$effective_reach
-      cost <- plan$data$cost_per_insertion[i]
-      score <- if (cost > 0) gain / cost else if (gain > 0) Inf else -Inf
-      list(i = i, gain = gain, score = score,
-           evaluated = evaluated)
-    })
-    candidates <- Filter(Negate(is.null), candidates)
-    if (!length(candidates)) break
-    scores <- vapply(candidates, function(x) x$score, numeric(1))
-    best <- candidates[[which.max(scores)]]
-    if (best$gain <= 0) break
-    allocation[best$i] <- allocation[best$i] + 1L
-    trace[[length(trace) + 1L]] <- c(channel = best$i, gain = best$gain)
+    if (!is.null(target_reach) && current$effective_reach >= target_reach - 1e-12) break
+    spend <- sum(allocation * cost)
+    best <- NULL
+    for (i in seq_along(allocation)) {
+      room <- max_insertions[i] - allocation[i]
+      for (q in seq_len(min(room, effective_frequency))) {
+        step_cost <- q * cost[i]
+        if (spend + step_cost > budget + 1e-10) break
+        proposal <- allocation
+        proposal[i] <- proposal[i] + q
+        evaluated <- allocation_reach(plan, proposal, model, effective_frequency)
+        gain <- evaluated$effective_reach - current$effective_reach
+        if (gain <= 1e-15) next
+        score <- if (step_cost > 0) gain / step_cost else Inf
+        if (is.null(best) || score > best$score) {
+          best <- list(i = i, q = q, gain = gain, score = score,
+                       evaluated = evaluated)
+        }
+      }
+    }
+    if (is.null(best)) break
+    allocation[best$i] <- allocation[best$i] + best$q
+    current <- best$evaluated
+    trace[[length(trace) + 1L]] <- c(channel = best$i, insertions = best$q,
+                                      gain = best$gain)
   }
   list(allocation = allocation, trace = trace)
 }
 
 #' Optimize a cross-media allocation
 #'
-#' Finds an insertion allocation under a budget using either exhaustive search
-#' (with a verifiable global optimum) or an explicitly labelled greedy
-#' heuristic. The objective can maximize effective reach or minimize spend for
-#' a required effective reach.
+#' Finds an allocation of insertions across channels under a budget, using
+#' either exhaustive search (with a verifiable global optimum) or an explicitly
+#' labeled greedy heuristic. The objective can maximize effective reach or
+#' minimize spend for a required effective reach.
 #'
-#' @param plan A `media_plan` object. Its current insertions are used as the
-#'   default upper bounds.
-#' @param budget Maximum total spend.
-#' @param objective `max_reach` or `min_cost`.
+#' @param plan A `media_plan` object. Its current insertions are the default
+#'   upper bounds of the search.
+#' @param budget Maximum total spend, in the plan's currency.
+#' @param objective `"max_reach"` maximizes effective reach within the budget;
+#'   `"min_cost"` minimizes spend subject to `target_reach`.
 #' @param target_reach Required effective reach, as a proportion, for
-#'   `min_cost`.
-#' @param effective_frequency Minimum exposures defining effective reach.
-#' @param max_insertions Integer upper bound per channel.
-#' @param model `sainsbury` or `binomial`; see `estimate_reach()`. Candidate
-#'   allocations routinely place several insertions in the same vehicle, so
-#'   the experimental NBD approximation (scoped to continuous exposure
-#'   processes, not finite schedules) is not offered here.
-#' @param method `exact`, `greedy`, or `auto`.
-#' @param max_combinations Maximum allocations allowed for exact enumeration.
+#'   `objective = "min_cost"`.
+#' @param effective_frequency Minimum number of exposures that defines
+#'   effective reach: the proportion of the population exposed at least that
+#'   many times.
+#' @param max_insertions Integer upper bound of insertions for each channel.
+#' @param model `"sainsbury"` or `"binomial"`; see [estimate_reach()].
+#'   Candidate allocations routinely place several insertions in the same
+#'   vehicle, so the Negative-Binomial approximation, which is scoped to
+#'   continuous exposure processes and not to finite schedules, is not offered.
+#' @param method `"exact"`, `"greedy"` or `"auto"`, which uses exhaustive
+#'   search when the number of allocations does not exceed `max_combinations`
+#'   and the greedy heuristic otherwise.
+#' @param max_combinations Maximum number of allocations, `prod(max_insertions
+#'   + 1)`, allowed for exhaustive search.
 #'
-#' @return A `media_optimization` object. `global_optimum` is `TRUE` only for
-#'   exhaustive search.
+#' @details
+#' Exhaustive search evaluates every allocation within `max_insertions` whose
+#' spend does not exceed the budget and returns the best one, so its result is
+#' a global optimum. Ties in effective reach are broken in favor of lower
+#' spend and then higher reach. For `objective = "min_cost"` the cheapest
+#' allocation that reaches `target_reach` is returned, and an error is raised
+#' when none does.
+#'
+#' The greedy heuristic repeatedly adds the move with the largest gain in
+#' effective reach per unit of cost. A move adds between one and
+#' `effective_frequency` insertions to one channel, because fewer insertions
+#' than the effective frequency cannot by themselves create effective reach.
+#' The result is not guaranteed to be optimal and is always reported as a
+#' heuristic. With `objective = "min_cost"`, a warning is issued if the target
+#' cannot be reached within the budget.
+#'
+#' @return A `media_optimization` object: a list with the optimized `plan`, the
+#'   named `allocation`, the `reach` result of [estimate_reach()], the plan
+#'   `metrics`, the `effective_frequency` and `effective_reach`, `spend`,
+#'   `budget`, `target_reach` and `target_met`, the `method` used,
+#'   `global_optimum` (`TRUE` only for exhaustive search),
+#'   `combinations_evaluated` and, for exhaustive search, a `search_table` with
+#'   the spend, reach and effective reach of each evaluated allocation.
 #'
 #' @references
-#' Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la
-#' distribucion de contactos en la planificacion de medios publicitarios
-#' impresos. Tesis doctoral, Universidad de Valencia, Espana. (Sections
-#' 3.3.1.1-3.3.1.2.)
+#' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
+#' distribución de contactos en la planificación de medios publicitarios
+#' impresos (Models for determining reach and exposure distribution in print
+#' media planning). Doctoral dissertation, Universidad de Valencia, Spain.
+#' Sections 3.3.1.1 and 3.3.1.2, the reach models this function evaluates.
 #'
+#' @examples
+#' plan <- media_plan(
+#'   data.frame(channel = c("TV", "Radio", "Digital"),
+#'              audience = c(300000, 180000, 120000),
+#'              insertions = c(4, 6, 10),
+#'              cost_per_insertion = c(18000, 3500, 1200)),
+#'   population = 1000000
+#' )
+#' optimized <- optimize_media_plan(
+#'   plan, budget = 60000, objective = "max_reach",
+#'   effective_frequency = 2, max_insertions = c(4, 8, 12)
+#' )
+#' optimized
+#' optimized$global_optimum
+#'
+#' # Cheapest allocation reaching 40% effective reach
+#' optimize_media_plan(
+#'   plan, budget = 60000, objective = "min_cost", target_reach = 0.40,
+#'   effective_frequency = 2, max_insertions = c(4, 8, 12)
+#' )$allocation
+#'
+#' @seealso [media_plan()] and [estimate_reach()].
 #' @export
 optimize_media_plan <- function(plan, budget,
                                 objective = c("max_reach", "min_cost"),
@@ -88,30 +157,19 @@ optimize_media_plan <- function(plan, budget,
   objective <- match.arg(objective)
   model <- match.arg(model)
   method <- match.arg(method)
-  if (!is.numeric(budget) || length(budget) != 1L || !is.finite(budget) || budget < 0) {
-    stop("budget must be one non-negative finite number", call. = FALSE)
+  assert_number(budget, "budget", min = 0)
+  assert_numeric_vector(max_insertions, "max_insertions", min = 0,
+                        integer = TRUE, length = nrow(plan$data))
+  assert_number(effective_frequency, "effective_frequency", min = 1,
+                integer = TRUE)
+  if (objective == "min_cost") {
+    if (is.null(target_reach)) {
+      stop("min_cost requires a target_reach between zero and one.",
+           call. = FALSE)
+    }
+    assert_number(target_reach, "target_reach", min = 0, max = 1)
   }
-  if (!is.numeric(max_insertions) || length(max_insertions) != nrow(plan$data) ||
-      anyNA(max_insertions) || any(!is.finite(max_insertions)) ||
-      any(max_insertions < 0) ||
-      any(max_insertions != round(max_insertions))) {
-    stop("max_insertions must provide one finite non-negative integer per channel", call. = FALSE)
-  }
-  if (!is.numeric(effective_frequency) || length(effective_frequency) != 1L ||
-      !is.finite(effective_frequency) || effective_frequency < 1 ||
-      effective_frequency != round(effective_frequency)) {
-    stop("effective_frequency must be a finite positive integer", call. = FALSE)
-  }
-  if (objective == "min_cost" &&
-      (is.null(target_reach) || !is.numeric(target_reach) ||
-       length(target_reach) != 1L || !is.finite(target_reach) ||
-       target_reach < 0 || target_reach > 1)) {
-    stop("min_cost requires a finite target_reach between zero and one", call. = FALSE)
-  }
-  if (!is.numeric(max_combinations) || length(max_combinations) != 1L ||
-      !is.finite(max_combinations) || max_combinations < 1) {
-    stop("max_combinations must be one positive finite number", call. = FALSE)
-  }
+  assert_number(max_combinations, "max_combinations", min = 1)
 
   combinations <- prod(max_insertions + 1)
   if (!is.finite(combinations)) combinations <- Inf
@@ -119,7 +177,7 @@ optimize_media_plan <- function(plan, budget,
     if (combinations <= max_combinations) "exact" else "greedy"
   } else method
   if (selected_method == "exact" && combinations > max_combinations) {
-    stop(sprintf("Exact search requires %.0f allocations; raise max_combinations or use method='greedy'",
+    stop(sprintf("Exact search requires %.0f allocations; raise max_combinations or use method = \"greedy\".",
                  combinations), call. = FALSE)
   }
 
@@ -134,18 +192,20 @@ optimize_media_plan <- function(plan, budget,
     for (i in seq_len(nrow(allocations))) {
       evaluated <- allocation_reach(plan, allocations[i, ], model, effective_frequency)
       effective[i] <- evaluated$effective_reach
-      reach[i] <- evaluated$result$reach$probability
+      reach[i] <- evaluated$reach
     }
+    # Values are compared after rounding so that floating-point noise cannot
+    # override the tie-breaking rules (lower spend first).
     if (objective == "max_reach") {
-      ordering <- order(-effective, spend, -reach)
+      ordering <- order(-round(effective, 12), round(spend, 8), -round(reach, 12))
     } else {
       feasible_target <- which(effective >= target_reach - 1e-12)
       if (!length(feasible_target)) {
-        stop("No allocation reaches target_reach within budget", call. = FALSE)
+        stop("No allocation reaches target_reach within budget.", call. = FALSE)
       }
-      ordering <- feasible_target[order(spend[feasible_target],
-                                        -effective[feasible_target],
-                                        -reach[feasible_target])]
+      ordering <- feasible_target[order(round(spend[feasible_target], 8),
+                                        -round(effective[feasible_target], 12),
+                                        -round(reach[feasible_target], 12))]
     }
     best <- ordering[1L]
     allocation <- as.integer(allocations[best, ])
@@ -166,6 +226,12 @@ optimize_media_plan <- function(plan, budget,
   idx <- match(effective_frequency, reach_result$cumulative$min_contacts)
   effective_reach <- if (is.na(idx)) 0 else reach_result$cumulative$probability[idx]
   target_met <- is.null(target_reach) || effective_reach >= target_reach - 1e-12
+  if (objective == "min_cost" && !target_met) {
+    warning("The greedy search stopped at an effective reach of ",
+            format(round(effective_reach, 4)), ", below target_reach (",
+            target_reach, "). Raise the budget or max_insertions.",
+            call. = FALSE)
+  }
 
   structure(list(
     plan = optimized_plan,
@@ -189,9 +255,9 @@ optimize_media_plan <- function(plan, budget,
 print.media_optimization <- function(x, ...) {
   label <- if (x$global_optimum) "verified global optimum" else "greedy heuristic"
   cat(sprintf("Media optimization (%s)\n", label))
-  cat(sprintf("Spend: %.2f / %.2f | Reach: %.2f%% | Reach %d+: %.2f%%\n",
-              x$spend, x$budget, x$reach$reach$percent,
-              x$effective_frequency, 100 * x$effective_reach))
+  cat(sprintf("Spend: %.2f / %.2f %s | Reach: %.2f%% | Reach %d+: %.2f%%\n",
+              x$spend, x$budget, x$plan$currency, x$reach$reach$percent,
+              as.integer(x$effective_frequency), 100 * x$effective_reach))
   print(data.frame(channel = names(x$allocation), insertions = x$allocation),
         row.names = FALSE)
   invisible(x)

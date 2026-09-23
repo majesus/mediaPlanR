@@ -17,42 +17,97 @@ optimize_media_plan(
 )
 }
 \arguments{
-\item{plan}{A \code{media_plan} object. Its current insertions are used as the
-default upper bounds.}
+\item{plan}{A \code{media_plan} object. Its current insertions are the default
+upper bounds of the search.}
 
-\item{budget}{Maximum total spend.}
+\item{budget}{Maximum total spend, in the plan's currency.}
 
-\item{objective}{\code{max_reach} or \code{min_cost}.}
+\item{objective}{\code{"max_reach"} maximizes effective reach within the budget;
+\code{"min_cost"} minimizes spend subject to \code{target_reach}.}
 
 \item{target_reach}{Required effective reach, as a proportion, for
-\code{min_cost}.}
+\code{objective = "min_cost"}.}
 
-\item{effective_frequency}{Minimum exposures defining effective reach.}
+\item{effective_frequency}{Minimum number of exposures that defines
+effective reach: the proportion of the population exposed at least that
+many times.}
 
-\item{max_insertions}{Integer upper bound per channel.}
+\item{max_insertions}{Integer upper bound of insertions for each channel.}
 
-\item{model}{\code{sainsbury} or \code{binomial}; see \code{estimate_reach()}. Candidate
-allocations routinely place several insertions in the same vehicle, so
-the experimental NBD approximation (scoped to continuous exposure
-processes, not finite schedules) is not offered here.}
+\item{model}{\code{"sainsbury"} or \code{"binomial"}; see \code{\link[=estimate_reach]{estimate_reach()}}.
+Candidate allocations routinely place several insertions in the same
+vehicle, so the Negative-Binomial approximation, which is scoped to
+continuous exposure processes and not to finite schedules, is not offered.}
 
-\item{method}{\code{exact}, \code{greedy}, or \code{auto}.}
+\item{method}{\code{"exact"}, \code{"greedy"} or \code{"auto"}, which uses exhaustive
+search when the number of allocations does not exceed \code{max_combinations}
+and the greedy heuristic otherwise.}
 
-\item{max_combinations}{Maximum allocations allowed for exact enumeration.}
+\item{max_combinations}{Maximum number of allocations, `prod(max_insertions
+\itemize{
+\item 1)`, allowed for exhaustive search.
+}}
 }
 \value{
-A \code{media_optimization} object. \code{global_optimum} is \code{TRUE} only for
-exhaustive search.
+A \code{media_optimization} object: a list with the optimized \code{plan}, the
+named \code{allocation}, the \code{reach} result of \code{\link[=estimate_reach]{estimate_reach()}}, the plan
+\code{metrics}, the \code{effective_frequency} and \code{effective_reach}, \code{spend},
+\code{budget}, \code{target_reach} and \code{target_met}, the \code{method} used,
+\code{global_optimum} (\code{TRUE} only for exhaustive search),
+\code{combinations_evaluated} and, for exhaustive search, a \code{search_table} with
+the spend, reach and effective reach of each evaluated allocation.
 }
 \description{
-Finds an insertion allocation under a budget using either exhaustive search
-(with a verifiable global optimum) or an explicitly labelled greedy
-heuristic. The objective can maximize effective reach or minimize spend for
-a required effective reach.
+Finds an allocation of insertions across channels under a budget, using
+either exhaustive search (with a verifiable global optimum) or an explicitly
+labeled greedy heuristic. The objective can maximize effective reach or
+minimize spend for a required effective reach.
+}
+\details{
+Exhaustive search evaluates every allocation within \code{max_insertions} whose
+spend does not exceed the budget and returns the best one, so its result is
+a global optimum. Ties in effective reach are broken in favor of lower
+spend and then higher reach. For \code{objective = "min_cost"} the cheapest
+allocation that reaches \code{target_reach} is returned, and an error is raised
+when none does.
+
+The greedy heuristic repeatedly adds the move with the largest gain in
+effective reach per unit of cost. A move adds between one and
+\code{effective_frequency} insertions to one channel, because fewer insertions
+than the effective frequency cannot by themselves create effective reach.
+The result is not guaranteed to be optimal and is always reported as a
+heuristic. With \code{objective = "min_cost"}, a warning is issued if the target
+cannot be reached within the budget.
+}
+\examples{
+plan <- media_plan(
+  data.frame(channel = c("TV", "Radio", "Digital"),
+             audience = c(300000, 180000, 120000),
+             insertions = c(4, 6, 10),
+             cost_per_insertion = c(18000, 3500, 1200)),
+  population = 1000000
+)
+optimized <- optimize_media_plan(
+  plan, budget = 60000, objective = "max_reach",
+  effective_frequency = 2, max_insertions = c(4, 8, 12)
+)
+optimized
+optimized$global_optimum
+
+# Cheapest allocation reaching 40\% effective reach
+optimize_media_plan(
+  plan, budget = 60000, objective = "min_cost", target_reach = 0.40,
+  effective_frequency = 2, max_insertions = c(4, 8, 12)
+)$allocation
+
 }
 \references{
-Aldas Manzano, J. (1998). Modelos de determinacion de la cobertura y la
-distribucion de contactos en la planificacion de medios publicitarios
-impresos. Tesis doctoral, Universidad de Valencia, Espana. (Sections
-3.3.1.1-3.3.1.2.)
+Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
+distribución de contactos en la planificación de medios publicitarios
+impresos (Models for determining reach and exposure distribution in print
+media planning). Doctoral dissertation, Universidad de Valencia, Spain.
+Sections 3.3.1.1 and 3.3.1.2, the reach models this function evaluates.
+}
+\seealso{
+\code{\link[=media_plan]{media_plan()}} and \code{\link[=estimate_reach]{estimate_reach()}}.
 }

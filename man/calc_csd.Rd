@@ -13,46 +13,56 @@ calc_csd(
 )
 }
 \arguments{
-\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1}, and \code{R2}.
-\code{R1} is one-insertion reach and \code{R2} is two-insertion cumulative reach,
-expressed as proportions. \code{R2} may be \code{NA} only when \code{insertions} is one.}
+\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2}.
+\code{R1} is the reach after one insertion and \code{R2} the cumulative reach after
+two insertions, as proportions. \code{R2} may be \code{NA} only when \code{insertions}
+is one.}
 
 \item{duplications}{Symmetric matrix of pairwise one-insertion audience
-duplication proportions. Diagonal values are ignored.}
+duplications, as proportions of the population. The diagonal is ignored.}
 
-\item{aggregation_order}{Either \code{"audience_desc"}, \code{"given"}, or a
-permutation of row indices. Use an explicit permutation when reproducing
+\item{aggregation_order}{Either \code{"audience_desc"} (vehicles in decreasing
+order of one-insertion reach), \code{"given"} (the row order), or a
+permutation of the row indices. Use an explicit permutation to reproduce
 a published aggregation criterion such as Kim's TD forward example.}
 
-\item{population}{Positive population used only to express probabilities as
-people.}
+\item{population}{Positive population used only to express probabilities
+as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
 \item{tolerance}{Positive numerical tolerance for probability constraints.}
 }
 \value{
-A \code{reach_csd} object containing reach, the complete exposure
-distribution, cumulative probabilities, vehicle marginals, aggregation
-steps, and numerical diagnostics.
+A \code{reach_csd} object: a list with \code{reach} (\code{probability}, \code{percent}
+and \code{people}), \code{average_frequency}, the complete exposure \code{distribution}
+(\code{contacts}, \code{probability}, \code{percent}, \code{people} and
+\code{cumulative_probability}), the \code{vehicle_marginals}, the one-insertion
+\code{vehicle_reach}, the canonical \code{correlation_matrix}, the
+\code{aggregation_order} and \code{aggregation_rule}, the aggregation \code{steps} and
+numerical \code{diagnostics}.
 }
 \description{
 Implements Kim's (2005) Canonical Sequential Aggregation Distribution
-(CSD): vehicle-level Beta-Binomial marginals are combined sequentially,
-while the target reach at every step is obtained from Danaher's second-order
-canonical expansion. The non-random convolution preserves both input
-margins and sets the zero-exposure cell to one minus canonical reach.
+(CSD): the Beta-Binomial marginal of each vehicle is combined sequentially
+with the vehicles already aggregated, while the reach at every step comes
+from Danaher's second-order canonical expansion. The non-random convolution
+preserves both marginal distributions and sets the zero-exposure cell to one
+minus the canonical reach.
 }
 \details{
 For a subset of vehicles, CSD estimates the all-zero probability as
 \deqn{P(0,\ldots,0)=\prod_i f_i(0)\left[1+\sum_{i<j}\rho_{ij}
 \frac{(0-\mu_i)(0-\mu_j)}{\sigma_i\sigma_j}\right],}
-where \code{f_i} is the Beta-Binomial marginal and \code{rho_ij} is obtained from the
-observed one-insertion duplication. Reach is one minus this probability.
+where \eqn{f_i}, \eqn{\mu_i} and \eqn{\sigma_i} are the Beta-Binomial
+probability function, mean and standard deviation of vehicle \eqn{i}, and
+\eqn{\rho_{ij}} is the canonical correlation obtained from the observed
+one-insertion duplication. Reach is one minus this probability.
 
-The canonical expansion is a second-order approximation. Unlike the legacy
-full-grid CANEX implementation, \code{calc_csd()} does not truncate or
-renormalize an invalid canonical target. It stops if the resulting reach is
-not a probability or is incompatible with the two margins being combined.
-This makes approximation failure visible to the analyst.
+The canonical expansion is a second-order approximation. Unlike
+\code{\link[=calc_canex]{calc_canex()}}, which truncates negative probabilities and renormalizes the
+full joint grid, \code{calc_csd()} does not alter an invalid canonical target: it
+stops if the resulting reach is not a probability or is incompatible with
+the two margins being combined. This makes approximation failure visible to
+the analyst.
 
 Kim's worked example rounds intermediate values to four decimals. Exact
 calculations from the published inputs therefore differ by a few hundredths
@@ -60,19 +70,9 @@ of a percentage point from some displayed cells; the unrounded calculation
 is returned.
 }
 \examples{
-# Kim (2005), Tables 4.2.2.1-4.2.2.10: TD forward order.
-vehicles <- data.frame(
-  insertions = c(2, 2, 2),
-  R1 = c(0.4902, 0.0333, 0.0300),
-  R2 = c(0.5805, 0.0502, 0.0371)
-)
-duplication <- matrix(
-  c(NA, 0.0157, 0.0139,
-    0.0157, NA, 0.0003,
-    0.0139, 0.0003, NA),
-  nrow = 3, byrow = TRUE
-)
-result <- calc_csd(vehicles, duplication, aggregation_order = 1:3)
+# Kim (2005), Tables 4.2.2.1-4.2.2.10: TD forward order
+data(csd_kim2005)
+result <- do.call(calc_csd, csd_kim2005)
 result$reach
 result$distribution
 
@@ -87,8 +87,8 @@ Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 Doctoral dissertation, The University of Texas at Austin, pp. 78-97.
 }
 \seealso{
-\code{\link[=calc_canex]{calc_canex()}} for a full-grid canonical expansion and
-\code{\link[=calc_msad]{calc_msad()}} for the Morgensztern sequential alternative; \code{\link[=calc_cbd]{calc_cbd()}}
-for a different sequential architecture built on this same canonical
-expansion at the (0,1) level.
+\code{\link[=calc_canex]{calc_canex()}} for the full-grid canonical expansion,
+\code{\link[=calc_msad]{calc_msad()}} for the Morgensztern sequential alternative and
+\code{\link[=calc_cbd]{calc_cbd()}} for a different sequential architecture built on the same
+canonical expansion at the (0,1) level.
 }
