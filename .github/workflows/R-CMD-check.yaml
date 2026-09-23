@@ -1,5 +1,5 @@
-# Workflow derivado de https://github.com/r-lib/actions/tree/v2/examples
-# Ayuda: https://github.com/r-lib/actions/tree/v2/setup-r-dependencies#readme
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Help: https://github.com/r-lib/actions/tree/v2/setup-r-dependencies#readme
 on:
   push:
     branches: [main, master]
