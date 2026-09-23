@@ -1,49 +1,39 @@
 Package: mediaPlanR
 Type: Package
-Version: 2.0.0
-Date: 2026-08-29
 Title: Reliable Cross-Media Reach and Frequency Planning
-Description: Reproducible tools for cross-media reach, contact-frequency
-    distributions, target-audience metrics and budget-constrained reach
-    optimization. Provides a validated media-plan data contract, exact
-    Poisson-binomial calculations, Binomial, Beta-Binomial, canonical-expansion,
-    Canonical Sequential, Morgensztern Sequential and Conditional Beta
-    Distribution models, a Multivariate Beta-Binomial model, plus an explicitly
-    scoped Negative-Binomial count approximation and effective-reach
-    optimization with explicit optimality diagnostics. Methods follow
-    Danaher (1991)
-    <doi:10.1177/002224379102800311>, Leckenby & Rice (1986)
-    <doi:10.1080/00913367.1986.10673014>, Ehrenberg (1959)
-    <doi:10.2307/2985810>, Kim (2005, "A Canonical Sequential Aggregation
-    Media Model", doctoral dissertation, The University of Texas at Austin),
-    and Cheong (2007, "Multivariate Beta Binomial Distribution Model as a
-    Web Media Exposure Model", doctoral dissertation, The University of
-    Texas at Austin).
-Authors@R: person(
-    given = "Manuel J.",
-    family = "Sánchez-Franco",
-    email = "majesus@us.es",
-    role = c("aut", "cre"),
-    comment = c(ORCID = "0000-0002-8042-3550")
-  )
-Author: Manuel J. Sánchez-Franco [aut, cre] (<https://orcid.org/0000-0002-8042-3550>)
-Maintainer: Manuel J. Sánchez-Franco <majesus@us.es>
+Version: 2.0.0
+Date: 2026-09-24
+Authors@R: 
+    person(given = "Manuel J.", family = "Sánchez-Franco",
+           email = "majesus@us.es", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-8042-3550"))
+Description: Reproducible tools for cross-media reach and exposure-frequency
+    planning. Provides a validated media-plan data contract; exact reach and
+    exposure distributions under random duplication (Sainsbury and Binomial
+    models); the Beta-Binomial accumulation model and its multi-vehicle
+    version of Metheringham (1964) <doi:10.1080/00218499.1964.12519751>; the
+    ad hoc duplication and accumulation formulas of Agostini (1961)
+    <doi:10.1080/00218499.1961.12519620> and Hofmans (1966)
+    <doi:10.1177/002224376600300307>; and the multivariate exposure
+    distribution models of Danaher (1991) <doi:10.1177/002224379102800311>
+    (canonical expansion), Leckenby and Rice (1986)
+    <doi:10.1080/00913367.1986.10673014> (Morgensztern sequential
+    aggregation), Kim (2005) (canonical sequential aggregation), Kim (1994)
+    (conditional Beta distribution) and Cheong (2007) (multivariate
+    Beta-Binomial). Also includes target-audience metrics, an explicitly
+    scoped Negative-Binomial count approximation, and budget-constrained
+    optimization of effective reach that reports whether a global optimum was
+    verified.
+License: MIT + file LICENSE
 URL: https://github.com/majesus/mediaPlanR
 BugReports: https://github.com/majesus/mediaPlanR/issues
-License: MIT + file LICENSE
+Depends: R (>= 4.0)
+Imports: extraDistr, ggplot2 (>= 3.4.0), stats, utils
+Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
 Encoding: UTF-8
+Language: en-US
+LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Imports:
-    stats,
-    extraDistr,
-    ggplot2 (>= 3.4.0)
-Suggests:
-    knitr,
-    rmarkdown,
-    testthat (>= 3.0.0)
-Config/testthat/edition: 3
-Depends:
-    R (>= 4.0)
-LazyData: true
-VignetteBuilder: knitr

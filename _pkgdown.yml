@@ -2,7 +2,7 @@ template:
   bootstrap: 5
   
 reference:
-- title: "Version 2 planning workflow"
+- title: "Planning workflow"
   desc: "Validated plans, metrics, reach and optimization"
   contents:
   - media_plan
@@ -11,12 +11,12 @@ reference:
   - compare_reach_models
   - optimize_media_plan
   - audience_metrics
-- title: "Classical reach models"
-  desc: "Historical models retained for reproducibility"
+- title: "Reach and exposure-distribution models"
+  desc: "Classical models organized by plan shape"
   contents:
   - starts_with("calc_")
-- title: "Statistical exposure models"
-  desc: "Explicit fitting, continuous-count approximation, and sequential aggregation"
+- title: "Fitting, count approximation and validation"
+  desc: "Beta-Binomial fitting, Negative-Binomial approximation and evaluation against observed data"
   contents:
   - fit_bbd_to_reach
   - calibrate_bbd
@@ -24,13 +24,13 @@ reference:
   - nbd_exposure_distribution
   - evaluate_exposure_model
 - title: "Example datasets"
-  desc: "Illustrative inputs (ready for do.call()) and literature-reproduction benchmarks"
+  desc: "Illustrative inputs (ready for do.call()) and literature-validation inputs"
   contents:
   - ratings_example
   - beta_binomial_example
   - metheringham_example
   - hofmans_accumulation_example
-  - hofmans_duplication_example
+  - duplication_example
   - canex_example
   - bbd_reach_example
   - csd_example

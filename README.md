@@ -1,11 +1,14 @@
-# mediaPlanR 2.0.0
+# mediaPlanR
 
 [![R-CMD-check](https://github.com/majesus/mediaPlanR/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/majesus/mediaPlanR/actions/workflows/R-CMD-check.yaml)
 
 `mediaPlanR` provides reproducible cross-media reach, frequency and budget
-allocation in R. Version 2 introduces a validated planning object, complete
-exposure distributions, explicit metric units and optimization results that say
-whether a global optimum was actually verified.
+allocation in R. It combines a validated planning object, complete exposure
+distributions, explicit metric units, and optimization results that state
+whether a global optimum was actually verified, with the classical reach and
+exposure-distribution models of the media-planning literature (Sainsbury,
+Binomial, Beta-Binomial, Metheringham, Agostini, Hofmans, CANEX, CSD, MSAD, CBD
+and MBD).
 
 ## Installation
 
@@ -14,7 +17,7 @@ whether a global optimum was actually verified.
 pak::pak("majesus/mediaPlanR")
 ```
 
-## A complete v2 workflow
+## A complete workflow
 
 ```r
 library(mediaPlanR)
@@ -36,13 +39,13 @@ reach <- estimate_reach(plan, model = "sainsbury")
 comparison <- compare_reach_models(plan, c("sainsbury", "binomial"))
 ```
 
-All v2 reach results contain:
+Every plan-based reach result contains:
 
 - zero-to-N exposure probabilities;
 - cumulative N+ reach;
 - reach in probability, percent and people;
-- average frequency among reached people;
-- model parameters and diagnostics.
+- average frequency among the people reached;
+- model parameters.
 
 ## Budget allocation
 
@@ -64,8 +67,10 @@ optimized$effective_reach
 
 For manageable search spaces, `method = "exact"` evaluates every feasible
 integer allocation and certifies the global optimum. For larger spaces,
-`method = "greedy"` is explicitly reported as a heuristic; it is never
-presented as an exact optimum.
+`method = "greedy"` is explicitly reported as a heuristic and is never
+presented as an exact optimum. The greedy search adds up to
+`effective_frequency` insertions per step, so it also works when effective
+reach needs several exposures.
 
 ## Target-audience metrics
 
@@ -78,20 +83,25 @@ audience_metrics(
 )
 ```
 
-Target composition and affinity are different quantities. Version 2 never
-multiplies gross audience by an affinity index, which could otherwise create a
-target audience larger than the gross audience.
+Target composition and affinity are different quantities. The package never
+multiplies a gross audience by an affinity index, which could create a target
+audience larger than the gross audience.
 
-## Classical models
+## Reach and exposure-distribution models
 
-The package distinguishes historical finite-opportunity models from continuous
-exposure-count approximations:
+The models are organized by the shape of plan they were derived for:
 
-- `calc_sainsbury()`, `calc_binomial()`, `calc_beta_binomial()`;
-- `calc_metheringham()`, `calc_hofmans_accumulation()`, `calc_agostini_duplication()`,
-  `calc_hofmans_duplication()`;
-- `calc_canex()`, `calc_cbd()`, Kim's `calc_csd()`, and the Leckenby-Rice `calc_msad()`;
-- `fit_bbd_to_reach()` for fitting one BBD to an external reach estimate;
+- random duplication, several vehicles with any number of insertions:
+  `calc_sainsbury()`, `calc_binomial()`;
+- one vehicle, several insertions: `calc_beta_binomial()`,
+  `calc_hofmans_accumulation()`;
+- several vehicles, one insertion each, with observed duplication:
+  `calc_agostini_duplication()`, `calc_hofmans_duplication()`;
+- several vehicles and insertions with observed duplication:
+  `calc_metheringham()`, `calc_canex()`, `calc_cbd()`, `calc_csd()`,
+  `calc_msad()`, `calc_mbd()`;
+- `fit_bbd_to_reach()` and `calibrate_bbd()` to fit a Beta-Binomial to an
+  external reach or a target effective reach;
 - `fit_nbd_exposure()` and `nbd_exposure_distribution()` for unbounded
   exposure-count processes.
 
@@ -99,8 +109,8 @@ exposure-count approximations:
 data(csd_kim2005)
 csd <- do.call(calc_csd, csd_kim2005)
 
-data(msad_kim2005)
-msad <- do.call(calc_msad, msad_kim2005)
+data(metheringham_example)
+metheringham <- do.call(calc_metheringham, metheringham_example)
 
 counts <- c(rep(0, 40), rep(1, 25), rep(2, 15), rep(3, 8), 5, 7)
 nbd_fit <- fit_nbd_exposure(counts)
@@ -110,7 +120,7 @@ nbd_fit <- fit_nbd_exposure(counts)
 
 Observed distributions are supplied by the analyst; they are never inferred
 from model inputs. The table must contain `contacts` and `observed`, including
-the zero-exposure cell, and its scale must be declared explicitly:
+the zero-exposure cell, and its scale must be declared:
 
 ```r
 observed <- data.frame(
@@ -131,23 +141,25 @@ evaluation$summary
 ```
 
 For a predicted data frame, columns must be named `contacts` and `predicted`
-and `predicted_scale` must also be declared. Exact support equality is required;
-open-tail NBD cells are rejected unless observed and predicted tails have first
-been collapsed identically.
+and `predicted_scale` must also be declared. Exact support equality is
+required; open-tail Negative-Binomial cells are rejected unless observed and
+predicted tails have first been collapsed identically.
 
-Descriptive example objects are available as `canex_example`, `csd_example`,
-`bbd_reach_example`, and `msad_example`. `csd_example`, `msad_example`,
-`mbd_example` and `canex_example` are original illustrative data, not derived
-from any published source. `csd_kim2005`, `msad_kim2005` and `mbd_cheong2007`
-instead reproduce the minimal factual inputs (reach and duplication figures)
-published by Kim (2005) and Cheong (2007), included solely so users can
-verify that `calc_csd()`, `calc_msad()` and `calc_mbd()` reproduce their
-published worked examples; `msad_kim2005` reuses Kim's CSD inputs but does
-not claim that its MSAD output was published by Kim.
+## Example datasets
+
+Datasets ending in `_example` are original illustrative inputs, ready for
+`do.call()`. `csd_kim2005`, `msad_kim2005` and `mbd_cheong2007` instead
+reproduce the minimal factual inputs (reach and duplication figures) published
+by Kim (2005) and Cheong (2007), so that users can verify that `calc_csd()`,
+`calc_msad()` and `calc_mbd()` reproduce the published worked examples.
+`msad_kim2005` reuses Kim's CSD inputs and does not claim that its MSAD output
+was published by Kim.
 
 ## Reproducibility guarantees
 
-- Inputs are checked for units, bounds and logical compatibility.
+- Inputs are checked for units, bounds and logical compatibility, and invalid
+  values (`NA`, `NaN`, `Inf`, wrong types or lengths) produce informative
+  errors.
 - Exposure distributions are normalized and include zero exposures.
 - Exact optimization never exceeds the declared budget.
 - Model boundary cases have regression tests.
@@ -156,13 +168,13 @@ not claim that its MSAD output was published by Kim.
 
 ## References
 
-The package documentation lists the original publications for each classical
-model. Verified identifiers are included for MSAD, CANEX, and the NBD exposure
-literature; remaining identifiers will be added only after verification.
+Each function's help page lists the primary sources of its model, and
+`vignette("mediaPlanR-intro")` collects them, with the DOIs that could be
+verified.
 
 ## Author and license
 
-Manuel J. Sanchez-Franco, Universidad de Sevilla
+Manuel J. Sánchez-Franco, Universidad de Sevilla
 
 [ORCID 0000-0002-8042-3550](https://orcid.org/0000-0002-8042-3550)
 

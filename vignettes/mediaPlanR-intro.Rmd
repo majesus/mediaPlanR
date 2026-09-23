@@ -19,22 +19,22 @@ knitr::opts_chunk$set(
 
 ## What mediaPlanR provides
 
-**mediaPlanR** brings together, in a single R package, the classical reach
-and exposure-distribution models used in advertising media planning, along
-with a validated planning core (plan, metrics, model comparison, and
-budget-constrained reach optimization).
+**mediaPlanR** brings together, in one package, the classical reach and
+exposure-distribution models of advertising media planning and a validated
+planning core: a plan object, plan metrics, model comparison, and
+budget-constrained optimization of effective reach.
 
 ```{r setup}
 library(mediaPlanR)
 ```
 
-## The version 2 workflow
+## The planning workflow
 
-The main API starts from a validated plan and preserves each variable's
-units. Audience represents people per insertion; cost represents currency
-per insertion; population is the planning universe.
+The planning functions start from a validated plan and keep every variable in
+explicit units. Audience is people per insertion, cost is currency per
+insertion, and population is the planning universe.
 
-```{r v2-plan}
+```{r plan}
 plan <- media_plan(
   data.frame(
     channel = c("TV", "Radio", "Digital"),
@@ -52,35 +52,34 @@ reach <- estimate_reach(plan, model = "sainsbury")
 reach
 ```
 
-The returned distribution includes zero exposures. This lets you check that
-the probabilities sum to one, that reach equals `1 - P(X=0)`, and that
-average frequency matches impressions divided by people reached.
+The returned distribution includes zero exposures. This makes it possible to
+check that the probabilities sum to one, that reach equals `1 - P(X = 0)`, and
+that average frequency equals impressions divided by people reached.
 
-```{r v2-invariants}
+```{r invariants}
 sum(reach$distribution$probability)
 reach$reach$probability
 reach$average_frequency
 ```
 
-`estimate_reach()` is a `media_plan`-native front end for
-`calc_sainsbury()`/`calc_binomial()`: it reads `audience`, `insertions`, and
-`population` from the plan and calls the requested model directly, so the
-two are backed by one implementation, not two. `model = "sainsbury"` keeps
-each vehicle's own audience (heterogeneous); `model = "binomial"` instead
-uses the plan's average probability for every vehicle (homogeneous). Both
-assume random duplication *and* random accumulation: a repeat insertion in
-the same vehicle is treated as an independent trial, exactly like an
-insertion in a different vehicle. That is a real simplification, not a bug
--- it is the hypothesis the cited models state explicitly (Lee & Burkart,
-1960; Chandon, 1985 -- reviewed in Aldas Manzano, 1998, secs.
-3.3.1.1-3.3.1.2), and it is what lets them run without any observed
-duplication data. With one insertion per vehicle, both reduce exactly to
-their respective one-insertion-per-vehicle formulation (Aldas Manzano, 1998,
-secs. 3.2.2.1-3.2.2.2).
+`estimate_reach()` is a plan-based front end for `calc_sainsbury()` and
+`calc_binomial()`: it reads `audience`, `insertions` and `population` from the
+plan and calls the requested model directly. `model = "sainsbury"` keeps each
+vehicle's own audience (heterogeneous vehicles); `model = "binomial"` gives
+every insertion the plan's insertion-weighted mean probability (homogeneous
+vehicles). Both assume random duplication *and* random accumulation: a repeat
+insertion in the same vehicle is treated as an independent trial, exactly like
+an insertion in a different vehicle. This is a simplification, and it is the
+hypothesis that the cited models state explicitly (Lee & Burkhart, 1960;
+Chandon, 1976, as reviewed in Aldás Manzano, 1998, Sections 3.3.1.1 and
+3.3.1.2, where it is cited as Chandon, 1985). It is also what allows them to
+run without any observed duplication data. With one insertion per vehicle,
+both reduce to their one-insertion-per-vehicle formulation (Aldás Manzano,
+1998, Sections 3.2.2.1 and 3.2.2.2).
 
 ### Optimization with an optimality diagnostic
 
-```{r v2-optimization}
+```{r optimization}
 optimized <- optimize_media_plan(
   plan,
   budget = 60000,
@@ -94,101 +93,150 @@ optimized$allocation
 optimized$global_optimum
 ```
 
-When the search space is manageable it is evaluated exhaustively and
-`global_optimum = TRUE`. In large spaces, the heuristic mode is identified as
-such; it is never presented as a global optimum. Candidate allocations
-routinely place several insertions in the same vehicle, so the optimizer
-only offers `sainsbury`/`binomial` as its reach model -- the experimental NBD
-approximation is scoped to continuous exposure processes, not finite
-insertion schedules, and is not offered here.
+When the search space is manageable, every allocation is evaluated and
+`global_optimum` is `TRUE`. In large spaces a greedy heuristic is used; it is
+labeled as such and never presented as a global optimum. The heuristic adds,
+at each step, between one and `effective_frequency` insertions to the channel
+with the best gain in effective reach per unit of cost. Adding several
+insertions at once matters because fewer insertions than the effective
+frequency cannot by themselves create effective reach. Candidate allocations
+routinely place several insertions in the same vehicle, so the optimizer offers
+only the `sainsbury` and `binomial` reach models: the Negative-Binomial
+approximation is scoped to continuous exposure processes, not to finite
+insertion schedules.
 
 ## The family of reach and exposure-distribution models
 
-All of these models answer the same question -- *what proportion of the
-target population is reached, and how many times, by a given media plan?*
--- but they differ in the **shape of plan** they were derived for, and in
-the assumptions they make about the **duplication** of audiences across
-vehicles and about the **heterogeneity** of individual exposure
-probabilities. Plan shape follows Aldas Manzano's (1998) own three-way
-split, which this package keeps deliberately visible: Beta-Binomial and
-Hofmans (accumulation) are derived for one vehicle and do not generalize to
-several, and Agostini (duplication) and Hofmans (duplication) are derived
-for several vehicles with one insertion each and do not generalize to
-several insertions. Only Sainsbury and Binomial cover both cases, because
-each is the same model at two levels of generality (see `insertions` above).
+All these models answer the same question: *what proportion of the population
+is reached, and how many times, by a given media plan?* They differ in the
+**shape of plan** they were derived for, and in their assumptions about the
+**duplication** of audiences across vehicles and about the **heterogeneity** of
+individual exposure probabilities. Plan shape follows Aldás Manzano's (1998)
+three-way split, which the package keeps visible in its function names.
+Accumulation models (Beta-Binomial, Hofmans accumulation) are derived for one
+vehicle with several insertions. Duplication models (Agostini, Hofmans
+duplication) are derived for several vehicles with one insertion each. Net
+cumulative audience models cover several vehicles with several insertions.
+Sainsbury and Binomial cover both simple cases because each is one model at two
+levels of generality (see the `insertions` argument).
 
-| Model | Function | Plan shape | Assumed duplication | Heterogeneity |
+| Model | Function | Plan shape | Duplication | Heterogeneity |
 |---|---|---|---|---|
-| Sainsbury | `calc_sainsbury()` / `estimate_reach(model = "sainsbury")` | 1 or more insertions, m vehicles | Random (independence and accumulation) | Yes, across vehicles |
-| Binomial | `calc_binomial()` / `estimate_reach(model = "binomial")` | 1 or more insertions, m vehicles | Random (independence and accumulation) | No (average vehicle) |
-| Agostini (duplication) | `calc_agostini_duplication()` | 1 insertion, m vehicles | Corrected with a single k coefficient | Random + empirical correction |
-| Hofmans (duplication) | `calc_hofmans_duplication()` | 1 insertion, m vehicles | Corrected with a pairwise coefficient per vehicle pair | Empirical, no distribution |
-| Beta-Binomial | `calc_beta_binomial()` | 1 vehicle, n insertions | Implicit (one vehicle, n insertions) | Yes, across individuals (Binomial-Beta mixture) |
-| Hofmans (accumulation) | `calc_hofmans_accumulation()` | 1 vehicle, n insertions | Implicit (curve fitted to R1, R2) | Non-linear empirical curve |
-| Metheringham | `calc_metheringham()` | n insertions, m vehicles | Observed (averaged) | Yes, via a Beta distribution |
-| CANEX | `calc_canex()` | n insertions, m vehicles | Observed, correlation matrix | Yes, per vehicle (Beta-Binomial) |
-| CBD (conditional Beta) | `calc_cbd()` | n insertions, m vehicles | Observed; canonical expansion at the (0,1) level | Yes, per-vehicle BBD marginal |
-| BBD fitted to external reach | `fit_bbd_to_reach()` | n insertions, m vehicles | Reach is supplied as a constraint | Yes, via Beta-Binomial |
-| CSD (canonical sequential aggregation) | `calc_csd()` | n insertions, m vehicles | Observed; canonical reach per sub-schedule with preserved margins | Yes, per-vehicle BBD marginal |
-| MSAD (Morgensztern) | `calc_msad()` | n insertions, m vehicles | Observed and preserved during sequential aggregation | Yes, per-vehicle BBD marginal |
-| MBD (multivariate Beta-Binomial) | `calc_mbd()` | n insertions, m vehicles | Observed pairs; imputed for 3+ vehicles via Waring's theorem | Yes, per-vehicle BBD marginal |
-| Experimental NBD | `nbd_exposure_distribution()` | Continuous process (not a finite schedule) | Does not represent cross-vehicle dependence | Yes, Poisson-Gamma heterogeneity in an unbounded process |
+| Sainsbury | `calc_sainsbury()` / `estimate_reach(model = "sainsbury")` | 1 or more insertions, m vehicles | Random (independence and accumulation) | Vehicles only |
+| Binomial | `calc_binomial()` / `estimate_reach(model = "binomial")` | 1 or more insertions, m vehicles | Random (independence and accumulation) | None (average vehicle) |
+| Agostini (duplication) | `calc_agostini_duplication()` | 1 insertion, m vehicles | Observed pairwise, one coefficient `k` | Reach only |
+| Hofmans (duplication) | `calc_hofmans_duplication()` | 1 insertion, m vehicles | Observed pairwise, pairwise coefficient | Reach only |
+| Beta-Binomial | `calc_beta_binomial()` | 1 vehicle, n insertions | Implicit (fitted to `R1`, `R2`) | Individuals (Beta-Binomial) |
+| Hofmans (accumulation) | `calc_hofmans_accumulation()` | 1 vehicle, n insertions | Implicit (fitted to `R1`, `R2`, optionally `R3`) | Reach only |
+| Metheringham | `calc_metheringham()` | n insertions, m vehicles | Observed, averaged over insertion pairs | Individuals (Beta-Binomial) |
+| CANEX | `calc_canex()` | n insertions, m vehicles | Observed, canonical correlations | Per vehicle (Beta-Binomial) |
+| CBD (conditional Beta) | `calc_cbd()` | n insertions, m vehicles | Observed; canonical expansion at the (0,1) level | Per vehicle (Beta-Binomial) |
+| Beta-Binomial fitted to a reach | `fit_bbd_to_reach()` | n insertions, m vehicles | Reach supplied as a constraint | Individuals (Beta-Binomial) |
+| CSD (canonical sequential aggregation) | `calc_csd()` | n insertions, m vehicles | Observed; canonical reach per sub-schedule | Per vehicle (Beta-Binomial) |
+| MSAD (Morgensztern) | `calc_msad()` | n insertions, m vehicles | Observed; Morgensztern reach per sub-schedule | Per vehicle (Beta-Binomial) |
+| MBD (multivariate Beta-Binomial) | `calc_mbd()` | n insertions, m vehicles | Observed pairs; imputed for 3+ vehicles (Waring's theorem) | Per vehicle (Beta-Binomial) |
+| Negative-Binomial approximation | `nbd_exposure_distribution()` | Continuous process, not a finite schedule | None across vehicles | Poisson-Gamma, unbounded |
 
-### Example: three vehicles, the same plan, different assumptions
+### Example: three vehicles, one insertion each, different assumptions
 
-```{r}
-audiences <- c(300000, 400000, 200000)
-population <- 1000000
+Sainsbury and Binomial need only the audiences. Agostini and Hofmans also use
+the audience duplicated between each pair of vehicles, and Metheringham uses
+the average duplication.
 
-reach_sainsbury <- calc_sainsbury(audiences, population)
-reach_binomial <- calc_binomial(audiences, population)
-reach_agostini_independence <- calc_agostini_duplication(audiences, population, k = 1)
-reach_agostini_corrected <- calc_agostini_duplication(audiences, population, k = 0.9)
+```{r duplication}
+data(ratings_example)
+data(duplication_example)
 
-data(hofmans_duplication_example)
-reach_hofmans_duplication <- do.call(calc_hofmans_duplication, hofmans_duplication_example)
+reach_sainsbury <- do.call(calc_sainsbury, ratings_example)
+reach_binomial <- do.call(calc_binomial, ratings_example)
+reach_agostini <- do.call(calc_agostini_duplication, duplication_example)
+reach_hofmans <- do.call(calc_hofmans_duplication, duplication_example)
+reach_metheringham <- calc_metheringham(
+  audiences = duplication_example$audiences,
+  insertions = c(1, 1, 1),
+  duplication_matrix = duplication_example$duplication_matrix,
+  population = duplication_example$population
+)
 
 data.frame(
-  model = c("Sainsbury", "Binomial", "Agostini (k=1)", "Agostini (k=0.9)",
-            "Hofmans (duplication)"),
+  model = c("Sainsbury", "Binomial", "Agostini (k = 1.125)", "Hofmans (duplication)",
+            "Metheringham"),
   reach_pct = round(c(
     reach_sainsbury$reach$percent,
     reach_binomial$reach$percent,
-    reach_agostini_independence$reach$percent,
-    reach_agostini_corrected$reach$percent,
-    reach_hofmans_duplication$reach$percent
+    reach_agostini$reach$percent,
+    reach_hofmans$reach$percent,
+    reach_metheringham$reach$percent
   ), 2)
 )
 ```
 
-Note that, with `k = 1`, `calc_agostini_duplication()` matches
-`calc_sainsbury()` exactly: both start from the same random-duplication
-assumption, applied iteratively in Agostini's case. With `k = 0.9`,
-predicted duplication is reduced and estimated reach therefore increases
-relative to the pure independence assumption. `calc_hofmans_duplication()`
-uses observed pairwise duplication instead of an assumed or fitted
-coefficient, so its reach need not fall between the other four -- here the
-observed overlap is lower than random duplication would predict, so its
-reach is the highest of the group.
+The observed duplication in `duplication_example` is higher than random
+duplication would produce for every pair of vehicles, so the models that use it
+estimate a lower reach than Sainsbury and Binomial. Agostini's formula applies
+one empirical coefficient (`k = 1.125`, Agostini's own estimate) to the total
+duplication, whereas Hofmans' formula computes a coefficient from each pair's
+own audiences, so no coefficient has to be fitted. Both are ad hoc formulas: they
+return reach only, and `calc_agostini_duplication()` and
+`calc_hofmans_duplication()` warn when the reach they compute leaves its logical
+range.
 
-## Beta-Binomial vs. NBD: finite opportunities and count processes
+### Several insertions per vehicle: Metheringham
 
-Both `calc_beta_binomial()` and the NBD assume each individual has their own
-personal exposure probability (or rate), heterogeneous across the
-population, but they differ in their distributional assumption: the former
-mixes a Binomial (n fixed insertions) with a Beta; the NBD mixes a Poisson
-with a Gamma. That difference is substantive: the NBD has unbounded support
-and is appropriate for page views, ad-server exposures, or other processes
-with continuous opportunities -- it should not be used to imply that a
-traditional, finite-insertion schedule can register more exposures than
-insertions.
+`calc_metheringham()` averages audiences and duplications over all pairs of
+insertions, both between vehicles and within a vehicle, to define an "average"
+vehicle, and fits a Beta-Binomial to the plan's `N = sum(insertions)`
+insertions (Aldás Manzano, 1998, Section 3.3.1.5). The diagonal of the
+duplication matrix holds the audience duplicated between two insertions in the
+same vehicle.
 
-When individual observed counts are available, `fit_nbd_exposure()`
-estimates the mean and heterogeneity by maximum likelihood. For scenarios
-with external parameters, `nbd_exposure_distribution()` keeps the last cell
-as an open tail and never presents it as an exact count:
+```{r metheringham}
+data(metheringham_example)
+metheringham <- do.call(calc_metheringham, metheringham_example)
+metheringham$reach$percent
+length(metheringham$distribution$percent)   # zero to N = 12 exposures
 
-```{r}
+# The mean of the distribution equals the plan's gross exposures per person
+sum(seq_along(metheringham$distribution$percent) *
+      metheringham$distribution$percent) / 100
+with(metheringham_example, sum(audiences * insertions) / population)
+```
+
+### One vehicle, several insertions: Beta-Binomial and Hofmans
+
+The Beta-Binomial accumulation model needs the audience after one and two
+insertions. Hofmans' accumulation model, with a constant coefficient, needs the
+same two figures; an observed third insertion (`R3`) lets the coefficient vary
+with the number of insertions.
+
+```{r accumulation}
+beta_binomial <- calc_beta_binomial(A1 = 500000, A2 = 550000, P = 1000000, n = 5)
+beta_binomial$reach$percent
+
+hofmans <- calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, N = 5)
+hofmans$results
+```
+
+## Beta-Binomial versus Negative-Binomial: finite opportunities and count processes
+
+Both `calc_beta_binomial()` and the Negative-Binomial distribution assume that
+each individual has a personal exposure probability (or rate) that varies
+across the population, but they mix different distributions. The Beta-Binomial
+mixes a Binomial with a fixed number of insertions with a Beta; the
+Negative-Binomial mixes a Poisson with a Gamma (Ehrenberg, 1959). The
+Negative-Binomial has unbounded support, so it suits page views, ad-server
+exposures and other processes with continuous opportunities. It should not be
+used to suggest that a finite-insertion schedule can register more exposures
+than insertions.
+
+When individual counts are observed, `fit_nbd_exposure()` estimates the mean and
+the heterogeneity by maximum likelihood. For scenarios with external
+parameters, `nbd_exposure_distribution()` keeps the last cell as an open tail
+and never presents it as an exact count. Danaher (2007) develops the
+multivariate Negative-Binomial model that represents dependence across
+websites; the functions here are deliberately univariate.
+
+```{r nbd}
 counts <- c(rep(0, 40), rep(1, 25), rep(2, 15), rep(3, 8), 5, 7)
 nbd_fit <- fit_nbd_exposure(counts)
 nbd_fit$estimates
@@ -199,16 +247,38 @@ nbd_scenario <- nbd_exposure_distribution(
 nbd_scenario$diagnostics$probability_above_opportunities
 ```
 
-That last diagnostic quantifies the mass an unbounded NBD assigns above the
-finite opportunities.
+The last diagnostic is the probability mass that the unbounded model assigns to
+more exposures than the finite opportunities allow.
+
+## CANEX: heterogeneity and jointly observed duplication
+
+`calc_canex()` implements Danaher's (1991) canonical expansion model. It combines
+a Beta-Binomial distribution for each vehicle with a correlation term that
+adjusts the joint probability according to the duplication observed between
+each pair of vehicles.
+
+```{r canex}
+data(canex_example)
+canex_result <- do.call(calc_canex, canex_example)
+canex_result
+canex_result$diagnostics
+```
+
+The number of exposure combinations grows exponentially with the number of
+vehicles and insertions, so the model is intended for small and medium
+schedules. For very large schedules `calc_canex()` stops with an informative
+error instead of exhausting memory. Because the second-order expansion can
+produce negative probabilities, `calc_canex()` sets them to zero and
+renormalizes; the diagnostics report how much mass was truncated.
 
 ## CSD and MSAD: two reach estimators, one sequential architecture
 
-`calc_csd()` reproduces Kim's (2005) complete numerical example: three
-vehicles, BBD marginals, second-order canonical-expansion reach, and
-non-random convolution with margin preservation.
+`calc_csd()` reproduces the complete numerical example of Kim (2005): three
+vehicles, Beta-Binomial marginals, second-order canonical-expansion reach, and
+non-random convolution that preserves the margins. `csd_kim2005` contains the
+published inputs (reach and duplication figures, with attribution).
 
-```{r}
+```{r csd}
 data(csd_kim2005)
 csd_result <- do.call(calc_csd, csd_kim2005)
 csd_result$reach
@@ -216,18 +286,18 @@ csd_result$distribution
 csd_result$steps
 ```
 
-The exact results may differ by a few hundredths of a percentage point from
-Kim's tables because the thesis rounds parameters and intermediate matrices
-to four decimals. The function preserves the precision of its inputs.
+The exact results can differ by a few hundredths of a percentage point from
+Kim's tables, because the dissertation rounds parameters and intermediate
+matrices to four decimals; the function keeps the precision of its inputs.
 
 ### MSAD: Morgensztern's sequential aggregation
 
 `calc_msad()` implements the structure described by Leckenby and Rice (1986)
-and Kim (2005): a per-vehicle BBD marginal, Morgensztern reach for each
-sub-schedule, and non-random convolution that preserves the marginals and
-sets the zero-exposure probability to `1 - reach`.
+and Kim (2005): a Beta-Binomial marginal for each vehicle, the Morgensztern
+reach for each sub-schedule, and a non-random convolution that preserves the
+marginals and sets the zero-exposure probability to `1 - reach`.
 
-```{r}
+```{r msad}
 data(msad_kim2005)
 msad_result <- do.call(calc_msad, msad_kim2005)
 msad_result$reach
@@ -235,24 +305,23 @@ msad_result$steps
 msad_result$diagnostics
 ```
 
-The default rule aggregates the highest-audience vehicles first, as Kim
-indicates. An explicit permutation can also be supplied to test sensitivity
-to order. The function stops if the duplications or the Morgensztern reach
-violate probabilistic bounds.
+By default the vehicles with the highest audience are aggregated first, as Kim
+indicates. An explicit permutation tests the sensitivity to the order. The
+function stops if the duplications or the Morgensztern reach violate
+probabilistic bounds.
 
-Kim specifies MSAD but refers to Lee (1988) for the complete numerical
-example. `msad_kim2005` therefore reuses the inputs from Kim's CSD example
-and labels its output as a derived calculation, not an MSAD result published
-in the thesis.
+Kim specifies MSAD but refers to Lee (1988) for the complete numerical example.
+`msad_kim2005` therefore reuses the inputs of Kim's CSD example, and its output
+is a derived calculation, not an MSAD result published in the dissertation.
 
 ## Validation against observed data
 
-Observed data are always supplied by the analyst. For one schedule, they
-must be provided as a table with the columns `contacts` and `observed`,
-explicitly including zero exposures. Whether the values are counts,
-probabilities, or percentages must also be declared:
+Observed data are always supplied by the analyst. For one schedule they must
+be a table with the columns `contacts` and `observed`, explicitly including zero
+exposures, and the scale of the values (counts, probabilities or percentages)
+must be declared.
 
-```{r}
+```{r evaluation}
 kim_observed <- data.frame(
   contacts = 0:6,
   observed = c(38.41, 17.89, 39.66, 2.67, 1.36, 0, 0)
@@ -268,226 +337,189 @@ csd_evaluation$summary
 csd_evaluation$by_schedule
 ```
 
-If the prediction is also supplied as a table, its columns must be named
-`contacts` and `predicted`, and `predicted_scale` must be declared. To
-evaluate several schedules at once, add an identifier column to both tables
-and name it via `schedule_col`.
+If the prediction is also a table, its columns must be named `contacts` and
+`predicted`, and `predicted_scale` must be declared. To evaluate several
+schedules at once, add an identifier column to both tables and name it in
+`schedule_col`.
 
-The evaluator requires identical supports. It does not interpret an NBD open
-tail as an exact frequency: before evaluation, the observed and predicted
-tails must be collapsed at the same threshold. Besides Kim's historical
-AER/APE, it also returns absolute reach error, total variation, cell MAE,
-and mean-exposure bias.
-
-## The CANEX model: heterogeneity and jointly observed duplication
-
-`calc_canex()` implements Danaher's (1991) canonical expansion model, which
-combines a per-vehicle Beta-Binomial distribution with a correlation term
-that adjusts the joint probability according to the observed duplication
-between each pair of vehicles:
-
-```{r}
-vehicles <- data.frame(
-  k = c(2, 2),
-  R1 = c(0.4902, 0.033),
-  R2 = c(0.5805, 0.0502)
-)
-duplications <- matrix(
-  c(1.000, 0.0157,
-    0.0157, 1.000),
-  nrow = 2, byrow = TRUE
-)
-
-canex_result <- calc_canex(vehicles, duplications, population = 1000000)
-canex_result
-```
-
-The number of exposure combinations to evaluate grows exponentially with the
-number of vehicles and insertions, so the model is intended for small- or
-medium-sized schedules; for very large schedules, `calc_canex()` stops with
-an informative error instead of exhausting available memory.
-
-## Ready-to-use example datasets
-
-Models with more complex input structures have datasets with descriptive
-names, whose elements match the function's arguments:
-
-```{r}
-data(canex_example)
-str(canex_example)
-do.call(calc_canex, canex_example)$total_reach
-```
-
-For CSD, MSAD, and MBD there are two example datasets per model.
-`csd_example`, `msad_example`, and `mbd_example` are original, illustrative,
-self-contained scenarios meant for quick experimentation with `do.call()`.
-`csd_kim2005`, `msad_kim2005`, and `mbd_cheong2007` instead reproduce the
-minimal numeric values (audiences and duplication figures) published by Kim
-(2005) and Cheong (2007) in their doctoral dissertations, included solely so
-anyone can verify that `calc_csd()`, `calc_msad()`, and `calc_mbd()`
-reproduce their respective published examples: they are bare factual data
-points reused for validation, not a creative or substantial reproduction of
-those dissertations. `bbd_reach_example` plays the same illustrative role
-for `fit_bbd_to_reach()`.
-`calc_sainsbury()`, `calc_binomial()`, and `calc_agostini_duplication()`
-share the same random-duplication starting hypothesis and the same minimal
-input shape, so they share a single dataset, `ratings_example`, rather than
-one each. It is not called `binomial_example` so as not to mask
-`stats::binomial`.
-
-The package has two unrelated Hofmans models, so each keeps its domain in
-both the function name and the dataset name: `hofmans_accumulation_example`
-for `calc_hofmans_accumulation()` (one vehicle, several insertions) and
-`hofmans_duplication_example` for `calc_hofmans_duplication()` (several
-vehicles, one insertion each).
+The evaluator requires identical supports. It does not interpret an open tail
+of the Negative-Binomial approximation as an exact frequency: observed and
+predicted tails must first be collapsed at the same threshold. Besides Kim's
+average error in reach and in the exposure distribution, it returns absolute
+reach error, total variation, cell mean absolute error and mean-exposure bias.
 
 ## MBD: the multivariate Beta-Binomial model
 
-`calc_mbd()` implements Cheong's (2007) MBD model: observed (pairwise) or
-imputed (three or more vehicles, via a Beta-Binomial fitted to the
-subset's own mean audience and duplication) co-exposure probabilities are
-combined via Waring's (1792) inclusion-exclusion theorem. Vehicles are
-peeled off one at a time, in reverse aggregation order, expanding each
-remaining pattern with a conditional Beta-Binomial allocation.
+`calc_mbd()` implements Cheong's (2007) model. Pairwise co-exposure
+probabilities are observed; those of three or more vehicles are imputed from a
+Beta-Binomial fitted to the subset's own mean audience and duplication. They are
+combined into the joint zero/one grid by Waring's (1792) inclusion-exclusion
+theorem. Vehicles are then peeled off one at a time, in reverse aggregation
+order, expanding each remaining pattern with a conditional Beta-Binomial
+allocation.
 
-```{r}
+```{r mbd}
 data(mbd_cheong2007)
 mbd_result <- do.call(calc_mbd, mbd_cheong2007)
 mbd_result$reach
 mbd_result$distribution
 ```
 
-Unlike CSD/MSAD, Cheong documents that the model can produce negative
-probabilities when combining four or more vehicles, because co-exposure for
-three or more vehicles is imputed rather than observed. Cheong's own
-four-vehicle example is corrected with a first-order consistency check;
-the five-vehicle example, explicitly, is not -- Cheong identifies that a
-higher-order check would be needed, which was never implemented, and
-proposes (without developing it) Deming's iterative proportional fitting as
-future work. `calc_mbd()` applies exactly the checks Cheong specifies
-(first-order only) and, just like Cheong's own MBD-ADJ variant, zeroes out
-any cell that remains negative and redistributes that mass proportionally --
-exactly the same pattern already used by `calc_canex()`. This is reflected
-in the diagnostics:
+Unlike CSD and MSAD, the model can produce negative probabilities when it
+combines four or more vehicles, because the co-exposure of three or more
+vehicles is imputed rather than observed. Cheong's four-vehicle example is
+corrected by a first-order consistency check. The five-vehicle example is not:
+Cheong notes that a higher-order check would be needed, which was never
+implemented, and proposes iterative proportional fitting (Deming, 1943) as
+future work. `calc_mbd()` applies exactly the checks Cheong specifies (first
+order only) and, like Cheong's MBD-ADJ variant, sets any cell that remains
+negative to zero and redistributes that mass proportionally. The diagnostics
+report it:
 
-```{r}
+```{r mbd-diagnostics}
 mbd_result$diagnostics$negative_mass_adjusted
 mbd_result$diagnostics$cells_adjusted
 ```
 
-With four or more vehicles, `calc_mbd()` explicitly warns about this
-limitation. Aggregation order can also alter the result (Cheong did not
-investigate this systematically), and the model is capped at 12 vehicles due
-to the exponential computational cost of the exposure grid -- the same
-practical limit Cheong applied in the dissertation's own empirical
-evaluation.
+With four or more vehicles `calc_mbd()` warns about this limitation. The
+aggregation order can also alter the result (Cheong did not investigate this
+systematically), and the model is limited to 12 vehicles because of the
+exponential cost of the exposure grid, the same practical limit Cheong applied
+in the dissertation's own evaluation.
 
 ## CBD: the conditional Beta distribution
 
-`calc_cbd()` implements the Conditional Beta Distribution (Leckenby & Kim,
-reported in Kim, 1994; reviewed in Kim, 2005, pp. 59-64). Kim (2005) and
-Cheong (2007) each independently rank CBD among the two or three most
-accurate models they tested -- it is the strongest-recommended model this
-package did not already have.
+`calc_cbd()` implements the Conditional Beta Distribution of Leckenby and Kim,
+reported in Kim (1994) and reviewed in Kim (2005, pp. 59-64). In Kim's (2005)
+evaluation CBD is among the three most accurate models, together with CSD and
+CANEX; in Cheong's (2007) it is second only to CANEX for the complete exposure
+distribution.
 
-CBD shares its within-vehicle step exactly with `calc_mbd()`: each vehicle
-is peeled off, in reverse aggregation order, from a (0,1) exposure state
-into its own insertion-level Beta-Binomial distribution, via the same
-conditional convolution (Danaher, 1992a). The two models differ only in how
-the initial (0,1) joint grid across all vehicles is built. MBD imputes
-co-exposure for three or more vehicles from a Beta-Binomial fit to each
-subset's own mean audience and duplication, combined via Waring's
-inclusion-exclusion. CBD instead applies Danaher's (1991) second-order
-canonical expansion -- the same mechanism `calc_canex()`/`calc_csd()` use --
-directly to every cell of the (0,1) grid, with no imputation step needed
-for three or more vehicles.
+CBD shares its within-vehicle step with `calc_mbd()`. Each vehicle is peeled off,
+in reverse aggregation order, from a (0,1) exposure state into its own
+insertion-level Beta-Binomial distribution by the same conditional convolution
+(Danaher, 1992a). The two models differ only in how the initial (0,1) joint
+grid across all vehicles is built. MBD imputes the co-exposure of three or more
+vehicles from a Beta-Binomial fitted to each subset's own mean audience and
+duplication and combines it with Waring's inclusion-exclusion theorem. CBD
+instead applies Danaher's (1991) second-order canonical expansion, the mechanism
+used by `calc_canex()` and `calc_csd()`, directly to every cell of the (0,1)
+grid, with no imputation step.
 
-```{r}
-vehicles <- data.frame(
-  insertions = c(2, 2, 2),
-  R1 = c(0.4902, 0.0333, 0.0300),
-  R2 = c(0.5805, 0.0502, 0.0371)
-)
-duplication <- matrix(
-  c(NA, 0.0157, 0.0139,
-    0.0157, NA, 0.0003,
-    0.0139, 0.0003, NA),
-  nrow = 3, byrow = TRUE
-)
-cbd_result <- calc_cbd(vehicles, duplication, aggregation_order = 1:3)
+```{r cbd}
+cbd_result <- do.call(calc_cbd, csd_kim2005)
 cbd_result$reach
 cbd_result$distribution
 ```
 
-These are the same three-vehicle inputs as `calc_csd()`'s Kim (2005)
-example above, so the two can be compared directly: both use the same
-between-vehicle canonical expansion, so their reach is close (though not
-required to be identical, since they combine it with the within-vehicle
-step differently). Kim (2005) reviews CBD's specification as an existing
-model rather than walking through a numerical example of it the way she
-does for her own CSD, so, unlike CSD, there is no published worked example
-to validate this implementation against directly. It is validated instead
-by construction: the (0,1) grid it builds recovers each vehicle's own R1 as
-its exact marginal, and the full model reduces to the exact independent
-convolution of the vehicles' own Beta-Binomial marginals when duplication
-implies zero correlation -- both are checked in the test suite.
+These are the same three-vehicle inputs as the CSD example, so the two can be
+compared directly. Both use the same between-vehicle canonical expansion, so
+their reach is close, although it is not required to be identical because the
+within-vehicle step differs. Kim (2005) reviews the specification of CBD as an
+existing model and does not present a numerical example of it, so there is no
+published worked example to validate this implementation against. It is
+validated by construction: the (0,1) grid recovers each vehicle's own `R1` as its
+exact marginal, and the model reduces to the exact convolution of the vehicles'
+own Beta-Binomial marginals when the duplications imply zero correlation. Both
+properties are checked in the test suite.
 
-## Literature coverage and upcoming models
+## Example datasets
 
-Kim's thesis does not offer the same level of reproducibility for every
-model. `mediaPlanR`'s policy is not to add a new model until its primary
-specification and a numeric reference that allows an independent regression
-test are both available.
+Models with complex inputs come with datasets whose elements match the
+function's arguments, so they can be used with `do.call()`:
 
-| Model | Accessible numeric evidence | v2 decision |
+```{r datasets}
+data(canex_example)
+str(canex_example)
+do.call(calc_canex, canex_example)$reach$percent
+```
+
+Datasets whose name ends in `_example` are original illustrative scenarios,
+meant for quick experimentation. `csd_kim2005`, `msad_kim2005` and
+`mbd_cheong2007` instead reproduce the minimal numeric inputs (reach and
+duplication figures) published by Kim (2005) and Cheong (2007), so that anyone
+can verify that `calc_csd()`, `calc_msad()` and `calc_mbd()` reproduce the
+published examples. They are bare factual figures reused for validation, not a
+reproduction of the dissertations. `ratings_example` serves `calc_sainsbury()`
+and `calc_binomial()`, and `duplication_example` serves
+`calc_agostini_duplication()` and `calc_hofmans_duplication()`, because each
+pair shares the same input shape. No dataset is named `binomial`, so that
+`stats::binomial` is never masked.
+
+The package has two unrelated Hofmans models, so both function names carry their
+domain: `calc_hofmans_accumulation()` (one vehicle, several insertions, with
+`hofmans_accumulation_example`) and `calc_hofmans_duplication()` (several
+vehicles, one insertion each, with `duplication_example`).
+
+## Scope
+
+The package adds a model only when its primary specification and a numeric
+reference that allows an independent regression test are available.
+
+| Model | Numeric evidence | Status |
 |---|---|---|
-| CSD | Complete example, Kim's (2005) Tables 4.2.2.1-4.2.2.10 | Implemented and validated |
-| MSAD | Algorithm given by Kim; detailed example referred to Lee (1988) | Implemented with invariants; external benchmark pending |
-| CANEX | Danaher's primary formula and the CSD example that uses its reach | Implemented; keeps approximation diagnostics |
-| BBD and Binomial | Closed-form formulas and marginals published by Kim | Implemented and tested at their limits |
-| MBD | Complete specification and example (3 vehicles) from Cheong (2007); 4-5 vehicle examples show the model's own limits | Implemented, with a documented safety net and warnings for 4+ vehicles |
-| CBD | Full specification, Kim (2005) pp. 59-64, reviewing Leckenby & Kim (Kim, 1994); ranked among the top models by both Kim (2005) and Cheong (2007) | Implemented; validated by construction (margin recovery, exact independence reduction) rather than an external numeric example |
-| HBBD | Kim refers detailed steps to Boyd (1985) and Kim (1994) | Priority candidate; no equivalence claimed until those sources are obtained |
-| DMD | Kim refers steps and examples to Boyd (1985) and Kim (1994); Aldas Manzano (1998) evaluated it empirically and ranked it below Metheringham/Kwerel geometric | Not planned: the one available empirical ranking recommends against it |
-| HBD | MBD approximation described by Cheong (2007), with no verified numeric example of its own | Pending; would require the same level of validation as MBD |
-| Multivariate NBD | Not Kim's example; requires Danaher's formulation for online processes | Future line, separate from the experimental univariate NBD |
-
-Kim's Appendix B publishes observed and estimated distributions for 560
-schedules and eight models. It is a valuable resource for a future external
-benchmark suite, but it does not substitute for the primary specifications
-of HBBD or DMD. Incorporating only the results columns without
-reconstructing their inputs and algorithms would produce circular or
-incomplete tests.
+| CSD | Complete example, Kim (2005), Tables 4.2.2.1-4.2.2.10 | Implemented and validated |
+| MSAD | Algorithm given by Kim; detailed example referred to Lee (1988) | Implemented; external benchmark pending |
+| CANEX | Danaher's (1991) formula and the CSD example that uses its reach | Implemented; reports approximation diagnostics |
+| Beta-Binomial and Binomial | Closed-form formulas | Implemented and tested at their limits |
+| MBD | Complete specification and three-vehicle example, Cheong (2007); four- and five-vehicle examples show the model's limits | Implemented, with a documented safety net and warnings |
+| CBD | Specification in Kim (2005, pp. 59-64) after Kim (1994) | Implemented; validated by construction |
+| HBBD (Hofmans Beta-Binomial) | Kim refers detailed steps to Boyd (1985) and Kim (1994) | Not implemented: primary steps not available |
+| DMD (Dirichlet multinomial) | Kim refers steps and examples to Boyd (1985) and Kim (1994); Aldás Manzano (1998) ranked it below the Metheringham and Kwerel geometric models | Not implemented |
+| HBD | Approximation of MBD described by Cheong (2007), without a verified numeric example | Not implemented |
+| Multivariate Negative-Binomial | Requires Danaher's (2007) formulation for online processes | Not implemented |
 
 ## References
 
-- Agostini, J. M. (1961). How to estimate unduplicated audiences. *Journal
-  of Advertising Research*, 1(3), 11-14.
-- Aldas Manzano, J. (1998). *Modelos de determinacion de la cobertura y la
-  distribucion de contactos en la planificacion de medios publicitarios
-  impresos*. Doctoral dissertation, Universidad de Valencia.
-- Chandon, J.-L. (1985). *A comparative study of media exposure models*.
-  Doctoral dissertation, University of Pennsylvania.
+- Agostini, J. M. (1961). How to estimate unduplicated audiences. *Journal of
+  Advertising Research*, 1(3), 11-14. doi:10.1080/00218499.1961.12519620
+- Aldás Manzano, J. (1998). *Modelos de determinación de la cobertura y la
+  distribución de contactos en la planificación de medios publicitarios
+  impresos* (Models for determining reach and exposure distribution in print
+  media planning). Doctoral dissertation, Universidad de Valencia, Spain.
+- Boyd, M. M. (1985). *The Dirichlet multivariate multinomial distribution as a
+  magazine exposure model*. Unpublished doctoral dissertation, University of
+  Illinois at Urbana-Champaign.
+- Chandon, J.-L. (1976). *A comparative study of media exposure models*.
+  Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
 - Cheong, Y. (2007). *Multivariate Beta Binomial Distribution Model as a Web
   Media Exposure Model*. Doctoral dissertation, The University of Texas at
   Austin.
 - Danaher, P. J. (1991). A canonical expansion model for multivariate media
-  exposure distributions. *Journal of Marketing Research*, 28(3), 361-367.
-- Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. *Journal of
-  the Royal Statistical Society: Series C*, 8(1), 26-41.
-- Kim, H. G. (2005). *A Canonical Sequential Aggregation Media Model*.
-  Doctoral dissertation, The University of Texas at Austin.
-- Leckenby, J. D., & Kishi, S. (1982). Performance of exposure distribution
-  models. *Journal of Advertising Research*, 22(2), 35-44.
+  exposure distributions: A generalization of the "duplication of viewing law".
+  *Journal of Marketing Research*, 28(3), 361-367.
+  doi:10.1177/002224379102800311
+- Danaher, P. J. (1992a). A Markov-chain model for multivariate
+  magazine-exposure distributions. *Journal of Business & Economic Statistics*,
+  10(4), 401-407. doi:10.1080/07350015.1992.10509915
+- Danaher, P. J. (2007). Modeling page views across multiple websites with an
+  application to Internet reach and frequency prediction. *Marketing Science*,
+  26(3), 422-437. doi:10.1287/mksc.1060.0226
+- Deming, W. E. (1943). *Statistical adjustment of data*. New York: Dover.
+- Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. *Applied
+  Statistics*, 8(1), 26-41. doi:10.2307/2985810
+- Hofmans, P. (1966). Measuring the cumulative net coverage of any combination
+  of media. *Journal of Marketing Research*, 3(3), 269-278.
+  doi:10.1177/002224376600300307
+- Kim, H. (1994). *A conditional beta distribution model for advertising
+  reach/frequency estimation*. Unpublished doctoral dissertation, The University
+  of Texas at Austin.
+- Kim, H. G. (2005). *A Canonical Sequential Aggregation Media Model*. Doctoral
+  dissertation, The University of Texas at Austin.
 - Leckenby, J. D., & Rice, M. D. (1986). The declining reach phenomenon in
   exposure distribution models. *Journal of Advertising*, 15(3), 13-20.
-- Metheringham, R. A. (1964). Measuring the net cumulative coverage of a
-  print campaign. *Journal of Advertising Research*, 4(4), 23-28.
+  doi:10.1080/00913367.1986.10673014
+- Lee, A. M., & Burkhart, A. J. (1960). Some optimization problems in advertising
+  media planning. *Operational Research Quarterly*, 11(3), 113-122.
+- Lee, H.-K. (1988). *Sequential aggregation advertising media models*.
+  Unpublished doctoral dissertation, The University of Texas at Austin.
+- Metheringham, R. A. (1964). Measuring the net cumulative coverage of a print
+  campaign. *Journal of Advertising Research*, 4(4), 23-28.
+  doi:10.1080/00218499.1964.12519751
 - Waring, E. (1792). *Meditationes Algebraicae*. Cambridge.
 
-Lee & Burkart (1960) and Lee (1988), cited above for the net cumulative
-audience Binomial model and for the detailed MSAD numerical example
-respectively, are known to this package only at second hand, through Aldas
-Manzano (1998) and Kim (2005); their own full bibliographic details have not
-been independently verified and are therefore not listed as standalone
-entries here.
+Morgensztern (1970), whose reach formula underlies MSAD, is known to this
+package through Aldás Manzano (1998) and Kim (2005). Lee and Burkhart (1960) and
+Lee (1988) are cited as they appear in Kim (2005). The bibliographic details of
+Chandon (1976), Boyd (1985), Kim (1994) and Lee (1988) are those given in the
+reference list of Kim (2005).

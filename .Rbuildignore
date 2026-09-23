@@ -7,6 +7,9 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^data-raw$
 ^README\.md$
+^cran-comments\.md$
+^CRAN-SUBMISSION$
 ^mediaPlanR_manual\.pdf$
 ^tmp$
