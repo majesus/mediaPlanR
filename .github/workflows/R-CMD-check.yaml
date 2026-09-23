@@ -13,6 +13,7 @@ permissions: read-all
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
+    timeout-minutes: 45
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
@@ -51,4 +52,4 @@ jobs:
           upload-snapshots: true
           build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
           # Version 2 treats warnings as release blockers.
-          error_on: '"warning"'
+          error-on: '"warning"'
