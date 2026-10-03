@@ -49,6 +49,7 @@ jobs:
         with:
           extra-packages: |
             any::rcmdcheck
+            any::pkgload
             ${{ matrix.config.manual && 'any::V8' || '' }}
           needs: check
 
@@ -73,6 +74,10 @@ jobs:
           args: ${{ matrix.config.manual && 'c("--as-cran", "--run-donttest")' || 'c("--no-manual", "--as-cran", "--run-donttest")' }}
           # Version 2 treats warnings as release blockers.
           error-on: '"warning"'
+
+      - name: Run the complete test suite from the source tree
+        shell: Rscript {0}
+        run: testthat::test_local(".", load_package = "source", stop_on_failure = TRUE)
 
       - name: Publish check logs for NOTE review
         if: always()
