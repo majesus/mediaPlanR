@@ -84,6 +84,7 @@ test_that("a duplication well below the random one is reported, a rounding-level
 })
 
 test_that("the published reference examples do not trigger the low-duplication warning", {
+  skip_if_no_fixture("cbd_published_plans.csv")
   plans <- utils::read.csv(test_path("fixtures", "cbd_published_plans.csv"))
   rho <- with(plans, (dup - R1_1 * R1_2) /
                 sqrt(R1_1 * (1 - R1_1) * R1_2 * (1 - R1_2)))

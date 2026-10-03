@@ -6,6 +6,7 @@
 # Bounds are absolute, in percentage points, per cell.
 
 kim_appendix_b_deviation <- function(model) {
+  skip_if_no_fixture("kim2005_appB_models.csv")
   plans <- utils::read.csv(test_path("fixtures", "kim2005_appB_models.csv"))
   vapply(seq_len(nrow(plans)), function(i) {
     plan <- plans[i, ]
@@ -42,6 +43,7 @@ test_that("MSAD reproduces 39 Kim schedules using the common reconstructed input
 })
 
 test_that("Kim plan 19's printed MSAD row matches random duplication", {
+  skip_if_no_fixture("kim2005_appB_models.csv")
   plans <- utils::read.csv(test_path("fixtures", "kim2005_appB_models.csv"))
   plan <- plans[plans$plan == 19, ]
   R1 <- c(plan$R1_1, plan$R1_2)

@@ -32,9 +32,12 @@ earlier snapshots are not part of this package.
   fixture is preserved; the former 0.11 percentage-point exception is removed.
 * CI includes a manual PDF job, archived check logs and NOTE summaries, plus a
   base-dependency R 4.0.5 compatibility job. README is included in the tarball.
-  `DATA-PROVENANCE.md` records dataset/fixture sources and unresolved rights and
-  numerical discrepancies. HBBD/DMD descriptions no longer claim that the
-  available literature lacks their specifications.
+  `DATA-PROVENANCE.md` records dataset/fixture sources, the redistribution
+  basis and numerical discrepancies. The two published-plan fixtures (whole
+  numeric appendices of Kim 2005 and Hong 1998) are excluded from the package
+  archive; the tests that read them are skipped when absent and the CI workflow
+  runs the complete suite from the source tree. HBBD/DMD descriptions no longer
+  claim that the available literature lacks their specifications.
 
 ## Planning workflow
 

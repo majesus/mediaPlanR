@@ -83,6 +83,7 @@ test_that("calc_cbd reproduces the published CBD distributions of Kim (2005, App
   # column (Hong) with the corresponding model of this package, so the check
   # is a consistency check of the CBD column with the other published
   # columns, with a resolution of 0.01 percentage points.
+  skip_if_no_fixture("cbd_published_plans.csv")
   plans <- utils::read.csv(test_path("fixtures", "cbd_published_plans.csv"),
                            stringsAsFactors = FALSE)
   expect_equal(nrow(plans), 80L)

@@ -4,11 +4,16 @@ No CRAN submission was made or authorized in this session. This record replaces
 the historical checks; it is not a claim that all submission prerequisites are
 closed. Candidate: mediaPlanR 2.0.0, Date 2026-10-03.
 
-A later commit changed only documentation text (roxygen comments, `man/`, the
-vignette, `NEWS.md` and the data provenance record) to state the causes of the
-numerical differences below. The archive identified next and the platform
-results in this record refer to the state before that commit; the archive must
-be rebuilt, and its SHA-256 and checks refreshed, before any submission.
+Two later commits changed the package after this record was made. The first
+changed only documentation text (roxygen comments, `man/`, the vignette,
+`NEWS.md` and the data provenance record) to state the causes of the numerical
+differences below. The second excludes the two published-plan fixtures
+(`cbd_published_plans.csv`, `kim2005_appB_models.csv`) from the package archive
+through `.Rbuildignore`, skips the tests that read them when they are absent,
+and adds a continuous-integration step that runs the complete suite from the
+source tree. The archive identified next and the platform results in this
+record refer to the state before those commits; the archive must be rebuilt,
+and its SHA-256 and checks refreshed, before any submission.
 
 Source archive: `mediaPlanR_2.0.0.tar.gz`.
 SHA-256: `48193df7fbb04a0301f900f1482bca0f6cc9be10ca717cb695a346fafb8ca201`.
@@ -53,9 +58,11 @@ local Windows R-devel provides the manual/check evidence for this candidate.
 
 ## Remaining submission prerequisites
 
-* The data/fixture inventory and unresolved redistribution record are in
-  `inst/DATA-PROVENANCE.md`. Attribution does not establish permission for
-  third-party materials; the maintainer must record the applicable basis.
+* The data/fixture inventory and the maintainer's redistribution basis are in
+  `inst/DATA-PROVENANCE.md`. The basis is the maintainer's position, not a
+  permission granted by the authors or their institutions; attribution does not
+  establish permission. The two published-plan fixtures, which reproduce whole
+  numeric appendices, are not distributed in the package archive.
 * Persistent identifiers for the Kim (1994, 2005) and Cheong (2007) theses are
   not all verified. Candidate Texas repository handles returned HTTP 403;
   they were not added as verified identifiers. Author names and titles were
