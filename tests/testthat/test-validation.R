@@ -60,27 +60,79 @@ test_that("missing or malformed numeric arguments give package errors, never cry
                                    max_insertions = c(2, 3), max_combinations = 1e5))
   )
   package_message <- paste0("must|cannot|requires|Missing|supports|incompatible|",
-                            "not logically|outside|exceeds|between|at least|not consistent")
-  bad_values <- list(NA_real_, NaN, "a", numeric(0))
+                            "not logically|outside|exceeds|between|at least|not consistent|",
+                            "impossible|inconsistent")
+  bad_values <- list(NA_real_, NaN, "a", numeric(0), Inf, -Inf, TRUE,
+                     list(1), factor("a"))
+
+  expect_rejected <- function(fn, fn_name, modified, what) {
+    error <- tryCatch({
+      suppressWarnings(do.call(fn, modified))
+      NULL
+    }, error = function(e) conditionMessage(e))
+    info <- paste(fn_name, what, "->", if (is.null(error)) "no error" else error)
+    expect_false(is.null(error), info = info)
+    if (!is.null(error)) expect_match(error, package_message, info = info)
+  }
 
   for (call in calls) {
     fn_name <- call[[1]]
     fn <- call[[2]]
     args <- call[[3]]
     for (argument in names(args)) {
-      if (is.data.frame(args[[argument]]) || is.matrix(args[[argument]]) ||
-          inherits(args[[argument]], "media_plan")) next
-      for (bad in bad_values) {
-        modified <- args
-        modified[[argument]] <- bad
-        error <- tryCatch({
-          suppressWarnings(do.call(fn, modified))
-          NULL
-        }, error = function(e) conditionMessage(e))
-        label <- sprintf("%s(%s = %s)", fn_name, argument, deparse(bad))
-        info <- paste(label, "->", if (is.null(error)) "no error" else error)
-        expect_false(is.null(error), info = info)
-        if (!is.null(error)) expect_match(error, package_message, info = info)
+      value <- args[[argument]]
+      if (inherits(value, "media_plan")) next
+      if (is.data.frame(value)) {
+        # A malformed column of a data frame contract, entirely or in one row.
+        for (column in names(value)) {
+          if (is.character(value[[column]])) next
+          for (bad in Filter(function(b) length(b) == 1L, bad_values)) {
+            modified <- args
+            modified[[argument]][[column]] <- rep(bad, length.out = nrow(value))
+            expect_rejected(fn, fn_name, modified,
+                            sprintf("(%s$%s = %s)", argument, column, deparse(bad)))
+          }
+          for (bad in list(NA_real_, NaN, Inf, -Inf)) {
+            modified <- args
+            modified[[argument]][[column]][1L] <- bad
+            expect_rejected(fn, fn_name, modified,
+                            sprintf("(%s$%s[1] = %s)", argument, column, deparse(bad)))
+          }
+        }
+      } else if (is.matrix(value)) {
+        # Keep the matrix numeric when testing non-finite numeric values:
+        # otherwise the type check masks the value check being exercised.
+        pairs <- which(upper.tri(value), arr.ind = TRUE)
+        for (pair in seq_len(nrow(pairs))) {
+          i <- pairs[pair, 1L]; j <- pairs[pair, 2L]
+          for (bad in list(NA_real_, NaN, Inf, -Inf, "a")) {
+            modified <- args
+            modified[[argument]][i, j] <- bad
+            modified[[argument]][j, i] <- bad
+            expect_rejected(fn, fn_name, modified,
+                            sprintf("(%s[%d,%d] = %s)", argument, i, j,
+                                    deparse(bad)))
+          }
+        }
+        # Wrong storage types are separate contract violations. A factor
+        # matrix loses its class in base R, so also test the factor argument.
+        for (bad in list(matrix(TRUE, nrow(value), ncol(value)),
+                         matrix(as.list(value), nrow(value)),
+                         factor(value), numeric(0))) {
+          modified <- args
+          modified[[argument]] <- bad
+          expect_rejected(fn, fn_name, modified, paste(argument, "wrong type"))
+        }
+      } else {
+        for (bad in bad_values) {
+          # size = Inf is the documented Poisson limit of the Negative Binomial.
+          if (fn_name == "nbd_exposure_distribution" && argument == "size" &&
+              identical(bad, Inf)) next
+          modified <- args
+          modified[[argument]] <- bad
+          expect_rejected(fn, fn_name, modified,
+                          sprintf("(%s = %s)", argument, deparse(bad)))
+        }
       }
     }
   }

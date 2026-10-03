@@ -131,6 +131,13 @@ evaluation_validate_distribution <- function(data, value_column, scale,
   original_mass <- vapply(split_rows, function(rows) sum(probability[rows]),
                           numeric(1))
   if (scale == "count") {
+    if (any(!is.finite(original_mass))) {
+      bad <- names(original_mass)[!is.finite(original_mass)][1L]
+      stop(sprintf(
+        paste0("%s count weights for schedule '%s' are too large to be summed ",
+               "(the total is not finite); rescale them, for example by ",
+               "dividing by their maximum."), label, bad), call. = FALSE)
+    }
     if (any(original_mass <= 0)) {
       stop(sprintf("Every %s count distribution must have positive total weight.",
                    label), call. = FALSE)

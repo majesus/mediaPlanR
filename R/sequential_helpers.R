@@ -40,7 +40,14 @@ validate_sequential_inputs <- function(vehicles_data, duplications,
          call. = FALSE)
   }
   needs_R2 <- insertions >= 2L
-  if (!is.numeric(R2) || anyNA(R2[needs_R2]) || any(!is.finite(R2[needs_R2]))) {
+  # An all-NA logical column (NA written without a numeric type) is a missing
+  # R2, which is only an error when some vehicle needs it.
+  if (is.logical(R2) && all(is.na(R2))) R2 <- as.numeric(R2)
+  if (!is.numeric(R2)) {
+    stop("R2 must be numeric (NA is allowed only for vehicles with a single ",
+         "insertion).", call. = FALSE)
+  }
+  if (anyNA(R2[needs_R2]) || any(!is.finite(R2[needs_R2]))) {
     stop("R2 must be finite for every vehicle with at least two insertions.",
          call. = FALSE)
   }
@@ -54,9 +61,7 @@ validate_sequential_inputs <- function(vehicles_data, duplications,
   off_diagonal <- row(duplications) != col(duplications)
   if (anyNA(duplications[off_diagonal]) ||
       any(!is.finite(duplications[off_diagonal])) ||
-      !isTRUE(all.equal(duplications[upper.tri(duplications)],
-                        t(duplications)[upper.tri(duplications)],
-                        tolerance = tolerance, check.attributes = FALSE))) {
+      !matrix_is_symmetric_relative(duplications, tolerance)) {
     stop("duplications must be finite and symmetric outside its diagonal.",
          call. = FALSE)
   }
@@ -64,8 +69,9 @@ validate_sequential_inputs <- function(vehicles_data, duplications,
     for (j in (i + 1L):n) {
       lower <- max(0, R1[i] + R1[j] - 1)
       upper <- min(R1[i], R1[j])
-      if (duplications[i, j] < lower - tolerance ||
-          duplications[i, j] > upper + tolerance) {
+      slack <- tolerance * upper
+      if (duplications[i, j] < lower - slack ||
+          duplications[i, j] > upper + slack) {
         stop(sprintf(
           "duplication [%d,%d] is outside its Frechet bounds [%.8f, %.8f].",
           i, j, lower, upper
@@ -73,6 +79,9 @@ validate_sequential_inputs <- function(vehicles_data, duplications,
       }
     }
   }
+
+  check_triple_feasibility(R1, duplications, tolerance)
+  warn_low_duplication(R1, duplications, caller)
 
   if (is.numeric(aggregation_order)) {
     if (length(aggregation_order) != n || anyNA(aggregation_order) ||
@@ -118,7 +127,7 @@ vehicle_exposure_distribution <- function(insertions, R1, R2) {
     out[c(1L, insertions + 1L)] <- c(1 - R1, R1)
     return(out)
   }
-  extraDistr::dbbinom(0:insertions, size = insertions,
+  dbetabinom(0:insertions, size = insertions,
                       alpha = params$alpha, beta = params$beta)
 }
 

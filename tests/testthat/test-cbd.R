@@ -22,11 +22,94 @@ test_that("calc_cbd runs on Kim's (2005) CSD example inputs and returns a valid 
   expect_equal(sum(result$distribution$probability), 1, tolerance = 1e-9)
   expect_true(result$reach$percent > 0 && result$reach$percent < 100)
   expect_equal(result$diagnostics$negative_mass_adjusted, 0)
-  # Same canonical-expansion between-vehicle step as CSD on identical inputs:
-  # close, though not required to be identical, since the two differ in how
-  # they combine it with the within-vehicle expansion.
-  csd_result <- calc_csd(inputs$vehicles_data, inputs$duplications, aggregation_order = 1:3)
-  expect_equal(result$reach$percent, csd_result$reach$percent, tolerance = 0.2)
+  # The zero-exposure probability is the canonical expansion of the zero cell
+  # with all the insertions (Kim 1994, p. 124), the same one calc_canex()
+  # computes.
+  canex <- calc_canex(data.frame(k = inputs$vehicles_data$insertions,
+                                 R1 = inputs$vehicles_data$R1,
+                                 R2 = inputs$vehicles_data$R2),
+                      inputs$duplications, population = 1)
+  expect_equal(result$distribution$probability[1],
+               canex$distribution$probability[1], tolerance = 1e-9)
+})
+
+test_that("calc_cbd reproduces the three-vehicle worked example of Kim (1994, p. 139)", {
+  # SMRB 1979 data of Kim (1994, pp. 125-139): vehicles with 2, 1 and 3
+  # insertions (the same example as Cheong, 2007, p. 75).
+  vehicles <- data.frame(insertions = c(2, 1, 3),
+                         R1 = c(0.146, 0.110, 0.252),
+                         R2 = c(0.191, NA, 0.318))
+  duplications <- matrix(c(NA, 0.032, 0.063,
+                           0.032, NA, 0.041,
+                           0.063, 0.041, NA), nrow = 3, byrow = TRUE)
+  fit <- calc_cbd(vehicles, duplications, aggregation_order = 1:3)
+
+  # Canonical correlations and (0,1) grid printed by Kim, in the order of the
+  # exposure patterns 000, 001, 010, 011, 100, 101, 110, 111.
+  R1 <- vehicles$R1
+  correlation <- diag(3)
+  for (i in 1:2) for (j in (i + 1):3) {
+    correlation[i, j] <- correlation[j, i] <-
+      calculate_duplication(duplications[i, j], R1[i], R1[j])
+  }
+  expect_lt(max(abs(c(correlation[1, 2], correlation[1, 3], correlation[2, 3]) -
+                      c(0.144, 0.171, 0.098))), 0.0005)
+  grid <- cbd_binary_grid(R1, correlation)
+  patterns <- list(integer(0), 3, 2, c(2, 3), 1, c(1, 3), c(1, 2), c(1, 2, 3))
+  expect_lt(max(abs(vapply(patterns, function(t) grid[[mbd_key(t)]], numeric(1)) -
+                      c(0.6151, 0.1609, 0.0499, 0.0281, 0.0639, 0.0501, 0.0191, 0.0129))),
+            0.00006)
+
+  # Published distribution (Kim 1994, p. 139). Its printed zero of the
+  # canonical expansion, 0.5066, differs from the one that the formula gives
+  # with the printed inputs (about 0.510), which this function evaluates; the
+  # zero and one-contact classes therefore differ by up to about 0.4
+  # percentage points and the other classes by less than 0.15.
+  published <- c(0.5066, 0.1620, 0.1205, 0.1329, 0.0453, 0.0275, 0.0055)
+  deviation <- abs(fit$distribution$probability - published)
+  expect_length(deviation, 7L)
+  expect_lt(max(deviation), 0.004)
+  expect_lt(max(deviation[-(1:3)]), 0.0005)
+  expect_lt(abs(fit$diagnostics$canonical_zero_probability - 0.5102), 0.0001)
+  expect_equal(fit$diagnostics$negative_mass_adjusted, 0)
+})
+
+test_that("calc_cbd reproduces the published CBD distributions of Kim (2005, Appendix B) and Hong (1998, Appendix E)", {
+  # tests/testthat/fixtures/cbd_published_plans.csv holds the one-insertion and
+  # two-insertion reaches (as proportions) of each two-vehicle, two-insertion
+  # plan and the published CBD distribution (percent, zero to four contacts).
+  # Neither source prints the duplication between the two vehicles; `dup` is
+  # the duplication that reproduces the source's own CANX column (Kim) or MSAD
+  # column (Hong) with the corresponding model of this package, so the check
+  # is a consistency check of the CBD column with the other published
+  # columns, with a resolution of 0.01 percentage points.
+  plans <- utils::read.csv(test_path("fixtures", "cbd_published_plans.csv"),
+                           stringsAsFactors = FALSE)
+  expect_equal(nrow(plans), 80L)
+  for (source in unique(plans$source)) {
+    expect_equal(sort(plans$plan[plans$source == source]), 1:40)
+  }
+  deviation <- vapply(seq_len(nrow(plans)), function(i) {
+    plan <- plans[i, ]
+    vehicles <- data.frame(insertions = c(2, 2),
+                           R1 = c(plan$R1_1, plan$R1_2),
+                           R2 = c(plan$R2_1, plan$R2_2))
+    duplications <- matrix(c(NA, plan$dup, plan$dup, NA), nrow = 2)
+    probability <- calc_cbd(vehicles, duplications,
+                            aggregation_order = "given")$distribution$probability
+    modelled <- 100 * c(probability, rep(0, 5))[1:5]
+    max(abs(modelled - unlist(plan[paste0("pub", 0:4)])))
+  }, numeric(1))
+  expect_lt(max(deviation[plans$source == "Kim2005_AppB"]), 0.02)
+  expect_lt(max(deviation[plans$source == "Hong1998_AppE"]), 0.02)
+})
+
+test_that("calc_cbd does not depend on the aggregation order", {
+  inputs <- kim_cbd_inputs()
+  forward <- calc_cbd(inputs$vehicles_data, inputs$duplications, aggregation_order = 1:3)
+  backward <- calc_cbd(inputs$vehicles_data, inputs$duplications, aggregation_order = 3:1)
+  expect_equal(forward$distribution$probability, backward$distribution$probability,
+               tolerance = 1e-12)
 })
 
 test_that("cbd_binary_grid recovers each vehicle's own R1 as its marginal", {
@@ -55,6 +138,7 @@ test_that("cbd_binary_grid recovers each vehicle's own R1 as its marginal", {
 })
 
 test_that("calc_cbd reduces to the exact independent convolution at zero correlation", {
+  skip_if_not_installed("extraDistr")
   vehicles <- data.frame(insertions = c(3, 2), R1 = c(0.2, 0.15), R2 = c(0.35, 0.27))
   independent_duplication <- vehicles$R1[1] * vehicles$R1[2]
   duplications <- matrix(c(NA, independent_duplication, independent_duplication, NA), nrow = 2)
@@ -84,8 +168,8 @@ test_that("calc_cbd validates inputs and caps the number of vehicles", {
 })
 
 test_that("calc_cbd does not error or return NaN when a vehicle's own R1/R2 sit at the binomial or polarized limit (regression test)", {
-  # calc_cbd() shares the mbd_peel_vehicle() mechanism with calc_mbd(), so it
-  # must handle the same two limits as calc_mbd()'s equivalent test.
+  # The conditional Beta-Binomial updating of calc_cbd() has the same two
+  # limits as calc_mbd()'s peeling step, and both must be handled explicitly.
   dup <- matrix(c(NA, 0.05, 0.05, NA), nrow = 2, byrow = TRUE)
 
   R1 <- 0.3

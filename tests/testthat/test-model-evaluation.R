@@ -125,3 +125,13 @@ test_that("open NBD tails are not mistaken for exact contact cells", {
     "open tail"
   )
 })
+
+test_that("count weights whose sum overflows are rejected instead of normalized to zero", {
+  observed <- data.frame(contacts = 0:1, observed = c(1e308, 1e308))
+  predicted <- data.frame(contacts = 0:1, predicted = c(0.5, 0.5))
+  expect_error(
+    evaluate_exposure_model(observed, predicted, observed_scale = "count",
+                            predicted_scale = "probability"),
+    "too large to be summed"
+  )
+})

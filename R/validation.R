@@ -82,6 +82,15 @@ assert_flag <- function(x, name) {
 
 # A symmetric numeric matrix of side `n`. The diagonal is checked only when
 # `diagonal_used` is TRUE.
+matrix_is_symmetric_relative <- function(m, tolerance) {
+  left <- m[upper.tri(m)]
+  right <- t(m)[upper.tri(m)]
+  # Compare each pair on its own scale. all.equal() can switch to absolute
+  # differences near zero and let a tiny audience change from disjoint to
+  # perfectly coincident when its vehicle order is reversed.
+  all(abs(left - right) <= tolerance * pmax(abs(left), abs(right)))
+}
+
 assert_symmetric_matrix <- function(m, name, n, tolerance = 1e-8,
                                     diagonal_used = FALSE) {
   if (!is.matrix(m) || !is.numeric(m) || !identical(dim(m), c(n, n))) {
@@ -92,8 +101,7 @@ assert_symmetric_matrix <- function(m, name, n, tolerance = 1e-8,
     stop(name, " must be finite",
          if (!diagonal_used) " outside its diagonal", ".", call. = FALSE)
   }
-  if (!isTRUE(all.equal(m[upper.tri(m)], t(m)[upper.tri(m)],
-                        tolerance = tolerance, check.attributes = FALSE))) {
+  if (!matrix_is_symmetric_relative(m, tolerance)) {
     stop(name, " must be symmetric", if (!diagonal_used) " outside its diagonal",
          ".", call. = FALSE)
   }
@@ -116,11 +124,11 @@ validate_duplication_inputs <- function(audiences, population,
   }
   assert_symmetric_matrix(duplication_matrix, "duplication_matrix", n,
                           tolerance = 1e-9)
-  tolerance <- 1e-9 * population
   for (i in seq_len(n - 1L)) {
     for (j in (i + 1L):n) {
-      lower <- max(0, audiences[i] + audiences[j] - population)
+      lower <- max(0, audiences[i] - (population - audiences[j]))
       upper <- min(audiences[i], audiences[j])
+      tolerance <- 1e-9 * upper
       value <- duplication_matrix[i, j]
       if (value < lower - tolerance || value > upper + tolerance) {
         stop(sprintf(paste0(
@@ -138,6 +146,10 @@ validate_duplication_inputs <- function(audiences, population,
 # than the population or the gross audience. The value is returned as
 # computed, but the analyst is told.
 check_reach_bounds <- function(reach, audiences, population, model) {
+  if (!is.finite(reach)) {
+    stop(model, " reach must be finite; the supplied values exceed the representable range.",
+         call. = FALSE)
+  }
   tolerance <- 1e-9 * population
   lower <- max(audiences)
   upper <- min(population, sum(audiences))

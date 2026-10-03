@@ -22,65 +22,146 @@ duplications, as proportions of the population. The diagonal is ignored.}
 
 \item{aggregation_order}{Either \code{"audience_desc"} (vehicles in decreasing
 order of one-insertion reach), \code{"given"} (the row order), or a
-permutation of the row indices. Vehicles are peeled off starting from the
-\emph{last} position of this order, as in \code{\link[=calc_mbd]{calc_mbd()}}.}
+permutation of the row indices. It is validated and reported for
+consistency with the other sequential models, but it does not affect the
+result: in Kim's specification the vehicles are conditionally independent
+given the (0,1) grid, so the distribution does not depend on the order.}
 
 \item{population}{Positive population used only to express probabilities
 as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
-\item{tolerance}{Positive numerical tolerance for probability constraints.}
+\item{tolerance}{Positive numerical tolerance for probability constraints.
+The Frechet and triple-feasibility checks apply it relative to the smaller
+audience involved.}
 }
 \value{
 A \code{reach_cbd} object: a list with \code{reach} (\code{probability}, \code{percent}
 and \code{people}), \code{average_frequency}, the complete exposure \code{distribution}
 (\code{contacts}, \code{probability}, \code{percent}, \code{people} and
 \code{cumulative_probability}), the \code{aggregation_order} and \code{aggregation_rule},
-the peeling \code{steps} and \code{diagnostics}, which include whether the
+the within-vehicle \code{vehicle_expansion} (the distribution used for each
+vehicle) and \code{diagnostics}, which include the canonical zero-exposure
+probability, the zero-cell rescaling factor and whether the
 negative-probability safety net of \code{\link[=calc_mbd]{calc_mbd()}} had to be engaged
 (\code{negative_mass_adjusted}, \code{cells_adjusted}).
 }
 \description{
-Implements the Conditional Beta Distribution (CBD) of Leckenby and Kim,
-reported in Kim (1994) and reviewed in Kim (2005), for several vehicles with
-several insertions each. Between-vehicle duplication is modeled first, at
-the one-insertion (0,1) level, by Danaher's (1991) second-order canonical
-expansion -- the mechanism \code{\link[=calc_canex]{calc_canex()}} and \code{\link[=calc_csd]{calc_csd()}} use. Vehicles are
-then peeled off one at a time, in reverse aggregation order, and each is
-expanded from its (0,1) exposure state into its own insertion-level
-Beta-Binomial distribution by Danaher's (1992a) conditional convolution --
-the mechanism \code{\link[=calc_mbd]{calc_mbd()}} uses for its own peeling step. CBD and MBD
-therefore share their within-vehicle expansion exactly and differ only in how
-the initial (0,1) joint grid is built: canonical expansion here, Waring's
-inclusion-exclusion theorem for MBD.
+Implements the Conditional Beta Distribution (CBD) of Kim (1994), reviewed
+in Kim (2005), for several vehicles with several insertions each.
+Between-vehicle duplication is modeled first, at the one-insertion (0,1)
+level, by Danaher's (1991) second-order canonical expansion -- the mechanism
+\code{\link[=calc_canex]{calc_canex()}} and \code{\link[=calc_csd]{calc_csd()}} use. Conditionally on the (0,1) exposure
+state of every vehicle, the remaining insertions of each vehicle follow a
+Beta-Binomial distribution whose Beta parameters are updated by that state,
+and the vehicles are independent given the grid (Danaher 1992a). The zero
+cell of the grid is then conformed to the canonical expansion of all the
+insertions.
 }
 \details{
-Unlike \code{\link[=calc_mbd]{calc_mbd()}}, the between-vehicle step of CBD needs no imputation
-for three or more vehicles: the canonical expansion gives every cell of the
-(0,1) grid directly from the pairwise correlations. For binary exposure the
-expansion uses the mean \eqn{R_{1i}} and variance \eqn{R_{1i}(1 - R_{1i})}
-of each vehicle's one-insertion exposure, which is the single-insertion
-case of the Beta-Binomial mean and variance in Kim (2005, pp. 60-61); this
-guarantees that summing out all other vehicles returns each vehicle's own
-Bernoulli marginal exactly.
+The model follows Kim (1994, pp. 115-124):
+\enumerate{
+\item The joint distribution of exposure to one insertion of each vehicle (the
+\eqn{2^m} cells of the (0,1) grid) is obtained from the second-order
+canonical expansion with Bernoulli marginals, from the pairwise
+correlations implied by the observed one-insertion duplications.
+\item Given that vehicle \eqn{i} was (\eqn{x_i = 1}) or was not (\eqn{x_i = 0})
+exposed to its first insertion, its remaining \eqn{n_i - 1} insertions
+follow a Beta-Binomial distribution with parameters
+\eqn{(\alpha + x_i, \beta + 1 - x_i)}, where \eqn{\alpha} and \eqn{\beta}
+are fitted from \code{R1} and \code{R2}. The vehicle's total exposure is that
+distribution shifted by \eqn{x_i}. The distributions of the vehicles are
+convolved within each cell of the grid and weighted by the cell
+probability. A vehicle with one insertion contributes only its state
+\eqn{x_i}.
+\item In the all-zero cell of the grid, the probability of zero exposures is
+set to the canonical expansion of the zero cell computed with all the
+insertions (Danaher 1991, as in \code{\link[=calc_canex]{calc_canex()}}), and the remaining levels
+of that cell are rescaled so that the cell keeps its total probability
+(Kim 1994, p. 124).
+}
 
-Kim (2005, pp. 59-64) reviews the specification of CBD as an existing model
-but does not present a numerical example of it, as it does for CSD, so there
-is no published worked example to validate this implementation against
-directly. The implementation is validated by construction: the (0,1) grid
-recovers each vehicle's own \code{R1} as its exact marginal, its peeling step is
-the separately validated mechanism of \code{\link[=calc_mbd]{calc_mbd()}}, and with zero
-correlation the model reduces to the exact convolution of the vehicles' own
+With a binomial-limit vehicle (\code{R2} equal to the reach under independence)
+the conditional distribution is the binomial one, and with a polarized one
+(\code{R2} equal to \code{R1}) it is the all-or-nothing exposure; both are the limits
+of the Beta-Binomial updating.
+
+Unlike \code{\link[=calc_mbd]{calc_mbd()}}, the between-vehicle step of CBD needs no imputation
+for three or more vehicles. The canonical expansion uses the mean
+\eqn{R_{1i}} and variance \eqn{R_{1i}(1 - R_{1i})} of each vehicle's
+one-insertion exposure; this guarantees that summing out all other vehicles
+returns each vehicle's own Bernoulli marginal exactly, and with zero
+correlation the model reduces to the exact convolution of the vehicles'
 Beta-Binomial marginals.
+With correlation, the final zero-cell adjustment does not
+preserve the mean number of exposures of each vehicle exactly; the
+departure is reported in \code{diagnostics$mean_error} and was between 0.0003 and
+0.013 exposures in the package's reference schedules.
+}
+\section{Validation against published results}{
+The implementation reproduces the CBD columns of the two-vehicle
+comparisons of Kim (2005, Appendix B) and of Hong (1998, Appendix E) within
+the rounding of those sources (0.01 percentage points), taking the
+duplication that each source implies, and the worked example of Kim (1994,
+p. 139; three vehicles with 2, 1 and 3 insertions, SMRB 1979 data) except
+for its zero cell. In that example the zero of the canonical expansion is
+printed as 0.5066,
+whereas the formula applied to the printed inputs gives about 0.510; this
+function evaluates the formula, so its zero and one-contact probabilities
+differ from the printed ones by about 0.4 percentage points in that
+example. See the package tests for the exact cases.
 
 Because the canonical expansion can assign small negative probabilities to
 some (0,1) cells -- the limitation documented for \code{\link[=calc_canex]{calc_canex()}} -- any
-cell that is still negative after peeling is set to zero and that mass is
+cell that is still negative at the end is set to zero and that mass is
 redistributed proportionally, as in the final safety net of \code{\link[=calc_mbd]{calc_mbd()}}.
-This is reported in \code{diagnostics}.
+This step is an extension of the package, not part of Kim's specification,
+and is reported in \code{diagnostics}. If the canonical zero-exposure probability
+is not a probability, the function stops, as \code{\link[=calc_csd]{calc_csd()}} does.
 
-The peeling step has the exponential cost of \code{\link[=calc_mbd]{calc_mbd()}}, so the number of
+The number of cells of the (0,1) grid grows as \eqn{2^m}, so the number of
 vehicles is limited to 12.
 }
+
+\section{Domain of validity}{
+
+The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
+\code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
+as given and check them against the Frechet bounds implied by the audiences
+and, for every triple of vehicles, against joint feasibility. The published
+methods have three limits that follow from this.
+
+First, Hong (1998, p. 238) notes that the models he evaluates assume a
+duplication between vehicles not below the random one, the product of the
+audiences, and treats null observed duplications as measurement error. With
+a lower duplication the models can diverge considerably. The functions warn
+(class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
+pair is below -0.1. That threshold is a decision of this package: the
+published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
+80 plans) include pairs slightly below the random duplication, with
+canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
+\code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
+under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
+expansion itself admits negative correlations. \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
+and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
+duplications.
+
+Second, pairwise duplications that satisfy the Frechet bounds can still be
+impossible jointly for three or more vehicles. For every triple of vehicles
+the functions check that the exposure to all three can have a non-negative
+probability, given the audiences and the three pairwise duplications, and
+stop with an error when it cannot. That condition is necessary but not
+sufficient for four or more vehicles, for which the published methods check
+feasibility at most to first order (Cheong 2007); \code{\link[=calc_mbd]{calc_mbd()}} and
+\code{\link[=calc_cbd]{calc_cbd()}} zero any negative cell that remains, and \code{\link[=calc_canex]{calc_canex()}}
+truncates it.
+
+Third, a low duplication between vehicles with several insertions can make
+the target of a sequential model invalid. For two vehicles with two
+insertions each, \code{R1 = 0.5} and \code{R2 = 0.75}, \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_cbd]{calc_cbd()}}
+stop with a duplication of zero, and \code{\link[=calc_msad]{calc_msad()}} with a duplication of zero
+or 0.5, instead of altering an invalid target.
+}
+
 \examples{
 # Same three-vehicle inputs as the CSD example of Kim (2005), so that CBD
 # can be compared with CSD and CANEX on identical data
@@ -91,12 +172,16 @@ result$distribution
 
 }
 \references{
-Kim, H. (1994). A conditional beta distribution model for advertising
+Kim, H. (1994). A conditional beta distribution model for advertising media
 reach/frequency estimation. Unpublished doctoral dissertation, The
-University of Texas at Austin.
+University of Texas at Austin, pp. 115-139.
 
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 Doctoral dissertation, The University of Texas at Austin, pp. 59-64.
+
+Hong, J. (1998). Advertising media models for Internet reach/frequency
+estimation. Unpublished doctoral dissertation, The University of Texas at
+Austin, Appendix E.
 
 Danaher, P. J. (1991). A canonical expansion model for multivariate media
 exposure distributions: A generalization of the "duplication of viewing
@@ -108,7 +193,7 @@ magazine-exposure distributions. Journal of Business & Economic Statistics,
 10(4), 401-407. \doi{10.1080/07350015.1992.10509915}
 }
 \seealso{
-\code{\link[=calc_mbd]{calc_mbd()}} for the same within-vehicle mechanism with an imputed
-between-vehicle step, and \code{\link[=calc_canex]{calc_canex()}} and \code{\link[=calc_csd]{calc_csd()}} for the canonical
-expansion that this model's first step reuses.
+\code{\link[=calc_mbd]{calc_mbd()}} for a model with an imputed between-vehicle step, and
+\code{\link[=calc_canex]{calc_canex()}} and \code{\link[=calc_csd]{calc_csd()}} for the canonical expansion that this
+model's first and last steps reuse.
 }

@@ -75,9 +75,9 @@ save_dataset("bbd_reach_example", list(
 save_dataset("csd_example", list(
   vehicles_data = data.frame(insertions = c(3, 2, 4), R1 = c(0.35, 0.18, 0.10),
                              R2 = c(0.44, 0.24, 0.15)),
-  duplications = square(c(NA, 0.05, 0.02,
-                          0.05, NA, 0.015,
-                          0.02, 0.015, NA), 3),
+  duplications = square(c(NA, 0.07, 0.04,
+                          0.07, NA, 0.02,
+                          0.04, 0.02, NA), 3),
   aggregation_order = 1:3
 ))
 

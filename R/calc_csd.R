@@ -9,7 +9,7 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
     contacts <- seq_along(marginals[[i]]) - 1L
     sum((contacts - means[position])^2 * marginals[[i]])
   }, numeric(1))
-  if (any(variances <= tolerance)) {
+  if (any(!(variances > 0))) {
     stop("CSD requires non-degenerate vehicle exposure marginals.",
          call. = FALSE)
   }
@@ -74,6 +74,8 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' @param population Positive population used only to express probabilities
 #'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
+#'   The Frechet and triple-feasibility checks apply it relative to the smaller
+#'   audience involved.
 #'
 #' @return A `reach_csd` object: a list with `reach` (`probability`, `percent`
 #'   and `people`), `average_frequency`, the complete exposure `distribution`
@@ -124,6 +126,7 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #'   [calc_msad()] for the Morgensztern sequential alternative and
 #'   [calc_cbd()] for a different sequential architecture built on the same
 #'   canonical expansion at the (0,1) level.
+#' @inheritSection calc_canex Domain of validity
 #' @export
 calc_csd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),

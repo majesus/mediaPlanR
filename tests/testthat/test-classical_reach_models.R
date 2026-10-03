@@ -61,8 +61,10 @@ test_that("calc_beta_binomial reproduces R1 and R2 through its own distribution"
   fit <- calc_beta_binomial(A1 = 4e5, A2 = 5.2e5, P = 1e6, n = 6)
   a <- fit$parameters$alpha
   b <- fit$parameters$beta
-  expect_equal(1 - extraDistr::dbbinom(0, 1, a, b), 0.4, tolerance = 1e-12)
-  expect_equal(1 - extraDistr::dbbinom(0, 2, a, b), 0.52, tolerance = 1e-12)
+  # Independent first and second Beta moments, without an optional package.
+  expect_equal(a / (a + b), 0.4, tolerance = 1e-12)
+  expect_equal(1 - b * (b + 1) / ((a + b) * (a + b + 1)),
+               0.52, tolerance = 1e-12)
   expect_equal(fit$parameters$mean_probability, 0.4)
   expect_equal(fit$parameters$type, "beta_binomial")
   expect_equal(sum(fit$distribution$percent) + fit$parameters$zero_contact_probability, 100)
@@ -212,7 +214,11 @@ test_that("calc_hofmans_accumulation follows Aldas Manzano equations 3.11 and 3.
                ((N * R1)^2 / (N * R1 + k * d * choose(N, 2)))[3:6], tolerance = 1e-12)
   expect_true(all(diff(constant$results$RN) > 0))
   expect_true(all(constant$results$RN <= N * R1))
-  expect_s3_class(constant$plot, "ggplot")
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    expect_s3_class(constant$plot, "ggplot")
+  } else {
+    expect_null(constant$plot)
+  }
 
   # Equation 3.12: with an observed R3 the exponent is estimated and the
   # curve reproduces R3 exactly.

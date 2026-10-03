@@ -24,12 +24,13 @@ jobs:
           - {os: macos-latest,   r: 'release'}
           - {os: windows-latest, r: 'release'}
           - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
-          - {os: ubuntu-latest,  r: 'release'}
+          - {os: ubuntu-latest,  r: 'release', manual: true}
           - {os: ubuntu-latest,  r: 'oldrel-1'}
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      NOT_CRAN: true
 
     steps:
       - uses: actions/checkout@v4
@@ -47,9 +48,42 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
+      - uses: r-lib/actions/setup-tinytex@v2
+        if: matrix.config.manual == true
+
+      - name: Install manual fonts
+        if: matrix.config.manual == true
+        run: tlmgr install inconsolata
+
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
-          build_args: 'c("--no-manual", "--compact-vignettes=gs+qpdf")'
+          upload-results: true
+          build_args: ${{ matrix.config.manual && 'character()' || '"--no-manual"' }}
+          args: ${{ matrix.config.manual && 'c("--as-cran", "--run-donttest")' || 'c("--no-manual", "--as-cran", "--run-donttest")' }}
           # Version 2 treats warnings as release blockers.
           error-on: '"warning"'
+
+      - name: Publish check logs for NOTE review
+        if: always()
+        shell: Rscript {0}
+        run: |
+          logs <- list.files("check", "00check[.]log$", recursive = TRUE, full.names = TRUE)
+          summary <- Sys.getenv("GITHUB_STEP_SUMMARY")
+          for (log in logs) {
+            cat("\n### ", log, "\n\n```text\n", paste(readLines(log, warn = FALSE), collapse = "\n"),
+                "\n```\n", file = summary, append = TRUE, sep = "")
+          }
+          cat("\nReview every NOTE before submission; a green job does not clear NOTEs.\n",
+              file = summary, append = TRUE)
+
+  minimum-R:
+    runs-on: ubuntu-latest
+    name: R 4.0.5 base-dependency compatibility
+    steps:
+      - uses: actions/checkout@v4
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.0.5'
+      - run: R CMD INSTALL .
+      - run: Rscript --vanilla tools/check-minimum-r.R

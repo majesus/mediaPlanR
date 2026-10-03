@@ -313,6 +313,9 @@ probabilistic bounds.
 Kim specifies MSAD but refers to Lee (1988) for the complete numerical example.
 `msad_kim2005` therefore reuses the inputs of Kim's CSD example, and its output
 is a derived calculation, not an MSAD result published in the dissertation.
+`calc_msad()` does reproduce the three-vehicle numerical example of Lee (1988,
+pp. 81-93) to within 0.0011 in every cell, which Lee prints to three decimals;
+that comparison is part of the test suite.
 
 ## Validation against observed data
 
@@ -365,6 +368,12 @@ mbd_result$reach
 mbd_result$distribution
 ```
 
+This is the three-vehicle example of Cheong (2007, p. 75), also published as
+Table 4 of Cheong, Leckenby and Eakin (2011). The function reproduces the
+published distribution to within 0.002 in every cell, more than the rounding of
+the published values (0.0005); the cause of that gap is not identified, and the
+tests fix the accepted deviation per cell.
+
 Unlike CSD and MSAD, the model can produce negative probabilities when it
 combines four or more vehicles, because the co-exposure of three or more
 vehicles is imputed rather than observed. Cheong's four-vehicle example is
@@ -389,22 +398,20 @@ in the dissertation's own evaluation.
 
 ## CBD: the conditional Beta distribution
 
-`calc_cbd()` implements the Conditional Beta Distribution of Leckenby and Kim,
-reported in Kim (1994) and reviewed in Kim (2005, pp. 59-64). In Kim's (2005)
-evaluation CBD is among the three most accurate models, together with CSD and
-CANEX; in Cheong's (2007) it is second only to CANEX for the complete exposure
-distribution.
+`calc_cbd()` implements the Conditional Beta Distribution of Kim (1994),
+reviewed in Kim (2005, pp. 59-64). In Kim's (2005) evaluation CBD is among the
+three most accurate models, together with CSD and CANEX; in Cheong's (2007) it
+is second only to CANEX for the complete exposure distribution.
 
-CBD shares its within-vehicle step with `calc_mbd()`. Each vehicle is peeled off,
-in reverse aggregation order, from a (0,1) exposure state into its own
-insertion-level Beta-Binomial distribution by the same conditional convolution
-(Danaher, 1992a). The two models differ only in how the initial (0,1) joint
-grid across all vehicles is built. MBD imputes the co-exposure of three or more
-vehicles from a Beta-Binomial fitted to each subset's own mean audience and
-duplication and combines it with Waring's inclusion-exclusion theorem. CBD
-instead applies Danaher's (1991) second-order canonical expansion, the mechanism
-used by `calc_canex()` and `calc_csd()`, directly to every cell of the (0,1)
-grid, with no imputation step.
+The model has three steps. Danaher's (1991) second-order canonical expansion,
+the mechanism used by `calc_canex()` and `calc_csd()`, gives the joint
+distribution of exposure to one insertion of each vehicle (the (0,1) grid).
+Conditionally on that state, the remaining insertions of each vehicle follow a
+Beta-Binomial distribution whose Beta parameters are updated by the first
+insertion, and the vehicles are independent given the grid (Danaher, 1992a).
+Finally, the zero cell of the grid is conformed to the canonical expansion of
+all the insertions and its remaining levels are rescaled so that the cell keeps
+its probability. The result does not depend on the aggregation order.
 
 ```{r cbd}
 cbd_result <- do.call(calc_cbd, csd_kim2005)
@@ -412,16 +419,17 @@ cbd_result$reach
 cbd_result$distribution
 ```
 
-These are the same three-vehicle inputs as the CSD example, so the two can be
-compared directly. Both use the same between-vehicle canonical expansion, so
-their reach is close, although it is not required to be identical because the
-within-vehicle step differs. Kim (2005) reviews the specification of CBD as an
-existing model and does not present a numerical example of it, so there is no
-published worked example to validate this implementation against. It is
-validated by construction: the (0,1) grid recovers each vehicle's own `R1` as its
-exact marginal, and the model reduces to the exact convolution of the vehicles'
-own Beta-Binomial marginals when the duplications imply zero correlation. Both
-properties are checked in the test suite.
+The implementation reproduces the CBD columns of the two-vehicle comparisons of
+Kim (2005, Appendix B) and Hong (1998, Appendix E) within the rounding of those
+sources (0.01 percentage points), taking the duplication that each source
+implies, and the three-vehicle worked example of Kim (1994, p. 139) except for
+its zero cell. In that example the zero of the canonical expansion is printed as
+0.5066, whereas the formula applied to the printed inputs gives about 0.510;
+`calc_cbd()` evaluates the formula, so its zero and one-contact probabilities
+differ from the printed ones by about 0.4 percentage points there. The tests
+check all these cases, and also that the (0,1) grid recovers each vehicle's own
+`R1` as its marginal and that, with zero correlation, the model reduces to the
+exact convolution of the vehicles' own Beta-Binomial marginals.
 
 ## Example datasets
 
@@ -451,6 +459,22 @@ domain: `calc_hofmans_accumulation()` (one vehicle, several insertions, with
 `hofmans_accumulation_example`) and `calc_hofmans_duplication()` (several
 vehicles, one insertion each, with `duplication_example`).
 
+## Domain of validity of the multivariate models
+
+`calc_canex()`, `calc_csd()`, `calc_msad()`, `calc_cbd()` and `calc_mbd()` take
+the observed one-insertion duplications as given. They stop when a duplication
+violates the Fréchet bounds implied by the audiences, or when some triple of
+vehicles has no non-negative joint exposure probability compatible with its
+pairwise duplications (a necessary condition that is not sufficient for four or
+more vehicles). They warn when the canonical correlation of a pair is below
+-0.1, because the models assume a duplication not below the random one (Hong,
+1998, p. 238) and can diverge considerably outside that domain; the threshold is
+a decision of this package, and the published reference plans stay above it.
+`calc_canex()` also warns when truncating the negative probabilities of its
+expansion is material, and reports in `diagnostics` the mean number of exposures
+that the expansion preserves and the one it returns. `?calc_canex` documents the
+domain in full.
+
 ## Scope
 
 The package adds a model only when its primary specification and a numeric
@@ -458,21 +482,21 @@ reference that allows an independent regression test are available.
 
 | Model | Numeric evidence | Status |
 |---|---|---|
-| CSD | Complete example, Kim (2005), Tables 4.2.2.1-4.2.2.10 | Implemented and validated |
-| MSAD | Algorithm given by Kim; detailed example referred to Lee (1988) | Implemented; external benchmark pending |
-| CANEX | Danaher's (1991) formula and the CSD example that uses its reach | Implemented; reports approximation diagnostics |
+| CSD | Complete example, Kim (2005), Tables 4.2.2.1-4.2.2.10; 40 plans of Appendix B | Implemented and validated |
+| MSAD | Algorithm given by Kim; detailed example in Lee (1988, pp. 81-93); 40 plans of Kim (2005, Appendix B) | Implemented and validated against Lee's example and Kim's plans (plan 19 differs by 0.099 percentage points) |
+| CANEX | Danaher's (1991) formula, the CSD example that uses its reach, and the CANX column of Kim (2005, Appendix B) | Implemented; reports approximation diagnostics |
 | Beta-Binomial and Binomial | Closed-form formulas | Implemented and tested at their limits |
-| MBD | Complete specification and three-vehicle example, Cheong (2007); four- and five-vehicle examples show the model's limits | Implemented, with a documented safety net and warnings |
-| CBD | Specification in Kim (2005, pp. 59-64) after Kim (1994) | Implemented; validated by construction |
-| HBBD (Hofmans Beta-Binomial) | Kim refers detailed steps to Boyd (1985) and Kim (1994) | Not implemented: primary steps not available |
-| DMD (Dirichlet multinomial) | Kim refers steps and examples to Boyd (1985) and Kim (1994); Aldás Manzano (1998) ranked it below the Metheringham and Kwerel geometric models | Not implemented |
+| MBD | Complete specification and three-vehicle example, Cheong (2007) and Cheong, Leckenby and Eakin (2011); four- and five-vehicle examples show the model's limits | Implemented, with a documented safety net and warnings; differs from the published example by up to 0.002 per cell |
+| CBD | Specification and three-vehicle example in Kim (1994, pp. 115-139); two-vehicle outputs in Kim (2005, Appendix B) and Hong (1998, Appendix E) | Implemented and validated against those outputs; zero cell of Kim's example differs by about 0.4 percentage points |
+| HBBD (Hofmans Beta-Binomial) | Kim (2005, pp. 52-53) gives the Hofmans reach formula followed by iterative mean-zero Beta-Binomial fitting | Not implemented or validated in this release |
+| DMD (Dirichlet multinomial) | Kim (2005, pp. 54-56) specifies the distribution and refers to detailed steps in Boyd (1985) and Kim (1994, pp. 89-98) | Not implemented or validated in this release |
 | HBD | Approximation of MBD described by Cheong (2007), without a verified numeric example | Not implemented |
 | Multivariate Negative-Binomial | Requires Danaher's (2007) formulation for online processes | Not implemented |
 
 ## References
 
 - Agostini, J. M. (1961). How to estimate unduplicated audiences. *Journal of
-  Advertising Research*, 1(3), 11-14. doi:10.1080/00218499.1961.12519620
+  Advertising Research*, 1(3), 11-14. <https://doi.org/10.1080/00218499.1961.12519620>
 - Aldás Manzano, J. (1998). *Modelos de determinación de la cobertura y la
   distribución de contactos en la planificación de medios publicitarios
   impresos* (Models for determining reach and exposure distribution in print
@@ -485,41 +509,49 @@ reference that allows an independent regression test are available.
 - Cheong, Y. (2007). *Multivariate Beta Binomial Distribution Model as a Web
   Media Exposure Model*. Doctoral dissertation, The University of Texas at
   Austin.
+- Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the multivariate
+  beta binomial distribution for estimating magazine and Internet exposure
+  frequency distributions. *Journal of Advertising*, 40(1), 7-23.
+  <https://doi.org/10.2753/JOA0091-3367400101>
 - Danaher, P. J. (1991). A canonical expansion model for multivariate media
   exposure distributions: A generalization of the "duplication of viewing law".
   *Journal of Marketing Research*, 28(3), 361-367.
-  doi:10.1177/002224379102800311
+  <https://doi.org/10.1177/002224379102800311>
 - Danaher, P. J. (1992a). A Markov-chain model for multivariate
   magazine-exposure distributions. *Journal of Business & Economic Statistics*,
-  10(4), 401-407. doi:10.1080/07350015.1992.10509915
+  10(4), 401-407. <https://doi.org/10.1080/07350015.1992.10509915>
 - Danaher, P. J. (2007). Modeling page views across multiple websites with an
   application to Internet reach and frequency prediction. *Marketing Science*,
-  26(3), 422-437. doi:10.1287/mksc.1060.0226
+  26(3), 422-437. <https://doi.org/10.1287/mksc.1060.0226>
 - Deming, W. E. (1943). *Statistical adjustment of data*. New York: Dover.
 - Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. *Applied
-  Statistics*, 8(1), 26-41. doi:10.2307/2985810
+  Statistics*, 8(1), 26-41. <https://doi.org/10.2307/2985810>
 - Hofmans, P. (1966). Measuring the cumulative net coverage of any combination
   of media. *Journal of Marketing Research*, 3(3), 269-278.
-  doi:10.1177/002224376600300307
-- Kim, H. (1994). *A conditional beta distribution model for advertising
+  <https://doi.org/10.1177/002224376600300307>
+- Hong, J. (1998). *Advertising media models for Internet reach/frequency
+  estimation*. Unpublished doctoral dissertation, The University of Texas at
+  Austin.
+- Kim, H. (1994). *A conditional beta distribution model for advertising media
   reach/frequency estimation*. Unpublished doctoral dissertation, The University
   of Texas at Austin.
 - Kim, H. G. (2005). *A Canonical Sequential Aggregation Media Model*. Doctoral
   dissertation, The University of Texas at Austin.
 - Leckenby, J. D., & Rice, M. D. (1986). The declining reach phenomenon in
   exposure distribution models. *Journal of Advertising*, 15(3), 13-20.
-  doi:10.1080/00913367.1986.10673014
+  <https://doi.org/10.1080/00913367.1986.10673014>
 - Lee, A. M., & Burkhart, A. J. (1960). Some optimization problems in advertising
   media planning. *Operational Research Quarterly*, 11(3), 113-122.
 - Lee, H.-K. (1988). *Sequential aggregation advertising media models*.
   Unpublished doctoral dissertation, The University of Texas at Austin.
 - Metheringham, R. A. (1964). Measuring the net cumulative coverage of a print
   campaign. *Journal of Advertising Research*, 4(4), 23-28.
-  doi:10.1080/00218499.1964.12519751
+  <https://doi.org/10.1080/00218499.1964.12519751>
 - Waring, E. (1792). *Meditationes Algebraicae*. Cambridge.
 
 Morgensztern (1970), whose reach formula underlies MSAD, is known to this
 package through Aldás Manzano (1998) and Kim (2005). Lee and Burkhart (1960) and
 Lee (1988) are cited as they appear in Kim (2005). The bibliographic details of
-Chandon (1976), Boyd (1985), Kim (1994) and Lee (1988) are those given in the
+Kim (1994), Lee (1988) and Hong (1998) are those of the title pages of the
+dissertations; those of Chandon (1976) and Boyd (1985) are given in the
 reference list of Kim (2005).

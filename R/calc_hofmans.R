@@ -55,7 +55,8 @@
 #'     (cumulative reach, as a proportion).
 #'   \item `parameters`: list with `k`, `d`, `alpha` and `R3` (`NA` when not
 #'     supplied).
-#'   \item `plot`: a ggplot2 object showing the evolution of cumulative reach.
+#'   \item `plot`: a ggplot2 object showing the evolution of cumulative reach,
+#'     or `NULL` when the suggested package ggplot2 is not installed.
 #' }
 #'
 #' @examples
@@ -71,7 +72,6 @@
 #' [calc_beta_binomial()] for a stochastic accumulation model that also
 #' returns the exposure distribution, and [calc_hofmans_duplication()] for the
 #' same author's model for several vehicles.
-#' @importFrom ggplot2 .data
 #' @export
 calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) {
   assert_number(R1, "R1", min = 0, max = 1, min_open = TRUE)
@@ -83,7 +83,7 @@ calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) 
          call. = FALSE)
   }
   d <- 2 * R1 - R2
-  if (d <= 1e-9) {
+  if (d <= 0) {
     stop("R2 must be smaller than 2 * R1: the audience duplicated between two ",
          "insertions (2 * R1 - R2) must be positive, otherwise the model is ",
          "undefined.", call. = FALSE)
@@ -100,7 +100,7 @@ calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) 
 
   k <- 2 * R1 / R2
   alpha <- if (is.null(R3)) 1 else
-    log((3 * R1 - R3) * R2 / (d * R3)) / log(2)
+    (log((3 * R1 - R3) / d) + log(R2 / R3)) / log(2)
 
   n <- seq_len(N)
   RN <- numeric(N)
@@ -108,7 +108,7 @@ calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) 
   RN[2L] <- R2
   if (N >= 3) {
     m <- 3:N
-    RN[m] <- (m * R1)^2 / (m * R1 + k * (m - 1)^alpha * (m / 2) * d)
+    RN[m] <- m * R1 / (1 + k * (m - 1)^alpha * d / (2 * R1))
   }
   results <- data.frame(N = n, RN = RN)
 
@@ -119,21 +119,24 @@ calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) 
             "values are not consistent with Hofmans' model.", call. = FALSE)
   }
 
-  plot_hofmans <- ggplot2::ggplot(results, ggplot2::aes(x = .data$N, y = .data$RN * 100)) +
-    ggplot2::geom_line(color = "steelblue") +
-    ggplot2::geom_point(size = 2, color = "steelblue") +
-    ggplot2::geom_text(
-      ggplot2::aes(label = paste0(round(.data$RN * 100, 1), "%")),
-      vjust = -0.8, size = 3
-    ) +
-    ggplot2::scale_y_continuous(limits = c(0, max(results$RN * 100) * 1.15)) +
-    ggplot2::labs(
-      x = "Number of insertions (N)",
-      y = "Reach (%)",
-      title = "Evolution of cumulative audience",
-      subtitle = "Hofmans accumulation model"
-    ) +
-    ggplot2::theme_minimal()
+  plot_hofmans <- NULL
+  if (requireNamespace("ggplot2", quietly = TRUE)) {
+    plot_hofmans <- ggplot2::ggplot(results, ggplot2::aes(x = .data$N, y = .data$RN * 100)) +
+      ggplot2::geom_line(color = "steelblue") +
+      ggplot2::geom_point(size = 2, color = "steelblue") +
+      ggplot2::geom_text(
+        ggplot2::aes(label = paste0(round(.data$RN * 100, 1), "%")),
+        vjust = -0.8, size = 3
+      ) +
+      ggplot2::scale_y_continuous(limits = c(0, max(results$RN * 100) * 1.15)) +
+      ggplot2::labs(
+        x = "Number of insertions (N)",
+        y = "Reach (%)",
+        title = "Evolution of cumulative audience",
+        subtitle = "Hofmans accumulation model"
+      ) +
+      ggplot2::theme_minimal()
+  }
 
   result <- structure(list(
     results = results,
@@ -231,15 +234,19 @@ calc_hofmans_duplication <- function(audiences, population, duplication_matrix) 
   Ai <- audiences[pairs[1L, ]]
   Aj <- audiences[pairs[2L, ]]
   Aij <- duplication_matrix[cbind(pairs[1L, ], pairs[2L, ])]
-  Kij <- (Ai + Aj) / (Ai + Aj - Aij)
+  Kij <- 1 / (1 - (Aij / population) / (Ai / population + Aj / population))
   weighted_duplication <- sum(Kij * Aij)
 
   gross_audience <- sum(audiences)
-  reach <- gross_audience^2 / (gross_audience + weighted_duplication)
+  if (!is.finite(gross_audience) || !is.finite(weighted_duplication)) {
+    stop("Total audience and weighted duplication must be finite; counts exceed the representable range.",
+         call. = FALSE)
+  }
+  reach <- gross_audience / (1 + weighted_duplication / gross_audience)
   check_reach_bounds(reach, audiences, population, "Hofmans")
 
   structure(list(
-    reach = list(percent = 100 * reach / population, people = reach),
+    reach = list(percent = 100 * (reach / population), people = reach),
     gross_audience = gross_audience,
     weighted_duplication = weighted_duplication,
     n_vehicles = length(audiences)

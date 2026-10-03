@@ -81,11 +81,20 @@ calc_agostini_duplication <- function(audiences, population, duplication_matrix,
 
   gross_audience <- sum(audiences)
   total_duplication <- sum(duplication_matrix[upper.tri(duplication_matrix)])
-  reach <- gross_audience^2 / (gross_audience + k * total_duplication)
+  if (!is.finite(gross_audience) || !is.finite(total_duplication)) {
+    stop("Total audience and duplication must be finite; counts exceed the representable range.",
+         call. = FALSE)
+  }
+  correction <- k * (total_duplication / gross_audience)
+  if (!is.finite(correction)) {
+    stop("The duplication correction must be finite; k exceeds the representable range.",
+         call. = FALSE)
+  }
+  reach <- gross_audience / (1 + correction)
   check_reach_bounds(reach, audiences, population, "Agostini")
 
   structure(list(
-    reach = list(percent = 100 * reach / population, people = reach),
+    reach = list(percent = 100 * (reach / population), people = reach),
     k = k,
     gross_audience = gross_audience,
     total_duplication = total_duplication,

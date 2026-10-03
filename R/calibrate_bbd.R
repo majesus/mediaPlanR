@@ -57,7 +57,7 @@ calibrate_bbd <- function(first_reach, target_reach, frequency,
     concentration <- exp(log_concentration)
     alpha <- first_reach * concentration
     beta <- (1 - first_reach) * concentration
-    distribution <- extraDistr::dbbinom(0:n, size = n, alpha = alpha, beta = beta)
+    distribution <- dbetabinom(0:n, size = n, alpha = alpha, beta = beta)
     if (type == "exact") distribution[frequency + 1L] else
       sum(distribution[(frequency + 1L):(n + 1L)])
   }
@@ -79,7 +79,7 @@ calibrate_bbd <- function(first_reach, target_reach, frequency,
   concentration <- exp(best$log_concentration)
   alpha <- first_reach * concentration
   beta <- (1 - first_reach) * concentration
-  distribution <- extraDistr::dbbinom(0:best$n, size = best$n,
+  distribution <- dbetabinom(0:best$n, size = best$n,
                                       alpha = alpha, beta = beta)
   cumulative <- rev(cumsum(rev(distribution)))
 

@@ -1,4 +1,4 @@
-test_that("no file under R/ executes module-level code (avoids launching Shiny apps or calculations on package load)", {
+test_that("R source files use only the allowed top-level syntax", {
   r_dir <- testthat::test_path("..", "..", "R")
   skip_if_not(dir.exists(r_dir), "R/ directory not found (skipped outside the source tree)")
 

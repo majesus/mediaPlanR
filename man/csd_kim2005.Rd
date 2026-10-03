@@ -25,7 +25,9 @@ forward aggregation order. They are included solely so that users can verify
 that \code{\link[=calc_csd]{calc_csd()}} reproduces the published result; exact calculations keep
 more precision than the intermediate values rounded in the dissertation.
 They are bare numeric values reused for validation, not a reproduction of
-the dissertation.
+the dissertation. The audiences and reaches originate from comScore Media
+Metrix data of September 2003, which Kim (2005) uses and Cheong, Leckenby
+and Eakin (2011, Table 5) also publish.
 }
 \examples{
 data(csd_kim2005)

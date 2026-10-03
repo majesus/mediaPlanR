@@ -178,7 +178,10 @@
 #' for validation, not a reproduction of the dissertation. Kim publishes these
 #' as the inputs of the CSD example and does not publish an MSAD distribution
 #' for them; this dataset is therefore an input benchmark, and the MSAD output
-#' it produces is a derived calculation, not a published result.
+#' it produces is a derived calculation, not a published result. The audiences
+#' and reaches originate from comScore Media Metrix data of September 2003,
+#' which Kim (2005) uses and Cheong, Leckenby and Eakin (2011, Table 5) also
+#' publish.
 #'
 #' @format A list with the components:
 #' \describe{
@@ -227,7 +230,9 @@
 #' that [calc_csd()] reproduces the published result; exact calculations keep
 #' more precision than the intermediate values rounded in the dissertation.
 #' They are bare numeric values reused for validation, not a reproduction of
-#' the dissertation.
+#' the dissertation. The audiences and reaches originate from comScore Media
+#' Metrix data of September 2003, which Kim (2005) uses and Cheong, Leckenby
+#' and Eakin (2011, Table 5) also publish.
 #'
 #' @format A list ready for `do.call(calc_csd, csd_kim2005)` with the
 #' components:
@@ -277,7 +282,10 @@
 #' that [calc_mbd()] reproduces the published result. This is the example of
 #' Cheong's dissertation that is fully specified and internally consistent
 #' without the negative-probability safety net. They are bare numeric values
-#' reused for validation, not a reproduction of the dissertation.
+#' reused for validation, not a reproduction of the dissertation. The figures
+#' originate from Simmons Market Research Bureau (SMRB) magazine audience data
+#' of 1979; the same example appears in Kim (1994, pp. 125-139) and in Cheong,
+#' Leckenby and Eakin (2011, Tables 2 to 4).
 #'
 #' @format A list ready for `do.call(calc_mbd, mbd_cheong2007)` with the
 #' components:
@@ -291,6 +299,11 @@
 #' Cheong, Y. (2007). Multivariate Beta Binomial Distribution Model as a Web
 #' Media Exposure Model. Doctoral dissertation, The University of Texas at
 #' Austin, Ch. 4.2.
+#'
+#' Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
+#' multivariate beta binomial distribution for estimating magazine and
+#' Internet exposure frequency distributions. Journal of Advertising, 40(1),
+#' 7-23. \doi{10.2753/JOA0091-3367400101}
 #' @examples
 #' data(mbd_cheong2007)
 #' result <- do.call(calc_mbd, mbd_cheong2007)

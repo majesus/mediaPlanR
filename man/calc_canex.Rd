@@ -12,7 +12,8 @@ calc_canex(vehicles_data, duplications, population = 1e+06)
 \item \code{k}: number of insertions in the vehicle (a positive integer);
 \item \code{R1}: reach after the first insertion, as a proportion in (0, 1];
 \item \code{R2}: cumulative reach after the second insertion, as a
-proportion with \verb{R1 <= R2 <= 2 * R1 - R1^2}.
+proportion between \code{R1} and the independence limit
+\code{2 * R1 - R1^2}.
 }}
 
 \item{duplications}{Symmetric matrix whose element \verb{[i, j]} is the
@@ -35,8 +36,10 @@ zero), \code{probability}, \code{percent}, \code{people} and \code{cumulative_pr
 \item \code{diagnostics}: list with \code{negative_mass_truncated} (probability mass
 that was negative before truncation), \code{mass_before_renormalization} and
 \code{correlation_min_eigenvalue} (the smallest eigenvalue of the
-correlation matrix). They show how much the second-order approximation
-had to be corrected.
+correlation matrix), \code{mean_exposures_expected} (the sum of the
+vehicles' means, preserved by the expansion) and \code{mean_exposures_result}
+(the mean of the returned distribution). They show how much the
+second-order approximation had to be corrected.
 }
 }
 \description{
@@ -69,6 +72,65 @@ with the number of vehicles and insertions. The model is therefore intended
 for small and medium schedules, and the function stops with an informative
 error above 2,000,000 combinations instead of exhausting memory.
 }
+\section{Truncation of negative probabilities}{
+Danaher (1991, pp. 363-364) shows that the probabilities of the expansion
+sum to one and reports, in his application, negative probabilities in a
+small fraction of the cells, with a mean magnitude of the order of 1e-7,
+which he sets to zero. That practice rests on the negative
+mass being negligible. This function applies it at any size and reports the
+truncated mass in \code{diagnostics$negative_mass_truncated}, together with the
+mean number of exposures that the expansion preserves
+(\code{mean_exposures_expected}, the sum of the vehicles' own means) and the one
+of the returned distribution (\code{mean_exposures_result}). When the truncated
+mass is not negligible, truncating and renormalizing can change the mean. The
+function then issues a warning of class \code{mediaPlanR_canex_truncation}; the
+threshold, a total negative mass of 1e-4, is a decision of this package and
+not of Danaher (1991). For example, two vehicles with two insertions each,
+\code{R1 = c(0.3, 0.2)}, \code{R2 = c(0.4, 0.3)} and zero duplication have an
+expected mean of 1 exposure and a negative mass of 0.0076, and the
+truncated distribution has a mean of 1.0227.
+}
+
+\section{Domain of validity}{
+
+The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
+\code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
+as given and check them against the Frechet bounds implied by the audiences
+and, for every triple of vehicles, against joint feasibility. The published
+methods have three limits that follow from this.
+
+First, Hong (1998, p. 238) notes that the models he evaluates assume a
+duplication between vehicles not below the random one, the product of the
+audiences, and treats null observed duplications as measurement error. With
+a lower duplication the models can diverge considerably. The functions warn
+(class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
+pair is below -0.1. That threshold is a decision of this package: the
+published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
+80 plans) include pairs slightly below the random duplication, with
+canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
+\code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
+under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
+expansion itself admits negative correlations. \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
+and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
+duplications.
+
+Second, pairwise duplications that satisfy the Frechet bounds can still be
+impossible jointly for three or more vehicles. For every triple of vehicles
+the functions check that the exposure to all three can have a non-negative
+probability, given the audiences and the three pairwise duplications, and
+stop with an error when it cannot. That condition is necessary but not
+sufficient for four or more vehicles, for which the published methods check
+feasibility at most to first order (Cheong 2007); \code{\link[=calc_mbd]{calc_mbd()}} and
+\code{\link[=calc_cbd]{calc_cbd()}} zero any negative cell that remains, and \code{\link[=calc_canex]{calc_canex()}}
+truncates it.
+
+Third, a low duplication between vehicles with several insertions can make
+the target of a sequential model invalid. For two vehicles with two
+insertions each, \code{R1 = 0.5} and \code{R2 = 0.75}, \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_cbd]{calc_cbd()}}
+stop with a duplication of zero, and \code{\link[=calc_msad]{calc_msad()}} with a duplication of zero
+or 0.5, instead of altering an invalid target.
+}
+
 \examples{
 # Two vehicles, two insertions each
 data(canex_example)

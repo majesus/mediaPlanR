@@ -10,7 +10,8 @@ plan_metrics(plan, reach = NULL)
 \item{plan}{A \code{media_plan} object.}
 
 \item{reach}{Optional unique reach of the plan, in people (for example
-\code{estimate_reach(plan)$reach$people}). When supplied, average frequency
+the \code{people} element of the \code{reach} returned by \code{\link[=estimate_reach]{estimate_reach()}}).
+When supplied, average frequency
 and cost per thousand people reached are added to the plan totals.}
 }
 \value{

@@ -83,8 +83,24 @@ test_that("calc_canex ignores the diagonal of the duplication matrix", {
 
 test_that("calc_canex stops with an informative error if the combination grid is excessive", {
   big_vehicles <- data.frame(k = rep(20, 5), R1 = rep(0.3, 5), R2 = rep(0.4, 5))
-  big_dup <- matrix(0.05, 5, 5)
+  big_dup <- matrix(0.1, 5, 5)
   diag(big_dup) <- 1
 
   expect_error(calc_canex(big_vehicles, big_dup), "exposure combinations")
+})
+
+test_that("the canonical correlation reproduces Table 1 of Danaher (1991)", {
+  # p1. = 0.3917, p.1 = 0.3657 and p11 = 0.1654 give a correlation of 0.0942
+  # (equation 1), and the inverse relation returns p11.
+  rho <- calculate_duplication(0.1654, 0.3917, 0.3657)
+  expect_lt(abs(rho - 0.0942), 0.00005)
+  p11 <- 0.3917 * 0.3657 *
+    (1 + 0.0942 * sqrt((1 - 0.3917) * (1 - 0.3657) / (0.3917 * 0.3657)))
+  expect_lt(abs(p11 - 0.1654), 0.00005)
+  fit <- calc_canex(data.frame(k = c(1, 1), R1 = c(0.3917, 0.3657),
+                               R2 = c(0.3917, 0.3657)),
+                    matrix(c(NA, 0.1654, 0.1654, NA), 2))
+  # Sum the two one-exposure cells in the observed bivariate Table 1.
+  expect_lt(max(abs(fit$distribution$probability - c(0.4080, 0.4266, 0.1654))),
+            1e-12)
 })

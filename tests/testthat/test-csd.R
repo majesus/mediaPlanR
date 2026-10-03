@@ -24,11 +24,11 @@ test_that("CSD reproduces Kim's complete three-vehicle example", {
   expect_s3_class(fit, "reach_csd")
   expect_equal(fit$steps$target_reach, c(0.6022075, 0.6180583),
                tolerance = 1e-7)
-  expect_equal(
-    fit$distribution$percent,
-    c(38.20, 18.57, 39.18, 2.49, 1.51, 0.05, 0.01),
-    tolerance = 0.03
-  )
+  # Published percentages (two decimals); the bound is an absolute error per
+  # cell, in percentage points. The largest observed difference is 0.0143.
+  published <- c(38.20, 18.57, 39.18, 2.49, 1.51, 0.05, 0.01)
+  expect_length(fit$distribution$percent, length(published))
+  expect_lt(max(abs(fit$distribution$percent - published)), 0.02)
   expect_equal(fit$reach$probability, 0.6180583, tolerance = 1e-7)
 })
 
@@ -87,4 +87,18 @@ test_that("CSD has a concise print method", {
                   aggregation_order = 1:3)
   expect_output(print(fit), "Canonical Sequential")
   expect_output(print(fit), "Probability sum")
+})
+
+test_that("a logical NA R2 is accepted only for vehicles with a single insertion", {
+  duplications <- matrix(c(NA, 0.25, 0.25, NA), 2)
+  single <- data.frame(insertions = c(1, 1), R1 = c(0.5, 0.5), R2 = c(NA, NA))
+  expect_true(is.logical(single$R2))
+  expect_s3_class(calc_cbd(single, duplications), "reach_cbd")
+  expect_s3_class(calc_csd(single, duplications), "reach_csd")
+
+  needed <- data.frame(insertions = c(2, 1), R1 = c(0.5, 0.5), R2 = c(NA, NA))
+  expect_error(calc_csd(needed, duplications), "at least two insertions")
+
+  wrong_type <- data.frame(insertions = c(1, 1), R1 = c(0.5, 0.5), R2 = c("a", "b"))
+  expect_error(calc_csd(wrong_type, duplications), "R2 must be numeric")
 })

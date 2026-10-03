@@ -68,6 +68,21 @@ media_plan <- function(data, population,
     stop("currency must be a character label.", call. = FALSE)
   }
 
+  numeric_columns <- c(audience = audience, insertions = insertions,
+                       cost_per_insertion = cost_per_insertion)
+  if (!is.null(target_audience)) {
+    numeric_columns <- c(numeric_columns, target_audience = target_audience)
+  }
+  for (name in names(numeric_columns)) {
+    if (!is.numeric(data[[numeric_columns[[name]]]])) {
+      stop(name, " must be a numeric column (logical, factor, character and ",
+           "list columns are not accepted).", call. = FALSE)
+    }
+  }
+  if (!is.character(data[[channel]]) && !is.factor(data[[channel]])) {
+    stop("channel must be a character or factor column.", call. = FALSE)
+  }
+
   out <- data.frame(
     channel = as.character(data[[channel]]),
     audience = as.numeric(data[[audience]]),
@@ -125,7 +140,8 @@ print.media_plan <- function(x, ...) {
 #'
 #' @param plan A `media_plan` object.
 #' @param reach Optional unique reach of the plan, in people (for example
-#'   `estimate_reach(plan)$reach$people`). When supplied, average frequency
+#'   the `people` element of the `reach` returned by [estimate_reach()]).
+#'   When supplied, average frequency
 #'   and cost per thousand people reached are added to the plan totals.
 #'
 #' @details
@@ -161,6 +177,11 @@ plan_metrics <- function(plan, reach = NULL) {
   d <- plan$data
   d$impressions <- d$audience * d$insertions
   d$spend <- d$cost_per_insertion * d$insertions
+  if (any(!is.finite(d$impressions)) || any(!is.finite(d$spend)) ||
+      !is.finite(sum(d$impressions)) || !is.finite(sum(d$spend))) {
+    stop("Total impressions and spend must be finite; the plan exceeds the representable range.",
+         call. = FALSE)
+  }
   d$rating_points <- d$impressions / plan$population * 100
   d$grp_share <- if (sum(d$rating_points) > 0) {
     d$rating_points / sum(d$rating_points)

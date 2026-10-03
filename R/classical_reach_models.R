@@ -99,7 +99,7 @@ calc_sainsbury <- function(audiences, population,
   full_distribution <- poisson_binomial_distribution(probs)
   P <- full_distribution[-1L]
   R <- rev(cumsum(rev(P)))
-  reach <- 1 - prod(1 - probs)
+  reach <- sum(P)
 
   structure(list(
     reach = list(percent = reach * 100, people = reach * population),
@@ -204,7 +204,7 @@ calc_binomial <- function(audiences, population,
   full_distribution <- stats::dbinom(0:n, size = n, prob = p)
   P <- full_distribution[-1L]
   R <- rev(cumsum(rev(P)))
-  reach <- 1 - full_distribution[1L]
+  reach <- sum(P)
 
   structure(list(
     reach = list(percent = reach * 100, people = reach * population),
@@ -284,6 +284,9 @@ calc_beta_binomial <- function(A1, A2, P, n) {
     stop("A1 and A2 cannot exceed the total population P.", call. = FALSE)
   }
   assert_number(n, "n", min = 1, integer = TRUE)
+  if (n > .Machine$integer.max - 1) {
+    stop("n exceeds the supported integer range.", call. = FALSE)
+  }
   n <- as.integer(n)
 
   R1 <- A1 / P
@@ -291,7 +294,7 @@ calc_beta_binomial <- function(A1, A2, P, n) {
   # Shared method-of-moments helper: it covers the binomial limit (R2 at the
   # independence bound, alpha = beta = Inf) and the polarized limit
   # (R2 = R1, alpha = beta = 0) explicitly instead of passing a non-finite
-  # alpha/beta on to extraDistr::dbbinom(), which returns NaN there.
+  # alpha/beta on to dbetabinom(), which returns NaN there.
   params <- calculate_bbd_params(R1, R2)
 
   P_dist <- if (params$type == "binomial_limit") {
@@ -301,11 +304,11 @@ calc_beta_binomial <- function(A1, A2, P, n) {
     out[c(1L, n + 1L)] <- c(1 - params$p, params$p)
     out
   } else {
-    extraDistr::dbbinom(0:n, size = n, alpha = params$alpha, beta = params$beta)
+    dbetabinom(0:n, size = n, alpha = params$alpha, beta = params$beta)
   }
 
   R_dist <- rev(cumsum(rev(P_dist)))
-  reach <- 1 - P_dist[1L]
+  reach <- sum(P_dist[-1L])
 
   structure(list(
     reach = list(percent = reach * 100, people = reach * P),
@@ -516,17 +519,17 @@ calc_metheringham <- function(audiences, insertions, duplication_matrix,
          "and diagonal entries of vehicles with at least two insertions).",
          call. = FALSE)
   }
-  if (!isTRUE(all.equal(duplication_matrix[used & upper.tri(used)],
-                        t(duplication_matrix)[used & upper.tri(used)],
-                        check.attributes = FALSE))) {
+  symmetry_check <- duplication_matrix
+  symmetry_check[!used] <- 0
+  if (!matrix_is_symmetric_relative(symmetry_check, 1e-8)) {
     stop("duplication_matrix must be symmetric.", call. = FALSE)
   }
-  tolerance <- 1e-9 * population
   for (i in seq_len(n_vehicles)) {
     for (j in i:n_vehicles) {
       if (!used[i, j]) next
-      lower <- max(0, audiences[i] + audiences[j] - population)
+      lower <- max(0, audiences[i] - (population - audiences[j]))
       upper <- min(audiences[i], audiences[j])
+      tolerance <- 1e-9 * upper
       value <- duplication_matrix[i, j]
       if (value < lower - tolerance || value > upper + tolerance) {
         stop(sprintf(paste0(
@@ -542,9 +545,9 @@ calc_metheringham <- function(audiences, insertions, duplication_matrix,
   duplication_vector <- matrix_to_vector(duplication)
   opportunity_vector <- matrix_to_vector(opportunity_matrix)
 
-  A1 <- sum(audiences * insertions) / total_insertions
-  D <- sum(duplication_vector * opportunity_vector) / sum(opportunity_vector)
-  A2 <- 2 * A1 - D
+  A1 <- sum(audiences * (insertions / total_insertions))
+  D <- sum(duplication_vector * (opportunity_vector / sum(opportunity_vector)))
+  A2 <- A1 + (A1 - D)
   if (A1 <= 0) {
     stop("At least one vehicle with insertions must have a positive audience.",
          call. = FALSE)

@@ -2,7 +2,7 @@ Package: mediaPlanR
 Type: Package
 Title: Reliable Cross-Media Reach and Frequency Planning
 Version: 2.0.0
-Date: 2026-09-24
+Date: 2026-10-03
 Authors@R: 
     person(given = "Manuel J.", family = "Sánchez-Franco",
            email = "majesus@us.es", role = c("aut", "cre"),
@@ -18,8 +18,10 @@ Description: Reproducible tools for cross-media reach and exposure-frequency
     distribution models of Danaher (1991) <doi:10.1177/002224379102800311>
     (canonical expansion), Leckenby and Rice (1986)
     <doi:10.1080/00913367.1986.10673014> (Morgensztern sequential
-    aggregation), Kim (2005) (canonical sequential aggregation), Kim (1994)
-    (conditional Beta distribution) and Cheong (2007) (multivariate
+    aggregation), Hyo Gyoo Kim (2005) (canonical sequential aggregation),
+    Heejin Kim (1994)
+    (conditional Beta distribution), and Cheong (2007) and Cheong, Leckenby and
+    Eakin (2011) <doi:10.2753/JOA0091-3367400101> (multivariate
     Beta-Binomial). Also includes target-audience metrics, an explicitly
     scoped Negative-Binomial count approximation, and budget-constrained
     optimization of effective reach that reports whether a global optimum was
@@ -28,8 +30,8 @@ License: MIT + file LICENSE
 URL: https://github.com/majesus/mediaPlanR
 BugReports: https://github.com/majesus/mediaPlanR/issues
 Depends: R (>= 4.0)
-Imports: extraDistr, ggplot2 (>= 3.4.0), stats, utils
-Suggests: knitr, rmarkdown, testthat (>= 3.0.0)
+Imports: stats, utils
+Suggests: extraDistr, ggplot2 (>= 3.4.0), knitr, rmarkdown, testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8

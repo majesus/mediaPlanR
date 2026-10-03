@@ -23,7 +23,7 @@ mbd_top_cell <- function(params, size) {
   } else if (params$type == "polarized_limit") {
     params$p
   } else {
-    extraDistr::dbbinom(size, size, alpha = params$alpha, beta = params$beta)
+    dbetabinom(size, size, alpha = params$alpha, beta = params$beta)
   }
 }
 
@@ -161,7 +161,7 @@ mbd_peel_vehicle <- function(table, other_keys_subsets, v, alpha_c, beta_c, p_c,
     # converge to the same point mass at p_c, so conditioning on the "0" or
     # "1" row leaves the vehicle's own distribution unchanged (no person-level
     # heterogeneity to condition on). Computing this directly also avoids
-    # extraDistr::dbbinom(alpha = Inf, beta = Inf), which returns NaN.
+    # dbetabinom(alpha = Inf, beta = Inf), which returns NaN.
     dist0 <- dist1 <- stats::dbinom(0:vehicle_size, size = vehicle_size, prob = p_c)
   } else if (alpha_c == 0 && beta_c == 0) {
     # Polarized limit: Beta(0, beta_c+1) is a point mass at p=0 and
@@ -173,8 +173,8 @@ mbd_peel_vehicle <- function(table, other_keys_subsets, v, alpha_c, beta_c, p_c,
   } else {
     alpha0 <- alpha_c; beta0 <- beta_c + 1
     alpha1 <- alpha_c + 1; beta1 <- beta_c
-    dist0 <- extraDistr::dbbinom(0:vehicle_size, size = vehicle_size, alpha = alpha0, beta = beta0)
-    dist1 <- extraDistr::dbbinom(0:vehicle_size, size = vehicle_size, alpha = alpha1, beta = beta1)
+    dist0 <- dbetabinom(0:vehicle_size, size = vehicle_size, alpha = alpha0, beta = beta0)
+    dist1 <- dbetabinom(0:vehicle_size, size = vehicle_size, alpha = alpha1, beta = beta1)
   }
   for (i in seq_along(other_keys_subsets)) {
     os <- other_keys_subsets[[i]]
@@ -236,6 +236,8 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' @param population Positive population used only to express probabilities
 #'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
+#'   The Frechet and triple-feasibility checks apply it relative to the smaller
+#'   audience involved.
 #'
 #' @return A `reach_mbd` object: a list with `reach` (`probability`, `percent`
 #'   and `people`), `average_frequency`, the complete exposure `distribution`
@@ -279,6 +281,20 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' exponential cost of the exposure grid. `calc_mbd()` stops above 12 vehicles
 #' for this reason.
 #'
+#' # Validation against the published example
+#'
+#' For the three-vehicle example of Cheong (2007, p. 75), which Cheong,
+#' Leckenby and Eakin (2011, Table 4) also publish, the function reproduces
+#' the published distribution to within 0.002 in every cell, which is more than
+#' the rounding of the published values (0.0005). The cause of that gap is not
+#' identified: the sum of the Beta-Binomial parameters printed in the article
+#' (7.294) cannot be reproduced from its own Table 2, and imposing it does not
+#' close the difference. The package tests fix the accepted deviation per cell.
+#' In the binomial limit of a vehicle's own distribution (`R2` equal to the
+#' reach under independence), the conditional distributions of the peeling step
+#' coincide, so the result of this model does not depend on the duplication
+#' between vehicles in that limit; this follows from Cheong's construction.
+#'
 #' Cheong reports MBD as the most accurate of the eleven models tested for
 #' reach alone (comScore 2003 data, 440 schedules) but not for the complete
 #' exposure distribution, where [calc_canex()] and the Conditional Beta
@@ -288,6 +304,11 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' Cheong, Y. (2007). Multivariate Beta Binomial Distribution Model as a Web
 #' Media Exposure Model. Doctoral dissertation, The University of Texas at
 #' Austin.
+#'
+#' Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
+#' multivariate beta binomial distribution for estimating magazine and
+#' Internet exposure frequency distributions. Journal of Advertising, 40(1),
+#' 7-23. \doi{10.2753/JOA0091-3367400101}
 #'
 #' Waring, E. (1792). Meditationes Algebraicae. Cambridge.
 #'
@@ -299,9 +320,9 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' result$distribution
 #'
 #' @seealso [calc_csd()] and [calc_msad()] for sequential aggregation models,
-#'   and [calc_cbd()] for the model that shares this function's within-vehicle
-#'   peeling step with a canonical-expansion between-vehicle step instead of an
-#'   imputed one.
+#'   and [calc_cbd()] for the model that uses a canonical-expansion
+#'   between-vehicle step instead of an imputed one.
+#' @inheritSection calc_canex Domain of validity
 #' @export
 calc_mbd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),

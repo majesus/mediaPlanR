@@ -29,7 +29,8 @@ A list of class \code{"reach_hofmans_accumulation"} with components:
 (cumulative reach, as a proportion).
 \item \code{parameters}: list with \code{k}, \code{d}, \code{alpha} and \code{R3} (\code{NA} when not
 supplied).
-\item \code{plot}: a ggplot2 object showing the evolution of cumulative reach.
+\item \code{plot}: a ggplot2 object showing the evolution of cumulative reach,
+or \code{NULL} when the suggested package ggplot2 is not installed.
 }
 }
 \description{

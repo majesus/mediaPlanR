@@ -43,6 +43,8 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' @param population Positive population used only to express probabilities
 #'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
+#'   The Frechet and triple-feasibility checks apply it relative to the smaller
+#'   audience involved.
 #'
 #' @return A `reach_msad` object: a list with `reach` (`probability`, `percent`
 #'   and `people`), `average_frequency`, the complete exposure `distribution`
@@ -64,6 +66,11 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' margins are preserved, and the zero-exposure probability is exactly
 #' \eqn{1 - R_m}.
 #'
+#' The function reproduces the three-vehicle numerical example of Lee (1988,
+#' pp. 81-93; two insertions per vehicle, aggregation in the order given) to
+#' within 0.0011 in every cell of the exposure distribution, which Lee prints
+#' to three decimals.
+#'
 #' MSAD is intended to reduce, but does not guarantee the elimination of,
 #' declining reach. The reach formula can also be incompatible with the
 #' supplied marginal distributions. In that case the function stops and reports
@@ -80,7 +87,8 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' Doctoral dissertation, The University of Texas at Austin, pp. 65-71. Kim
 #' identifies the detailed MSAD numerical example as Lee, H.-K. (1988),
 #' Sequential aggregation advertising media models, unpublished doctoral
-#' dissertation, The University of Texas at Austin, pp. 81-101.
+#' dissertation, The University of Texas at Austin, pp. 81-101; the numerical
+#' example itself occupies pp. 81-93.
 #'
 #' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
 #' distribución de contactos en la planificación de medios publicitarios
@@ -98,6 +106,7 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' @seealso [calc_csd()] for the canonical alternative and [calc_mbd()] and
 #'   [calc_cbd()] for models that peel vehicles into insertion-level
 #'   distributions.
+#' @inheritSection calc_canex Domain of validity
 #' @export
 calc_msad <- function(vehicles_data, duplications,
                       aggregation_order = c("audience_desc", "given"),

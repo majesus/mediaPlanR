@@ -21,15 +21,15 @@ test_that("MBD reproduces Cheong's complete three-vehicle example", {
   expect_s3_class(fit, "reach_mbd")
   # Cheong (2007), Ch. 4.2, final collapsed distribution (p.75): the only
   # example in the dissertation that is fully traceable end to end without
-  # engaging the negative-probability safety net. Cheong's own intermediate
-  # values are rounded to three decimals, so a small tolerance is expected
-  # (the same practice used for Kim's CSD example elsewhere in this package).
-  expect_equal(
-    fit$distribution$probability,
-    c(0.515, 0.164, 0.112, 0.121, 0.046, 0.034, 0.008),
-    tolerance = 0.01
-  )
-  expect_equal(fit$reach$probability, 1 - 0.515, tolerance = 0.01)
+  # engaging the negative-probability safety net. The same distribution is
+  # Table 4 of Cheong, Leckenby and Eakin (2011). The published values are
+  # rounded to three decimals, and this implementation differs from them by up
+  # to 0.002 in one cell (the cause of that gap is not identified), so the
+  # check is per cell, with an absolute bound of 0.0025.
+  published <- c(0.515, 0.164, 0.112, 0.121, 0.046, 0.034, 0.008)
+  expect_length(fit$distribution$probability, length(published))
+  expect_lt(max(abs(fit$distribution$probability - published)), 0.0025)
+  expect_lt(abs(fit$reach$probability - (1 - 0.515)), 0.0025)
   expect_equal(fit$diagnostics$negative_mass_adjusted, 0)
 })
 
@@ -80,9 +80,11 @@ test_that("MBD's safety net matches Cheong's MBD-ADJ direction on schedule #151"
   expect_equal(sum(safety$distribution), 1, tolerance = 1e-9)
   # Cheong's own MBD-ADJ table (4.4.3): close but not identical, since
   # Cheong's raw table itself sums to 1.008 (rounding), not 1.
-  expect_equal(safety$distribution[1:7],
-               c(.2792, .0082, .1306, .0566, .0135, .0034, .0027),
-               tolerance = 0.01)
+  # Absolute error per cell (probabilities); the largest observed difference
+  # is 0.0019, in the first cell.
+  expect_lt(max(abs(safety$distribution[1:7] -
+                      c(.2792, .0082, .1306, .0566, .0135, .0034, .0027))),
+            0.0025)
 })
 
 test_that("MBD validates inputs and the vehicle-count cap", {

@@ -29,7 +29,9 @@ order, as in Cheong's worked examples.}
 \item{population}{Positive population used only to express probabilities
 as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
-\item{tolerance}{Positive numerical tolerance for probability constraints.}
+\item{tolerance}{Positive numerical tolerance for probability constraints.
+The Frechet and triple-feasibility checks apply it relative to the smaller
+audience involved.}
 }
 \value{
 A \code{reach_mbd} object: a list with \code{reach} (\code{probability}, \code{percent}
@@ -84,11 +86,65 @@ distribution, that this was not investigated systematically, and that the
 model was tested computationally only up to 12-13 vehicles because of the
 exponential cost of the exposure grid. \code{calc_mbd()} stops above 12 vehicles
 for this reason.
+}
+
+\section{Validation against the published example}{
+For the three-vehicle example of Cheong (2007, p. 75), which Cheong,
+Leckenby and Eakin (2011, Table 4) also publish, the function reproduces
+the published distribution to within 0.002 in every cell, which is more than
+the rounding of the published values (0.0005). The cause of that gap is not
+identified: the sum of the Beta-Binomial parameters printed in the article
+(7.294) cannot be reproduced from its own Table 2, and imposing it does not
+close the difference. The package tests fix the accepted deviation per cell.
+In the binomial limit of a vehicle's own distribution (\code{R2} equal to the
+reach under independence), the conditional distributions of the peeling step
+coincide, so the result of this model does not depend on the duplication
+between vehicles in that limit; this follows from Cheong's construction.
 
 Cheong reports MBD as the most accurate of the eleven models tested for
 reach alone (comScore 2003 data, 440 schedules) but not for the complete
 exposure distribution, where \code{\link[=calc_canex]{calc_canex()}} and the Conditional Beta
 Distribution model (\code{\link[=calc_cbd]{calc_cbd()}}) were more accurate.
+}
+
+\section{Domain of validity}{
+
+The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
+\code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
+as given and check them against the Frechet bounds implied by the audiences
+and, for every triple of vehicles, against joint feasibility. The published
+methods have three limits that follow from this.
+
+First, Hong (1998, p. 238) notes that the models he evaluates assume a
+duplication between vehicles not below the random one, the product of the
+audiences, and treats null observed duplications as measurement error. With
+a lower duplication the models can diverge considerably. The functions warn
+(class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
+pair is below -0.1. That threshold is a decision of this package: the
+published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
+80 plans) include pairs slightly below the random duplication, with
+canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
+\code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
+under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
+expansion itself admits negative correlations. \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
+and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
+duplications.
+
+Second, pairwise duplications that satisfy the Frechet bounds can still be
+impossible jointly for three or more vehicles. For every triple of vehicles
+the functions check that the exposure to all three can have a non-negative
+probability, given the audiences and the three pairwise duplications, and
+stop with an error when it cannot. That condition is necessary but not
+sufficient for four or more vehicles, for which the published methods check
+feasibility at most to first order (Cheong 2007); \code{\link[=calc_mbd]{calc_mbd()}} and
+\code{\link[=calc_cbd]{calc_cbd()}} zero any negative cell that remains, and \code{\link[=calc_canex]{calc_canex()}}
+truncates it.
+
+Third, a low duplication between vehicles with several insertions can make
+the target of a sequential model invalid. For two vehicles with two
+insertions each, \code{R1 = 0.5} and \code{R2 = 0.75}, \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_cbd]{calc_cbd()}}
+stop with a duplication of zero, and \code{\link[=calc_msad]{calc_msad()}} with a duplication of zero
+or 0.5, instead of altering an invalid target.
 }
 
 \examples{
@@ -104,11 +160,15 @@ Cheong, Y. (2007). Multivariate Beta Binomial Distribution Model as a Web
 Media Exposure Model. Doctoral dissertation, The University of Texas at
 Austin.
 
+Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
+multivariate beta binomial distribution for estimating magazine and
+Internet exposure frequency distributions. Journal of Advertising, 40(1),
+7-23. \doi{10.2753/JOA0091-3367400101}
+
 Waring, E. (1792). Meditationes Algebraicae. Cambridge.
 }
 \seealso{
 \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_msad]{calc_msad()}} for sequential aggregation models,
-and \code{\link[=calc_cbd]{calc_cbd()}} for the model that shares this function's within-vehicle
-peeling step with a canonical-expansion between-vehicle step instead of an
-imputed one.
+and \code{\link[=calc_cbd]{calc_cbd()}} for the model that uses a canonical-expansion
+between-vehicle step instead of an imputed one.
 }

@@ -59,3 +59,19 @@ test_that("MSAD rejects probabilistically impossible inputs", {
     "integer row indices"
   )
 })
+
+test_that("MSAD reproduces the worked example of Lee (1988, pp. 81-93)", {
+  # Three vehicles with two insertions each, aggregated in the order of Lee's
+  # example. Lee's table is rounded to three decimals.
+  vehicles <- data.frame(insertions = c(2, 2, 2),
+                         R1 = c(0.121, 0.132, 0.088),
+                         R2 = c(0.162, 0.182, 0.121))
+  duplications <- matrix(c(NA, 0.046, 0.037,
+                           0.046, NA, 0.033,
+                           0.037, 0.033, NA), nrow = 3, byrow = TRUE)
+  fit <- calc_msad(vehicles, duplications, aggregation_order = "given")
+  published <- c(0.702, 0.085, 0.106, 0.062, 0.035, 0.009, 0.002)
+  expect_length(fit$distribution$probability, length(published))
+  expect_lt(max(abs(fit$distribution$probability - published)), 0.0015)
+  expect_lt(abs(fit$reach$probability - (1 - 0.702)), 0.0015)
+})

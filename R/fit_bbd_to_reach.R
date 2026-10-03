@@ -68,7 +68,6 @@
 #' [calc_beta_binomial()], [calc_sainsbury()], [calc_binomial()] and
 #' [calc_metheringham()], which estimate the Beta-Binomial or the exposure
 #' distribution from audiences alone.
-#' @importFrom extraDistr dbbinom
 #' @export
 fit_bbd_to_reach <- function(insertions, audiences, reach, universe,
                              precision = 100, max_iter = 100) {
@@ -92,7 +91,7 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, universe,
     concentration <- exp(log_concentration)
     alpha <- concentration * mean_probability
     beta <- concentration * (1 - mean_probability)
-    (1 - extraDistr::dbbinom(0, size = N, alpha = alpha, beta = beta)) * universe
+    (1 - dbetabinom(0, size = N, alpha = alpha, beta = beta)) * universe
   }
 
   feasible_min <- mean_probability * universe
@@ -144,7 +143,7 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, universe,
     beta <- concentration * (1 - mean_probability)
     fitted_reach <- coverage_for_log_concentration(root)
     iterations <- eval_count
-    distribution <- extraDistr::dbbinom(0:N, size = N, alpha = alpha, beta = beta)
+    distribution <- dbetabinom(0:N, size = N, alpha = alpha, beta = beta)
     fit_type <- "beta_binomial"
   }
   difference <- fitted_reach - reach

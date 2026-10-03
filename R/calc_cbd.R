@@ -5,10 +5,9 @@
 # cell is adjusted by the sum of pairwise correlation terms only (no
 # three-way or higher terms) -- the same canonical formula already used by
 # calc_canex()/calc_csd() for the zero cell, evaluated here for all 2^n
-# cells (Kim 2005, pp.56-57 and 60). Returns an environment keyed by
-# mbd_key(), exactly the shape mbd_peel_vehicle() expects, so the two models
-# share the same peeling mechanism (Danaher 1992a) once this initial grid is
-# built.
+# cells (Kim 1994, pp. 115-124; Kim 2005, pp. 56-57 and 60). Returns an
+# environment keyed by mbd_key() (the subset of vehicles exposed to their first
+# insertion).
 cbd_binary_grid <- function(R1, correlation_matrix) {
   n <- length(R1)
   mu <- R1
@@ -35,18 +34,16 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 
 #' Conditional Beta Distribution model
 #'
-#' Implements the Conditional Beta Distribution (CBD) of Leckenby and Kim,
-#' reported in Kim (1994) and reviewed in Kim (2005), for several vehicles with
-#' several insertions each. Between-vehicle duplication is modeled first, at
-#' the one-insertion (0,1) level, by Danaher's (1991) second-order canonical
-#' expansion -- the mechanism [calc_canex()] and [calc_csd()] use. Vehicles are
-#' then peeled off one at a time, in reverse aggregation order, and each is
-#' expanded from its (0,1) exposure state into its own insertion-level
-#' Beta-Binomial distribution by Danaher's (1992a) conditional convolution --
-#' the mechanism [calc_mbd()] uses for its own peeling step. CBD and MBD
-#' therefore share their within-vehicle expansion exactly and differ only in how
-#' the initial (0,1) joint grid is built: canonical expansion here, Waring's
-#' inclusion-exclusion theorem for MBD.
+#' Implements the Conditional Beta Distribution (CBD) of Kim (1994), reviewed
+#' in Kim (2005), for several vehicles with several insertions each.
+#' Between-vehicle duplication is modeled first, at the one-insertion (0,1)
+#' level, by Danaher's (1991) second-order canonical expansion -- the mechanism
+#' [calc_canex()] and [calc_csd()] use. Conditionally on the (0,1) exposure
+#' state of every vehicle, the remaining insertions of each vehicle follow a
+#' Beta-Binomial distribution whose Beta parameters are updated by that state,
+#' and the vehicles are independent given the grid (Danaher 1992a). The zero
+#' cell of the grid is then conformed to the canonical expansion of all the
+#' insertions.
 #'
 #' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
 #'   with the same convention as [calc_csd()] and [calc_mbd()] (`R2` may be
@@ -55,55 +52,101 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #'   duplications, as proportions of the population. The diagonal is ignored.
 #' @param aggregation_order Either `"audience_desc"` (vehicles in decreasing
 #'   order of one-insertion reach), `"given"` (the row order), or a
-#'   permutation of the row indices. Vehicles are peeled off starting from the
-#'   *last* position of this order, as in [calc_mbd()].
+#'   permutation of the row indices. It is validated and reported for
+#'   consistency with the other sequential models, but it does not affect the
+#'   result: in Kim's specification the vehicles are conditionally independent
+#'   given the (0,1) grid, so the distribution does not depend on the order.
 #' @param population Positive population used only to express probabilities
 #'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
+#'   The Frechet and triple-feasibility checks apply it relative to the smaller
+#'   audience involved.
 #'
 #' @return A `reach_cbd` object: a list with `reach` (`probability`, `percent`
 #'   and `people`), `average_frequency`, the complete exposure `distribution`
 #'   (`contacts`, `probability`, `percent`, `people` and
 #'   `cumulative_probability`), the `aggregation_order` and `aggregation_rule`,
-#'   the peeling `steps` and `diagnostics`, which include whether the
+#'   the within-vehicle `vehicle_expansion` (the distribution used for each
+#'   vehicle) and `diagnostics`, which include the canonical zero-exposure
+#'   probability, the zero-cell rescaling factor and whether the
 #'   negative-probability safety net of [calc_mbd()] had to be engaged
 #'   (`negative_mass_adjusted`, `cells_adjusted`).
 #'
 #' @details
-#' Unlike [calc_mbd()], the between-vehicle step of CBD needs no imputation
-#' for three or more vehicles: the canonical expansion gives every cell of the
-#' (0,1) grid directly from the pairwise correlations. For binary exposure the
-#' expansion uses the mean \eqn{R_{1i}} and variance \eqn{R_{1i}(1 - R_{1i})}
-#' of each vehicle's one-insertion exposure, which is the single-insertion
-#' case of the Beta-Binomial mean and variance in Kim (2005, pp. 60-61); this
-#' guarantees that summing out all other vehicles returns each vehicle's own
-#' Bernoulli marginal exactly.
+#' The model follows Kim (1994, pp. 115-124):
 #'
-#' Kim (2005, pp. 59-64) reviews the specification of CBD as an existing model
-#' but does not present a numerical example of it, as it does for CSD, so there
-#' is no published worked example to validate this implementation against
-#' directly. The implementation is validated by construction: the (0,1) grid
-#' recovers each vehicle's own `R1` as its exact marginal, its peeling step is
-#' the separately validated mechanism of [calc_mbd()], and with zero
-#' correlation the model reduces to the exact convolution of the vehicles' own
+#' 1. The joint distribution of exposure to one insertion of each vehicle (the
+#'    \eqn{2^m} cells of the (0,1) grid) is obtained from the second-order
+#'    canonical expansion with Bernoulli marginals, from the pairwise
+#'    correlations implied by the observed one-insertion duplications.
+#' 2. Given that vehicle \eqn{i} was (\eqn{x_i = 1}) or was not (\eqn{x_i = 0})
+#'    exposed to its first insertion, its remaining \eqn{n_i - 1} insertions
+#'    follow a Beta-Binomial distribution with parameters
+#'    \eqn{(\alpha + x_i, \beta + 1 - x_i)}, where \eqn{\alpha} and \eqn{\beta}
+#'    are fitted from `R1` and `R2`. The vehicle's total exposure is that
+#'    distribution shifted by \eqn{x_i}. The distributions of the vehicles are
+#'    convolved within each cell of the grid and weighted by the cell
+#'    probability. A vehicle with one insertion contributes only its state
+#'    \eqn{x_i}.
+#' 3. In the all-zero cell of the grid, the probability of zero exposures is
+#'    set to the canonical expansion of the zero cell computed with all the
+#'    insertions (Danaher 1991, as in [calc_canex()]), and the remaining levels
+#'    of that cell are rescaled so that the cell keeps its total probability
+#'    (Kim 1994, p. 124).
+#'
+#' With a binomial-limit vehicle (`R2` equal to the reach under independence)
+#' the conditional distribution is the binomial one, and with a polarized one
+#' (`R2` equal to `R1`) it is the all-or-nothing exposure; both are the limits
+#' of the Beta-Binomial updating.
+#'
+#' Unlike [calc_mbd()], the between-vehicle step of CBD needs no imputation
+#' for three or more vehicles. The canonical expansion uses the mean
+#' \eqn{R_{1i}} and variance \eqn{R_{1i}(1 - R_{1i})} of each vehicle's
+#' one-insertion exposure; this guarantees that summing out all other vehicles
+#' returns each vehicle's own Bernoulli marginal exactly, and with zero
+#' correlation the model reduces to the exact convolution of the vehicles'
 #' Beta-Binomial marginals.
+#' With correlation, the final zero-cell adjustment does not
+#' preserve the mean number of exposures of each vehicle exactly; the
+#' departure is reported in `diagnostics$mean_error` and was between 0.0003 and
+#' 0.013 exposures in the package's reference schedules.
+#'
+#' # Validation against published results
+#'
+#' The implementation reproduces the CBD columns of the two-vehicle
+#' comparisons of Kim (2005, Appendix B) and of Hong (1998, Appendix E) within
+#' the rounding of those sources (0.01 percentage points), taking the
+#' duplication that each source implies, and the worked example of Kim (1994,
+#' p. 139; three vehicles with 2, 1 and 3 insertions, SMRB 1979 data) except
+#' for its zero cell. In that example the zero of the canonical expansion is
+#' printed as 0.5066,
+#' whereas the formula applied to the printed inputs gives about 0.510; this
+#' function evaluates the formula, so its zero and one-contact probabilities
+#' differ from the printed ones by about 0.4 percentage points in that
+#' example. See the package tests for the exact cases.
 #'
 #' Because the canonical expansion can assign small negative probabilities to
 #' some (0,1) cells -- the limitation documented for [calc_canex()] -- any
-#' cell that is still negative after peeling is set to zero and that mass is
+#' cell that is still negative at the end is set to zero and that mass is
 #' redistributed proportionally, as in the final safety net of [calc_mbd()].
-#' This is reported in `diagnostics`.
+#' This step is an extension of the package, not part of Kim's specification,
+#' and is reported in `diagnostics`. If the canonical zero-exposure probability
+#' is not a probability, the function stops, as [calc_csd()] does.
 #'
-#' The peeling step has the exponential cost of [calc_mbd()], so the number of
+#' The number of cells of the (0,1) grid grows as \eqn{2^m}, so the number of
 #' vehicles is limited to 12.
 #'
 #' @references
-#' Kim, H. (1994). A conditional beta distribution model for advertising
+#' Kim, H. (1994). A conditional beta distribution model for advertising media
 #' reach/frequency estimation. Unpublished doctoral dissertation, The
-#' University of Texas at Austin.
+#' University of Texas at Austin, pp. 115-139.
 #'
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 #' Doctoral dissertation, The University of Texas at Austin, pp. 59-64.
+#'
+#' Hong, J. (1998). Advertising media models for Internet reach/frequency
+#' estimation. Unpublished doctoral dissertation, The University of Texas at
+#' Austin, Appendix E.
 #'
 #' Danaher, P. J. (1991). A canonical expansion model for multivariate media
 #' exposure distributions: A generalization of the "duplication of viewing
@@ -122,9 +165,10 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' result$reach
 #' result$distribution
 #'
-#' @seealso [calc_mbd()] for the same within-vehicle mechanism with an imputed
-#'   between-vehicle step, and [calc_canex()] and [calc_csd()] for the canonical
-#'   expansion that this model's first step reuses.
+#' @seealso [calc_mbd()] for a model with an imputed between-vehicle step, and
+#'   [calc_canex()] and [calc_csd()] for the canonical expansion that this
+#'   model's first and last steps reuse.
+#' @inheritSection calc_canex Domain of validity
 #' @export
 calc_cbd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),
@@ -138,10 +182,6 @@ calc_cbd <- function(vehicles_data, duplications,
   R2 <- input$R2
   order_index <- input$order_index
   order_rule <- input$order_rule
-  vehicle_bbd <- lapply(seq_len(n), function(i) {
-    if (insertions[i] >= 2L) calculate_bbd_params(R1[i], R2[i])
-    else list(alpha = NA_real_, beta = NA_real_, p = R1[i], type = "single_insertion")
-  })
 
   correlation_matrix <- diag(1, n)
   for (i in seq_len(n - 1L)) {
@@ -151,28 +191,43 @@ calc_cbd <- function(vehicles_data, duplications,
     }
   }
 
+  # Step 1: (0,1) grid by the second-order canonical expansion.
   grid <- cbd_binary_grid(R1, correlation_matrix)
-  remaining <- seq_len(n)
-  table <- list()
-  for (t in mbd_all_subsets(remaining)) table[[mbd_key(t)]] <- grid[[mbd_key(t)]]
 
-  peel_order <- rev(order_index)
-  steps <- vector("list", n)
-  for (step in seq_along(peel_order)) {
-    v <- peel_order[step]
-    other <- setdiff(remaining, v)
-    other_subsets <- mbd_all_subsets(other)
-    vp <- vehicle_bbd[[v]]
-    table <- mbd_peel_vehicle(table, other_subsets, v, vp$alpha, vp$beta, vp$p,
-                              insertions[v], tolerance)
-    remaining <- other
-    steps[[step]] <- data.frame(
-      step = step, peeled_vehicle = v,
-      mechanism = if (is.na(vp$alpha)) "single_insertion" else "beta_binomial",
-      remaining_vehicles = length(remaining)
-    )
+  # Step 2: conditional exposure distribution of each vehicle, given its
+  # state (0 or 1) at the first insertion.
+  conditional <- lapply(seq_len(n), function(i) {
+    cbd_vehicle_conditionals(insertions[i], R1[i], R2[i])
+  })
+
+  # Step 3 needs the canonical zero probability with all the insertions.
+  marginals <- lapply(seq_len(n), function(i) {
+    vehicle_exposure_distribution(insertions[i], R1[i], R2[i])
+  })
+  zero_probability <- cbd_canonical_zero(marginals, correlation_matrix,
+                                         tolerance)
+
+  total_length <- sum(insertions) + 1L
+  distribution_raw <- numeric(total_length)
+  zero_cell_factor <- NA_real_
+  for (t in mbd_all_subsets(seq_len(n))) {
+    cell <- 1
+    for (i in seq_len(n)) {
+      cell <- cbd_convolve(cell, conditional[[i]][[if (i %in% t) 2L else 1L]])
+    }
+    cell_probability <- grid[[mbd_key(t)]]
+    cell <- cell_probability * cell
+    if (length(t) == 0L) {
+      level_zero <- cell[1L]
+      denominator <- cell_probability - level_zero
+      if (is.finite(denominator) && abs(denominator) > 1e-12 * abs(cell_probability)) {
+        zero_cell_factor <- (cell_probability - zero_probability) / denominator
+        cell[-1L] <- cell[-1L] * zero_cell_factor
+        cell[1L] <- zero_probability
+      }
+    }
+    distribution_raw[seq_along(cell)] <- distribution_raw[seq_along(cell)] + cell
   }
-  distribution_raw <- table[[mbd_key(integer(0))]]
 
   safety <- mbd_safety_net(distribution_raw, tolerance)
   distribution <- safety$distribution
@@ -180,7 +235,16 @@ calc_cbd <- function(vehicles_data, duplications,
   cumulative <- rev(cumsum(rev(distribution)))
   reach <- 1 - distribution[1L]
   average_frequency <- sum(contacts * distribution) / reach
-  steps <- do.call(rbind, steps)
+
+  vehicle_expansion <- data.frame(
+    vehicle = seq_len(n),
+    insertions = insertions,
+    mechanism = vapply(seq_len(n), function(i) {
+      if (insertions[i] == 1L) "single_insertion"
+      else calculate_bbd_params(R1[i], R2[i])$type
+    }, character(1)),
+    stringsAsFactors = FALSE
+  )
 
   result <- list(
     reach = list(probability = reach, percent = 100 * reach, people = population * reach),
@@ -191,12 +255,15 @@ calc_cbd <- function(vehicles_data, duplications,
     ),
     aggregation_order = order_index,
     aggregation_rule = order_rule,
-    steps = steps,
+    vehicle_expansion = vehicle_expansion,
     diagnostics = list(
       probability_sum = sum(distribution),
       minimum_probability = min(distribution),
       negative_mass_adjusted = safety$negative_mass_adjusted,
       cells_adjusted = safety$cells_adjusted,
+      canonical_zero_probability = zero_probability,
+      grid_zero_probability = grid[[mbd_key(integer(0))]],
+      zero_cell_factor = zero_cell_factor,
       gross_mean_contacts = sum(insertions * R1),
       distribution_mean_contacts = sum(contacts * distribution),
       mean_error = sum(contacts * distribution) - sum(insertions * R1)
@@ -204,6 +271,74 @@ calc_cbd <- function(vehicles_data, duplications,
   )
   class(result) <- "reach_cbd"
   result
+}
+
+# Full convolution of two probability vectors indexed from zero contacts.
+cbd_convolve <- function(a, b) {
+  out <- numeric(length(a) + length(b) - 1L)
+  for (i in seq_along(a)) {
+    idx <- (i - 1L) + seq_along(b)
+    out[idx] <- out[idx] + a[i] * b
+  }
+  out
+}
+
+# Distribution of a vehicle's total exposures (0, ..., insertions) conditional
+# on its exposure state at the first insertion (Kim 1994, pp. 117-121). Returns
+# a list of two vectors, for state 0 and state 1. The remaining insertions - 1
+# insertions are Beta-Binomial(alpha + x, beta + 1 - x), shifted by x; the
+# binomial and polarized limits are handled explicitly.
+cbd_vehicle_conditionals <- function(insertions, R1, R2) {
+  if (insertions == 1L) {
+    return(list(c(1, 0), c(0, 1)))
+  }
+  remaining <- insertions - 1L
+  params <- calculate_bbd_params(R1, R2)
+  conditional_for_state <- function(x) {
+    if (params$type == "binomial_limit") {
+      d <- stats::dbinom(0:remaining, size = remaining, prob = R1)
+    } else if (params$type == "polarized_limit") {
+      d <- numeric(remaining + 1L)
+      d[if (x == 0L) 1L else remaining + 1L] <- 1
+    } else {
+      d <- dbetabinom(0:remaining, size = remaining,
+                               alpha = params$alpha + x,
+                               beta = params$beta + 1 - x)
+    }
+    c(rep(0, x), d, rep(0, 1L - x))
+  }
+  list(conditional_for_state(0L), conditional_for_state(1L))
+}
+
+# Second-order canonical expansion of the all-zero cell with all the
+# insertions (Danaher 1991, equation 6), from the vehicles' own exposure
+# marginals and the canonical correlations. Vehicles with exactly no
+# variance contribute no interaction term, as in calc_canex().
+cbd_canonical_zero <- function(marginals, correlation_matrix, tolerance) {
+  n <- length(marginals)
+  means <- vapply(marginals, function(m) sum((seq_along(m) - 1L) * m), numeric(1))
+  variances <- vapply(seq_len(n), function(i) {
+    sum((seq_along(marginals[[i]]) - 1L - means[i])^2 * marginals[[i]])
+  }, numeric(1))
+  zero_base <- prod(vapply(marginals, function(m) m[1L], numeric(1)))
+  adjustment <- 0
+  if (n >= 2L) {
+    pairs <- utils::combn(n, 2L)
+    for (column in seq_len(ncol(pairs))) {
+      i <- pairs[1L, column]; j <- pairs[2L, column]
+      if (variances[i] > 0 && variances[j] > 0) {
+        adjustment <- adjustment + correlation_matrix[i, j] * means[i] *
+          means[j] / sqrt(variances[i] * variances[j])
+      }
+    }
+  }
+  zero <- zero_base * (1 + adjustment)
+  if (!is.finite(zero) || zero < -tolerance || zero > 1 + tolerance) {
+    stop(sprintf(
+      paste0("The second-order canonical expansion produced an invalid ",
+             "zero-exposure probability (%.8f)."), zero), call. = FALSE)
+  }
+  min(1, max(0, zero))
 }
 
 #' @export

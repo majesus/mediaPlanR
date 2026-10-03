@@ -9,7 +9,8 @@ test_that("CANEX handles the binomial and polarized BBD limits exactly", {
   expect_equal(polarized$reach$probability, 0.2, tolerance = 1e-12)
   expect_named(independent$diagnostics,
                c("negative_mass_truncated", "mass_before_renormalization",
-                 "correlation_min_eigenvalue"))
+                 "correlation_min_eigenvalue", "mean_exposures_expected",
+                 "mean_exposures_result"))
   expect_error(
     calc_canex(data.frame(k = 2, R1 = 0.2, R2 = 0.5), matrix(1, 1, 1)),
     "independence limit"
@@ -31,6 +32,7 @@ test_that("Hofmans accumulation return value matches its documented contract", {
 })
 
 test_that("one-dimensional BBD calibration preserves R1 and reaches its target", {
+  skip_if_not_installed("extraDistr")
   truth <- extraDistr::dbbinom(0:6, size = 6, alpha = 0.8, beta = 1.2)
   target <- sum(truth[4:7])
   fit <- calibrate_bbd(first_reach = 0.4, target_reach = target,

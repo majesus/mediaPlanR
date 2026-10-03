@@ -23,7 +23,10 @@ verify calculations against the source. They are bare numeric values reused
 for validation, not a reproduction of the dissertation. Kim publishes these
 as the inputs of the CSD example and does not publish an MSAD distribution
 for them; this dataset is therefore an input benchmark, and the MSAD output
-it produces is a derived calculation, not a published result.
+it produces is a derived calculation, not a published result. The audiences
+and reaches originate from comScore Media Metrix data of September 2003,
+which Kim (2005) uses and Cheong, Leckenby and Eakin (2011, Table 5) also
+publish.
 }
 \examples{
 data(msad_kim2005)
