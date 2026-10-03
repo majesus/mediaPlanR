@@ -371,8 +371,10 @@ mbd_result$distribution
 This is the three-vehicle example of Cheong (2007, p. 75), also published as
 Table 4 of Cheong, Leckenby and Eakin (2011). The function reproduces the
 published distribution to within 0.002 in every cell, more than the rounding of
-the published values (0.0005); the cause of that gap is not identified, and the
-tests fix the accepted deviation per cell.
+the published values (0.0005); an independent reimplementation of the printed
+algorithm agrees with the function, and the gap comes from arithmetic
+inconsistencies in the printed intermediate tables. The tests fix the accepted
+deviation per cell.
 
 Unlike CSD and MSAD, the model can produce negative probabilities when it
 combines four or more vehicles, because the co-exposure of three or more

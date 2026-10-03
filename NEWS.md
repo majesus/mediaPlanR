@@ -95,7 +95,11 @@ earlier snapshots are not part of this package.
   Cheong (2007, p. 75; also Cheong, Leckenby and Eakin, 2011), to within 0.002
   per cell. `calc_canex()`, `calc_csd()` and `calc_msad()` also reproduce the 40
   plans of Kim (2005, Appendix B) within 0.02 percentage points per cell
-  (MSAD plan 19, 0.099). The test suite checks all of these.
+  (MSAD plan 19, 0.099 with the common reconstructed duplication; its printed
+  row is reproduced with random duplication). The three remaining differences
+  with published values (Kim 1994 zero cell, Cheong MBD 0.002, Kim 2005 MSAD
+  plan 19) have identified causes recorded in `inst/DATA-PROVENANCE.md`. The
+  test suite checks all of these.
 * `csd_kim2005`, `msad_kim2005` and `mbd_cheong2007` contain the published
   numeric inputs of those examples, with attribution. All other example
   datasets are original illustrative data, ready for `do.call()`.

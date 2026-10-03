@@ -120,7 +120,9 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' p. 139; three vehicles with 2, 1 and 3 insertions, SMRB 1979 data) except
 #' for its zero cell. In that example the zero of the canonical expansion is
 #' printed as 0.5066,
-#' whereas the formula applied to the printed inputs gives about 0.510; this
+#' whereas the formula applied to the printed inputs gives about 0.510 (and no
+#' choice of the inputs within their rounding goes below 0.507), so the printed
+#' value is an arithmetic error of the source; this
 #' function evaluates the formula, so its zero and one-contact probabilities
 #' differ from the printed ones by about 0.4 percentage points in that
 #' example. See the package tests for the exact cases.

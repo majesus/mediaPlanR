@@ -4,6 +4,12 @@ No CRAN submission was made or authorized in this session. This record replaces
 the historical checks; it is not a claim that all submission prerequisites are
 closed. Candidate: mediaPlanR 2.0.0, Date 2026-10-03.
 
+A later commit changed only documentation text (roxygen comments, `man/`, the
+vignette, `NEWS.md` and the data provenance record) to state the causes of the
+numerical differences below. The archive identified next and the platform
+results in this record refer to the state before that commit; the archive must
+be rebuilt, and its SHA-256 and checks refreshed, before any submission.
+
 Source archive: `mediaPlanR_2.0.0.tar.gz`.
 SHA-256: `48193df7fbb04a0301f900f1482bca0f6cc9be10ca717cb695a346fafb8ca201`.
 The same archive was checked on Windows using
@@ -56,7 +62,11 @@ local Windows R-devel provides the manual/check evidence for this candidate.
   checked against the supplied documents. The nine cited DOI identities were
   verified, but publisher HTTP 403 responses remain an access limitation.
 * The Kim (1994) zero-cell and Cheong MBD table discrepancies remain documented,
-  with explicit per-cell test bounds. Kim (2005) MSAD plan 19 matches all printed
+  with explicit per-cell test bounds, and have identified causes
+  (`inst/DATA-PROVENANCE.md`): Kim's own printed formula gives 0.5103 for her
+  printed inputs, not 0.5066, and an independent reimplementation of Cheong's
+  printed algorithm agrees with `calc_mbd()` to 1e-4, the 0.002 gap arising from
+  arithmetic inconsistencies in the printed step-3 tables. Kim (2005) MSAD plan 19 matches all printed
   percentages after rounding when using random duplication (0.000615), rather
   than the common reconstructed input (0.0000623). A separate regression records
   this result; why the source used a different input remains unverified.

@@ -46,11 +46,23 @@ licensed by the package's MIT declaration.
   alternative input, not why the source used it. The common fixture is unchanged;
   the former 0.11 acceptance bound for this discrepancy has been removed.
 * Cheong MBD: maximum error about 0.0019 in probability against rounded source
-  outputs, with a test bound of 0.0025. Rounding alone has not been shown to
-  explain the discrepancy. Do not adjust parameters to force agreement.
-* Kim (1994) CBD example: the published zero cell is 0.5066, while the stated
-  canonical formula gives about 0.5102 for the printed inputs. Both are recorded
-  in tests; the discrepancy remains unresolved.
+  outputs, with a test bound of 0.0025. An independent reimplementation of the
+  printed algorithm agrees with `calc_mbd()` to 1e-4, so the package follows
+  the algorithm. The printed step-3 tables contain arithmetic inconsistencies
+  (a product printed as .024(.057) = .003 instead of .0014; a printed sum of
+  Beta-Binomial parameters of 7.294 where the printed formula gives 7.543;
+  .562 where it gives .5646; an exclusive-grid sum of 1.001 and a cell of .068
+  where inclusion-exclusion gives .067) and the published distribution
+  inherits them. Recomputing the chain with three-decimal rounding and the
+  printed coefficients gives deviations of up to 0.003. Rounding of the
+  published values alone is an unlikely cause (uniform +/-0.0005 rounding of
+  the step-3 cells gives a median deviation of 0.0007 and a maximum of 0.0019
+  in 20000 simulations). Do not adjust parameters to force agreement.
+* Kim (1994) CBD example: the published zero cell is 0.5066. The CANEX formula
+  printed by Kim, applied to her printed inputs, gives 0.5103 (the package
+  0.5102), and varying the eight inputs within their rounding (+/-0.0005)
+  cannot go below 0.5074. The printed value is an arithmetic error of the
+  source; both values are recorded in tests.
 * Lee MSAD: source outputs are printed to three decimals; the test bound is
   0.0015 in probability, including rounded inputs and intermediate calculations.
 

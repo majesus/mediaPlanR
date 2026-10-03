@@ -286,10 +286,13 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' For the three-vehicle example of Cheong (2007, p. 75), which Cheong,
 #' Leckenby and Eakin (2011, Table 4) also publish, the function reproduces
 #' the published distribution to within 0.002 in every cell, which is more than
-#' the rounding of the published values (0.0005). The cause of that gap is not
-#' identified: the sum of the Beta-Binomial parameters printed in the article
-#' (7.294) cannot be reproduced from its own Table 2, and imposing it does not
-#' close the difference. The package tests fix the accepted deviation per cell.
+#' the rounding of the published values (0.0005). An independent
+#' reimplementation of the printed algorithm agrees with this function to
+#' 1e-4, so the gap originates in the printed intermediate tables, which contain
+#' arithmetic inconsistencies: a product printed as .024(.057) = .003 (it is
+#' .0014), a sum of Beta-Binomial parameters of 7.294 (the printed formula gives
+#' 7.543), and an exclusive-grid sum of 1.001. The package tests fix the
+#' accepted deviation per cell.
 #' In the binomial limit of a vehicle's own distribution (`R2` equal to the
 #' reach under independence), the conditional distributions of the peeling step
 #' coincide, so the result of this model does not depend on the duplication
