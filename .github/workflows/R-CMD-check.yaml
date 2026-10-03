@@ -47,8 +47,16 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: |
+            any::rcmdcheck
+            ${{ matrix.config.manual && 'any::V8' || '' }}
           needs: check
+
+      - name: Install HTML validation tools
+        if: matrix.config.manual == true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tidy
 
       - uses: r-lib/actions/setup-tinytex@v2
         if: matrix.config.manual == true
