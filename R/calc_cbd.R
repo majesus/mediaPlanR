@@ -345,7 +345,7 @@ cbd_canonical_zero <- function(marginals, correlation_matrix, tolerance) {
 
 #' @rdname print_sequential
 #' @export
-print.reach_cbd <- function(x, full = FALSE, max_rows = 30L, ...) {
+print.reach_cbd <- function(x, full = TRUE, max_rows = 30L, ...) {
   if (isTRUE(full)) {
     print_sequential_report(
       x, "CONDITIONAL BETA DISTRIBUTION (CBD)",

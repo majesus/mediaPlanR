@@ -190,7 +190,7 @@ calc_msad <- function(vehicles_data, duplications,
 
 #' @rdname print_sequential
 #' @export
-print.reach_msad <- function(x, full = FALSE, max_rows = 30L, ...) {
+print.reach_msad <- function(x, full = TRUE, max_rows = 30L, ...) {
   if (isTRUE(full)) {
     print_sequential_report(
       x, "MORGENSZTERN SEQUENTIAL AGGREGATION DISTRIBUTION (MSAD)",

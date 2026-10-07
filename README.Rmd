@@ -308,7 +308,9 @@ data(csd_kim2005)     # reach and duplication figures of a worked example, Kim (
 str(csd_kim2005)
 ```
 
-so that `do.call()` runs the model on it:
+so that `do.call()` runs the model on it. Printing a result gives the full report
+of the model: headline metrics, parameters, the exposure distribution, the
+cumulative distribution and diagnostics.
 
 ```{r}
 csd <- do.call(calc_csd, csd_kim2005)
@@ -365,15 +367,11 @@ csd <- calc_csd(
 csd
 ```
 
-The default print is a summary. `print(x, full = TRUE)` gives the full report:
-headline metrics, the vehicles and the aggregation steps, the exposure
-distribution and the cumulative distribution. Long distributions are cut after
-`max_rows` exposure levels (30 by default; use `max_rows = Inf` to list them
-all):
-
-```{r}
-print(csd, full = TRUE)
-```
+The report of these four models also lists the vehicles and the aggregation
+steps. Their distributions have one row per insertion of the plan, so a long
+one is cut after `max_rows` exposure levels (30 by default; use
+`print(csd, max_rows = Inf)` to list them all). For a four-line summary, use
+`print(csd, full = FALSE)`.
 
 `aggregation_order` can be `"audience_desc"` (largest audience first), `"given"`
 (the row order of `vehicles_data`) or a permutation such as `c(2, 1, 3)`. The

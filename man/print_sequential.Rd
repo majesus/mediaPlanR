@@ -9,20 +9,20 @@
 \alias{print.reach_msad}
 \title{Print a sequential-aggregation result}
 \usage{
-\method{print}{reach_cbd}(x, full = FALSE, max_rows = 30L, ...)
+\method{print}{reach_cbd}(x, full = TRUE, max_rows = 30L, ...)
 
-\method{print}{reach_csd}(x, full = FALSE, max_rows = 30L, ...)
+\method{print}{reach_csd}(x, full = TRUE, max_rows = 30L, ...)
 
-\method{print}{reach_mbd}(x, full = FALSE, max_rows = 30L, ...)
+\method{print}{reach_mbd}(x, full = TRUE, max_rows = 30L, ...)
 
-\method{print}{reach_msad}(x, full = FALSE, max_rows = 30L, ...)
+\method{print}{reach_msad}(x, full = TRUE, max_rows = 30L, ...)
 }
 \arguments{
 \item{x}{A result of \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} or
 \code{\link[=calc_mbd]{calc_mbd()}}.}
 
-\item{full}{Logical. \code{FALSE} (default) prints the compact summary; \code{TRUE}
-prints the full report.}
+\item{full}{Logical. \code{TRUE} (default) prints the full report; \code{FALSE}
+prints the compact summary.}
 
 \item{max_rows}{Maximum number of exposure levels listed in the full report;
 longer distributions are cut with a note. Use \code{Inf} to list all of them.}
@@ -33,15 +33,15 @@ longer distributions are cut with a note. Use \code{Inf} to list all of them.}
 \code{x}, invisibly.
 }
 \description{
-By default, a compact summary: reach, average frequency, aggregation order
-and numerical diagnostics. With \code{full = TRUE}, the full report used by the
-classical models: headline metrics, model parameters, the vehicles and
-aggregation steps, the exposure distribution and the cumulative N+
-distribution.
+By default, the full report used by the classical models: headline metrics,
+model parameters, the vehicles and aggregation steps, the exposure
+distribution and the cumulative N+ distribution, and numerical diagnostics.
+With \code{full = FALSE}, a compact summary: reach, average frequency,
+aggregation order and numerical diagnostics.
 }
 \examples{
 data(csd_kim2005)
 csd <- do.call(calc_csd, csd_kim2005)
 csd
-print(csd, full = TRUE)
+print(csd, full = FALSE)
 }

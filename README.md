@@ -428,16 +428,78 @@ str(csd_kim2005)
 #>  $ aggregation_order: int [1:3] 1 2 3
 ```
 
-so that `do.call()` runs the model on it:
+so that `do.call()` runs the model on it. Printing a result gives the full report
+of the model: headline metrics, parameters, the exposure distribution, the
+cumulative distribution and diagnostics.
 
 
 ```r
 csd <- do.call(calc_csd, csd_kim2005)
 csd
-#> Canonical Sequential Aggregation Distribution (CSD)
-#> Reach: 61.81% | Average frequency: 1.791
-#> Aggregation order: 1 -> 2 -> 3 (custom)
-#> Probability sum: 1.000000000000 | Mean error: -2.22e-16
+#> CANONICAL SEQUENTIAL AGGREGATION DISTRIBUTION (CSD)
+#> ===================================================
+#> Description: Beta-Binomial vehicles aggregated sequentially; the reach of every step comes from the second-order canonical expansion
+#> 
+#> HEADLINE METRICS:
+#> -----------------
+#> Total reach: 61.81%
+#> Average exposures per person reached: 1.79
+#> 
+#> MODEL PARAMETERS:
+#> -----------------
+#> Probability of 0 exposures (%): 38.19
+#> Total insertions (N): 6
+#> Aggregation order: 1 -> 2 -> 3
+#> Aggregation rule: custom
+#> 
+#> VEHICLES:
+#> ---------
+#>  vehicle insertions own_reach_percent aggregation_position
+#>        1          2             58.05                    1
+#>        2          2              5.02                    2
+#>        3          2              3.71                    3
+#> 
+#> AGGREGATION STEPS:
+#> ------------------
+#>  step added_vehicle target_reach_percent zero_probability
+#>     1             2                60.22           0.3978
+#>     2             3                61.81           0.3819
+#>  random_zero_probability expansion_adjustment duplicated_reach
+#>                   0.3984            -0.001628          0.02849
+#>                   0.3837            -0.004476          0.02125
+#> 
+#> CANONICAL CORRELATIONS BETWEEN VEHICLES:
+#> ----------------------------------------
+#>         V1      V2      V3
+#> V1  1.0000 -0.0070 -0.0095
+#> V2 -0.0070  1.0000 -0.0228
+#> V3 -0.0095 -0.0228  1.0000
+#> 
+#> EXPOSURE DISTRIBUTION:
+#> ----------------------
+#> (Percentage of the population receiving exactly N exposures)
+#> 1 exposure: 18.58%
+#> 2 exposures: 39.18%
+#> 3 exposures: 2.49%
+#> 4 exposures: 1.50%
+#> 5 exposures: 0.04%
+#> 6 exposures: 0.01%
+#> 
+#> CUMULATIVE DISTRIBUTION:
+#> -------------------------
+#> (Percentage of the population receiving N or more exposures)
+#> >= 1 exposure: 61.81%
+#> >= 2 exposures: 43.22%
+#> >= 3 exposures: 4.05%
+#> >= 4 exposures: 1.55%
+#> >= 5 exposures: 0.06%
+#> >= 6 exposures: 0.01%
+#> 
+#> DIAGNOSTICS:
+#> ------------
+#> Probability sum: 1.000000000000 | Smallest probability: 0.00014 | Mean error: -2.22e-16
+#> Largest margin error across aggregation steps: 1.11e-16
+#> Smallest eigenvalue of the correlation matrix: 0.9723
 ```
 
 Example datasets exist for the main models (`ratings_example`,
@@ -489,21 +551,6 @@ csd <- calc_csd(
   population = 8000000
 )
 csd
-#> Canonical Sequential Aggregation Distribution (CSD)
-#> Reach: 65.92% | Average frequency: 2.746
-#> Aggregation order: 1 -> 2 -> 3 (audience_desc)
-#> Probability sum: 1.000000000000 | Mean error: 4.44e-16
-```
-
-The default print is a summary. `print(x, full = TRUE)` gives the full report:
-headline metrics, the vehicles and the aggregation steps, the exposure
-distribution and the cumulative distribution. Long distributions are cut after
-`max_rows` exposure levels (30 by default; use `max_rows = Inf` to list them
-all):
-
-
-```r
-print(csd, full = TRUE)
 #> CANONICAL SEQUENTIAL AGGREGATION DISTRIBUTION (CSD)
 #> ===================================================
 #> Description: Beta-Binomial vehicles aggregated sequentially; the reach of every step comes from the second-order canonical expansion
@@ -575,6 +622,12 @@ print(csd, full = TRUE)
 #> Largest margin error across aggregation steps: 1.11e-16
 #> Smallest eigenvalue of the correlation matrix: 0.8915
 ```
+
+The report of these four models also lists the vehicles and the aggregation
+steps. Their distributions have one row per insertion of the plan, so a long
+one is cut after `max_rows` exposure levels (30 by default; use
+`print(csd, max_rows = Inf)` to list them all). For a four-line summary, use
+`print(csd, full = FALSE)`.
 
 `aggregation_order` can be `"audience_desc"` (largest audience first), `"given"`
 (the row order of `vehicles_data`) or a permutation such as `c(2, 1, 3)`. The

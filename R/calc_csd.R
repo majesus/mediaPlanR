@@ -232,16 +232,16 @@ calc_csd <- function(vehicles_data, duplications,
 
 #' Print a sequential-aggregation result
 #'
-#' By default, a compact summary: reach, average frequency, aggregation order
-#' and numerical diagnostics. With `full = TRUE`, the full report used by the
-#' classical models: headline metrics, model parameters, the vehicles and
-#' aggregation steps, the exposure distribution and the cumulative N+
-#' distribution.
+#' By default, the full report used by the classical models: headline metrics,
+#' model parameters, the vehicles and aggregation steps, the exposure
+#' distribution and the cumulative N+ distribution, and numerical diagnostics.
+#' With `full = FALSE`, a compact summary: reach, average frequency,
+#' aggregation order and numerical diagnostics.
 #'
 #' @param x A result of [calc_csd()], [calc_msad()], [calc_cbd()] or
 #'   [calc_mbd()].
-#' @param full Logical. `FALSE` (default) prints the compact summary; `TRUE`
-#'   prints the full report.
+#' @param full Logical. `TRUE` (default) prints the full report; `FALSE`
+#'   prints the compact summary.
 #' @param max_rows Maximum number of exposure levels listed in the full report;
 #'   longer distributions are cut with a note. Use `Inf` to list all of them.
 #' @param ... Unused.
@@ -250,10 +250,10 @@ calc_csd <- function(vehicles_data, duplications,
 #' data(csd_kim2005)
 #' csd <- do.call(calc_csd, csd_kim2005)
 #' csd
-#' print(csd, full = TRUE)
+#' print(csd, full = FALSE)
 #' @name print_sequential
 #' @export
-print.reach_csd <- function(x, full = FALSE, max_rows = 30L, ...) {
+print.reach_csd <- function(x, full = TRUE, max_rows = 30L, ...) {
   if (isTRUE(full)) {
     print_sequential_report(
       x, "CANONICAL SEQUENTIAL AGGREGATION DISTRIBUTION (CSD)",

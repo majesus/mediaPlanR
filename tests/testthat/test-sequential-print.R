@@ -9,9 +9,9 @@ sequential_fits <- function(population = 1) {
   )
 }
 
-test_that("the sequential models print a full report with full = TRUE", {
+test_that("the sequential models print the full report by default", {
   for (fit in sequential_fits()) {
-    out <- capture.output(returned <- print(fit, full = TRUE))
+    out <- capture.output(returned <- print(fit))
     expect_identical(returned, fit)
     expect_true(any(grepl("^HEADLINE METRICS:", out)))
     expect_true(any(grepl("^MODEL PARAMETERS:", out)))
@@ -52,10 +52,19 @@ test_that("max_rows cuts long distributions with an explicit note", {
   expect_error(print(fit, full = TRUE, max_rows = 0), "max_rows")
 })
 
-test_that("the default print stays the compact summary", {
+test_that("autoprinting a result gives the full report", {
   for (fit in sequential_fits()) {
-    out <- capture.output(print(fit))
+    out <- capture.output(show(fit))
+    expect_true(any(grepl("^HEADLINE METRICS:", out)))
+  }
+})
+
+test_that("full = FALSE prints the compact summary", {
+  for (fit in sequential_fits()) {
+    out <- capture.output(returned <- print(fit, full = FALSE))
+    expect_identical(returned, fit)
     expect_lt(length(out), 8L)
     expect_false(any(grepl("HEADLINE METRICS", out)))
+    expect_true(any(grepl("^Reach: ", out)))
   }
 })

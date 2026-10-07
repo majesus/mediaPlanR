@@ -85,8 +85,8 @@ test_that("CSD has a concise print method", {
   inputs <- kim_csd_inputs()
   fit <- calc_csd(inputs$vehicles_data, inputs$duplications,
                   aggregation_order = 1:3)
-  expect_output(print(fit), "Canonical Sequential")
-  expect_output(print(fit), "Probability sum")
+  expect_output(print(fit, full = FALSE), "Canonical Sequential")
+  expect_output(print(fit, full = FALSE), "Probability sum")
 })
 
 test_that("a logical NA R2 is accepted only for vehicles with a single insertion", {

@@ -124,8 +124,8 @@ test_that("MBD warns for four or more vehicles", {
 test_that("MBD has a concise print method", {
   inputs <- cheong_v3_inputs()
   fit <- calc_mbd(inputs$vehicles_data, inputs$duplications, aggregation_order = 1:3)
-  expect_output(print(fit), "Multivariate Beta Binomial")
-  expect_output(print(fit), "Probability sum")
+  expect_output(print(fit, full = FALSE), "Multivariate Beta Binomial")
+  expect_output(print(fit, full = FALSE), "Probability sum")
 })
 
 test_that("MBD does not error or return NaN when a vehicle's own R1/R2 sit at the binomial or polarized limit (regression test)", {

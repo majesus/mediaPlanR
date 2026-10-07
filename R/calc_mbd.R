@@ -414,7 +414,7 @@ calc_mbd <- function(vehicles_data, duplications,
 
 #' @rdname print_sequential
 #' @export
-print.reach_mbd <- function(x, full = FALSE, max_rows = 30L, ...) {
+print.reach_mbd <- function(x, full = TRUE, max_rows = 30L, ...) {
   if (isTRUE(full)) {
     print_sequential_report(
       x, "MULTIVARIATE BETA BINOMIAL DISTRIBUTION (MBD)",

@@ -8,11 +8,11 @@ earlier snapshots are not part of this package.
 
 ## Full report for the sequential models (2026-10-07)
 
-* `print(x, full = TRUE)` for `calc_csd()`, `calc_msad()`, `calc_cbd()` and
-  `calc_mbd()` prints the same kind of report as the classical models:
-  headline metrics, parameters, aggregation steps, exposure and cumulative
-  distributions, and diagnostics. `max_rows` cuts long distributions with a
-  note. The default print is unchanged.
+* The print methods of `calc_csd()`, `calc_msad()`, `calc_cbd()` and `calc_mbd()`
+  now show the same kind of report as the classical models: headline metrics,
+  parameters, aggregation steps, exposure and cumulative distributions, and
+  diagnostics. `max_rows` cuts long distributions with a note, and
+  `print(x, full = FALSE)` gives the previous four-line summary.
 * The README now explains how to run the models with the analyst's own data and
   lists the inputs and units of every model.
 
