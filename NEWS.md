@@ -6,6 +6,16 @@ backward compatible with them: function names, arguments, example datasets and
 returned objects changed. The Shiny explorers and the budget/KPI helpers of the
 earlier snapshots are not part of this package.
 
+## Full report for the sequential models (2026-10-07)
+
+* `print(x, full = TRUE)` for `calc_csd()`, `calc_msad()`, `calc_cbd()` and
+  `calc_mbd()` prints the same kind of report as the classical models:
+  headline metrics, parameters, aggregation steps, exposure and cumulative
+  distributions, and diagnostics. `max_rows` cuts long distributions with a
+  note. The default print is unchanged.
+* The README now explains how to run the models with the analyst's own data and
+  lists the inputs and units of every model.
+
 ## Audit corrections (2026-10-03)
 
 * Pairwise symmetry is checked relative to each duplicated audience, including

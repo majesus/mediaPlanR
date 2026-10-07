@@ -105,13 +105,169 @@ The models are organized by the shape of plan they were derived for:
 - `fit_nbd_exposure()` and `nbd_exposure_distribution()` for unbounded
   exposure-count processes.
 
+### Quick start
+
+Every model ships with an example dataset that is already a list of
+arguments, so `do.call()` runs it directly:
+
 ```r
-data(csd_kim2005)
+data(csd_kim2005)                 # inputs of a worked example in Kim (2005)
 csd <- do.call(calc_csd, csd_kim2005)
 
-data(metheringham_example)
-metheringham <- do.call(calc_metheringham, metheringham_example)
+csd                               # compact summary
+print(csd, full = TRUE)           # full report
+```
 
+```
+Canonical Sequential Aggregation Distribution (CSD)
+Reach: 61.81% | Average frequency: 1.791
+Aggregation order: 1 -> 2 -> 3 (custom)
+Probability sum: 1.000000000000 | Mean error: -2.22e-16
+```
+
+The full report lists the headline metrics, the model parameters, the
+vehicles and the aggregation steps, the exposure distribution and the
+cumulative N+ distribution:
+
+```
+CANONICAL SEQUENTIAL AGGREGATION DISTRIBUTION (CSD)
+===================================================
+Description: Beta-Binomial vehicles aggregated sequentially; the reach of every step comes from the second-order canonical expansion
+
+HEADLINE METRICS:
+-----------------
+Total reach: 61.81%
+Average exposures per person reached: 1.79
+
+MODEL PARAMETERS:
+-----------------
+Probability of 0 exposures (%): 38.19
+Total insertions (N): 6
+Aggregation order: 1 -> 2 -> 3
+Aggregation rule: custom
+...
+EXPOSURE DISTRIBUTION:
+----------------------
+(Percentage of the population receiving exactly N exposures)
+1 exposure: 18.58%
+2 exposures: 39.18%
+3 exposures: 2.49%
+...
+```
+
+`print(x, full = TRUE)` works the same way for `calc_csd()`, `calc_msad()`,
+`calc_cbd()` and `calc_mbd()`. Their distributions have one row per insertion,
+so `max_rows` (default 30) cuts long ones with a note; use `max_rows = Inf` to
+list every level. The classical models (Sainsbury to CANEX) always print the
+full report.
+
+`str(csd_kim2005)` shows exactly what a function expects, and `?calc_csd`
+documents each argument.
+
+### Using your own data
+
+CSD, MSAD, CBD and MBD take the same three kinds of input, all as
+**proportions of the population** (between 0 and 1):
+
+- `vehicles_data`: one row per vehicle with `insertions` (planned insertions,
+  a whole number), `R1` (reach after one insertion, that is, the vehicle's
+  audience) and `R2` (cumulative reach after two insertions; it must satisfy
+  `R1 <= R2 <= 2 * R1 - R1^2`, the upper limit being random duplication; use
+  `NA` for vehicles with a single insertion). Extra columns, such as a vehicle
+  name, must be left out.
+- `duplications`: a symmetric square matrix with the proportion of the
+  population reached by both vehicles with one insertion each. The diagonal is
+  ignored. The row and column order must match `vehicles_data`.
+- `population`: the number of people in the target population, so the results
+  are also expressed in people. The default, 1, leaves them as proportions.
+
+```r
+vehicles <- data.frame(
+  vehicle    = c("TV", "Radio", "Digital"),
+  insertions = c(3, 2, 4),
+  R1         = c(0.35, 0.18, 0.10),
+  R2         = c(0.44, 0.24, 0.15)
+)
+
+duplications <- matrix(
+  c(NA,   0.07, 0.04,
+    0.07, NA,   0.02,
+    0.04, 0.02, NA),
+  nrow = 3, byrow = TRUE,
+  dimnames = list(vehicles$vehicle, vehicles$vehicle)
+)
+
+csd <- calc_csd(
+  vehicles_data = vehicles[, c("insertions", "R1", "R2")],
+  duplications = duplications,
+  aggregation_order = "audience_desc",
+  population = 8000000
+)
+
+print(csd, full = TRUE)
+csd$reach$percent    # reach, in %
+csd$distribution     # exposure distribution: probability, percent and people
+```
+
+`aggregation_order` can be `"audience_desc"` (largest audience first),
+`"given"` (the row order of `vehicles_data`) or a permutation such as
+`c(2, 1, 3)`. The order can change the exposure distribution, so report the one
+you used. The other three models take the same arguments: replace `calc_csd`
+with `calc_msad`, `calc_cbd` or `calc_mbd`. The models do not accept every
+input: when the duplications are inconsistent with the model's assumptions the
+function stops with a message that explains why, rather than returning a
+silently altered result (`calc_mbd()` with the plan above is one such case).
+
+### Inputs of each model
+
+| Model | Function | Inputs | Units | Example dataset |
+|---|---|---|---|---|
+| Sainsbury, Binomial | `calc_sainsbury()`, `calc_binomial()` | `audiences`, `population`, `insertions` | people | `ratings_example` |
+| Beta-Binomial | `calc_beta_binomial()` | `A1`, `A2`, `P`, `n` | people | `beta_binomial_example` |
+| Hofmans (accumulation) | `calc_hofmans_accumulation()` | `R1`, `R2`, `N` | proportions | `hofmans_accumulation_example` |
+| Agostini, Hofmans (duplication) | `calc_agostini_duplication()`, `calc_hofmans_duplication()` | `audiences`, `population`, `duplication_matrix` | people | `duplication_example` |
+| Metheringham | `calc_metheringham()` | `audiences`, `insertions`, `duplication_matrix`, `population` | people | `metheringham_example` |
+| CANEX | `calc_canex()` | `vehicles_data` (`k`, `R1`, `R2`), `duplications`, `population` | proportions | `canex_example` |
+| CSD, MSAD, CBD, MBD | `calc_csd()`, `calc_msad()`, `calc_cbd()`, `calc_mbd()` | `vehicles_data` (`insertions`, `R1`, `R2`), `duplications`, `population` | proportions | `csd_example`, `msad_example`, `mbd_example` |
+
+Examples with your own numbers, one per family:
+
+```r
+# Random duplication: three vehicles with 2, 1 and 3 insertions
+calc_sainsbury(audiences = c(300000, 400000, 200000),
+               population = 1000000, insertions = c(2, 1, 3))
+
+# One vehicle: audience after one and after two insertions, six insertions
+calc_beta_binomial(A1 = 400000, A2 = 620000, P = 1000000, n = 6)
+
+# Several vehicles with one insertion each: duplication matrix in people
+duplication <- matrix(c(NA,     140000, 70000,
+                        140000, NA,     90000,
+                        70000,  90000,  NA), nrow = 3, byrow = TRUE)
+calc_hofmans_duplication(audiences = c(300000, 400000, 200000),
+                         population = 1000000,
+                         duplication_matrix = duplication)
+
+# Several vehicles and insertions, with the duplication observed in people.
+# Here the diagonal is the duplication between two insertions of the same
+# vehicle, so it is not NA.
+calc_metheringham(
+  audiences = c(1500000, 800000, 1200000),
+  insertions = c(4, 3, 5),
+  duplication_matrix = matrix(c(150000, 200000, 180000,
+                                200000, 120000, 140000,
+                                180000, 140000, 170000), nrow = 3),
+  population = 10000000
+)
+```
+
+For the remaining models, copy the structure of their example dataset
+(`str(canex_example)`, `str(mbd_example)`) and replace the numbers.
+
+Exposure counts observed in a sample can instead be fitted with a
+Negative-Binomial distribution:
+
+```r
 counts <- c(rep(0, 40), rep(1, 25), rep(2, 15), rep(3, 8), 5, 7)
 nbd_fit <- fit_nbd_exposure(counts)
 ```

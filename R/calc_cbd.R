@@ -343,8 +343,28 @@ cbd_canonical_zero <- function(marginals, correlation_matrix, tolerance) {
   min(1, max(0, zero))
 }
 
+#' @rdname print_sequential
 #' @export
-print.reach_cbd <- function(x, ...) {
+print.reach_cbd <- function(x, full = FALSE, max_rows = 30L, ...) {
+  if (isTRUE(full)) {
+    print_sequential_report(
+      x, "CONDITIONAL BETA DISTRIBUTION (CBD)",
+      paste("between-vehicle duplication on the (0,1) grid of the first",
+            "insertion, then each vehicle's Beta-Binomial conditioned on",
+            "that state"),
+      parameters = list("Aggregation order" = x$aggregation_order,
+                        "Aggregation rule" = x$aggregation_rule),
+      tables = list("Vehicles" = x$vehicle_expansion),
+      diagnostics = c(
+        sequential_diagnostic_lines(x),
+        sprintf("Canonical zero probability: %.6f | Zero probability of the (0,1) grid: %.6f",
+                x$diagnostics$canonical_zero_probability,
+                x$diagnostics$grid_zero_probability)
+      ),
+      max_rows = max_rows
+    )
+    return(invisible(x))
+  }
   cat("Conditional Beta Distribution (CBD)\n")
   cat(sprintf("Reach: %.2f%% | Average frequency: %.3f\n",
               x$reach$percent, x$average_frequency))

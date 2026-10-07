@@ -412,8 +412,23 @@ calc_mbd <- function(vehicles_data, duplications,
   result
 }
 
+#' @rdname print_sequential
 #' @export
-print.reach_mbd <- function(x, ...) {
+print.reach_mbd <- function(x, full = FALSE, max_rows = 30L, ...) {
+  if (isTRUE(full)) {
+    print_sequential_report(
+      x, "MULTIVARIATE BETA BINOMIAL DISTRIBUTION (MBD)",
+      paste("co-exposure grid from observed duplications, with vehicles",
+            "peeled one at a time into insertion-level Beta-Binomial",
+            "distributions"),
+      parameters = list("Aggregation order" = x$aggregation_order,
+                        "Aggregation rule" = x$aggregation_rule),
+      tables = list("Peeling steps (reverse aggregation order)" = x$steps),
+      diagnostics = sequential_diagnostic_lines(x),
+      max_rows = max_rows
+    )
+    return(invisible(x))
+  }
   cat("Multivariate Beta Binomial Distribution (MBD)\n")
   cat(sprintf("Reach: %.2f%% | Average frequency: %.3f\n",
               x$reach$percent, x$average_frequency))

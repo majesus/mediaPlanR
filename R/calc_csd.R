@@ -230,8 +230,56 @@ calc_csd <- function(vehicles_data, duplications,
   result
 }
 
+#' Print a sequential-aggregation result
+#'
+#' By default, a compact summary: reach, average frequency, aggregation order
+#' and numerical diagnostics. With `full = TRUE`, the full report used by the
+#' classical models: headline metrics, model parameters, the vehicles and
+#' aggregation steps, the exposure distribution and the cumulative N+
+#' distribution.
+#'
+#' @param x A result of [calc_csd()], [calc_msad()], [calc_cbd()] or
+#'   [calc_mbd()].
+#' @param full Logical. `FALSE` (default) prints the compact summary; `TRUE`
+#'   prints the full report.
+#' @param max_rows Maximum number of exposure levels listed in the full report;
+#'   longer distributions are cut with a note. Use `Inf` to list all of them.
+#' @param ... Unused.
+#' @return `x`, invisibly.
+#' @examples
+#' data(csd_kim2005)
+#' csd <- do.call(calc_csd, csd_kim2005)
+#' csd
+#' print(csd, full = TRUE)
+#' @name print_sequential
 #' @export
-print.reach_csd <- function(x, ...) {
+print.reach_csd <- function(x, full = FALSE, max_rows = 30L, ...) {
+  if (isTRUE(full)) {
+    print_sequential_report(
+      x, "CANONICAL SEQUENTIAL AGGREGATION DISTRIBUTION (CSD)",
+      paste("Beta-Binomial vehicles aggregated sequentially; the reach of",
+            "every step comes from the second-order canonical expansion"),
+      parameters = list("Aggregation order" = x$aggregation_order,
+                        "Aggregation rule" = x$aggregation_rule),
+      tables = list(
+        "Vehicles" = sequential_vehicle_table(x),
+        "Aggregation steps" = sequential_step_table(x$steps),
+        "Canonical correlations between vehicles" = {
+          correlations <- round(x$correlation_matrix, 4L)
+          dimnames(correlations) <- rep(
+            list(paste0("V", seq_len(nrow(correlations)))), 2L)
+          correlations
+        }
+      ),
+      diagnostics = c(
+        sequential_diagnostic_lines(x),
+        sprintf("Smallest eigenvalue of the correlation matrix: %.4g",
+                x$diagnostics$correlation_min_eigenvalue)
+      ),
+      max_rows = max_rows
+    )
+    return(invisible(x))
+  }
   cat("Canonical Sequential Aggregation Distribution (CSD)\n")
   cat(sprintf("Reach: %.2f%% | Average frequency: %.3f\n",
               x$reach$percent, x$average_frequency))

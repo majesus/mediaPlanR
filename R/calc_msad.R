@@ -188,8 +188,25 @@ calc_msad <- function(vehicles_data, duplications,
   result
 }
 
+#' @rdname print_sequential
 #' @export
-print.reach_msad <- function(x, ...) {
+print.reach_msad <- function(x, full = FALSE, max_rows = 30L, ...) {
+  if (isTRUE(full)) {
+    print_sequential_report(
+      x, "MORGENSZTERN SEQUENTIAL AGGREGATION DISTRIBUTION (MSAD)",
+      paste("Beta-Binomial vehicles aggregated sequentially; the reach of",
+            "every step comes from the Morgensztern formula"),
+      parameters = list("Aggregation order" = x$aggregation_order,
+                        "Aggregation rule" = x$aggregation_rule),
+      tables = list(
+        "Vehicles" = sequential_vehicle_table(x),
+        "Aggregation steps" = sequential_step_table(x$steps)
+      ),
+      diagnostics = sequential_diagnostic_lines(x),
+      max_rows = max_rows
+    )
+    return(invisible(x))
+  }
   cat("Morgensztern Sequential Aggregation Distribution (MSAD)\n")
   cat(sprintf("Reach: %.2f%% | Average frequency: %.3f\n",
               x$reach$percent, x$average_frequency))

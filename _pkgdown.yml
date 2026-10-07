@@ -15,6 +15,7 @@ reference:
   desc: "Classical models organized by plan shape"
   contents:
   - starts_with("calc_")
+  - print_sequential
 - title: "Fitting, count approximation and validation"
   desc: "Beta-Binomial fitting, Negative-Binomial approximation and evaluation against observed data"
   contents:
