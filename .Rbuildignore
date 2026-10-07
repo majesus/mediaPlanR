@@ -9,6 +9,7 @@
 ^pkgdown$
 ^data-raw$
 ^cran-comments\.md$
+^README\.Rmd$
 ^CRAN-SUBMISSION$
 ^mediaPlanR_manual\.pdf$
 ^tmp$

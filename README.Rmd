@@ -1,7 +1,10 @@
 <!-- README.md is generated from README.Rmd. Edit README.Rmd, then run
      knitr::knit("README.Rmd") with the installed package. -->
 
-
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+options(width = 80, scipen = 999)
+```
 
 # mediaPlanR
 
@@ -42,10 +45,8 @@ remotes::install_github("majesus/mediaPlanR", build = FALSE)
 
 This second route skips the vignette. Then load the package:
 
-
-```r
+```{r}
 library(mediaPlanR)
-#> mediaPlanR 2.0.0 | Reliable cross-media reach and frequency planning. See ?media_plan
 ```
 
 ## The ideas in five minutes
@@ -68,15 +69,12 @@ different people the plan exposes and how often. These terms are used throughout
 Take a population of 1,000,000 people and two vehicles with one insertion each,
 reaching 300,000 and 400,000 people:
 
-
-```r
+```{r}
 population <- 1000000
 audiences  <- c(A = 300000, B = 400000)
 
 sum(audiences)                       # impressions
-#> [1] 700000
 sum(audiences) / population * 100    # GRP
-#> [1] 70
 ```
 
 The two audiences add up to 700,000 impressions, but fewer than 700,000 *different*
@@ -84,44 +82,17 @@ people are reached, because some are in both audiences. If the two audiences
 overlap only by chance (**random duplication**), the share of the population in
 both is the product of the two shares, and the reach follows directly:
 
-
-```r
+```{r}
 duplicated_people <- prod(audiences / population) * population
 duplicated_people                           # people expected in both audiences
-#> [1] 120000
 sum(audiences) - duplicated_people          # reach, in people
-#> [1] 580000
 ```
 
 `calc_sainsbury()` does this calculation and adds the full exposure
 distribution:
 
-
-```r
+```{r}
 calc_sainsbury(audiences, population)
-#> SAINSBURY MODEL
-#> ===============
-#> Description: random duplication and accumulation, with heterogeneous vehicles
-#> 
-#> HEADLINE METRICS:
-#> -----------------
-#> Total reach: 58.00% (580000 people)
-#> 
-#> EXPOSURE DISTRIBUTION:
-#> ----------------------
-#> (Percentage of the population receiving exactly N exposures)
-#> 1 exposure: 46.00% (460000 people)
-#> 2 exposures: 12.00% (120000 people)
-#> 
-#> CUMULATIVE DISTRIBUTION:
-#> -------------------------
-#> (Percentage of the population receiving N or more exposures)
-#> >= 1 exposure: 58.00% (580000 people)
-#> >= 2 exposures: 12.00% (120000 people)
-#> 
-#> SUMMARY STATISTICS:
-#> --------------------
-#> Average exposures per person reached: 1.21
 ```
 
 The result can be read by hand: 42% of the population (0.7 x 0.6) is in
@@ -143,8 +114,7 @@ It rejects inconsistent inputs (for example an audience larger than the
 population) instead of calculating with them. The optional `target_audience`
 column holds the people of your target group in each insertion.
 
-
-```r
+```{r}
 plan <- media_plan(
   data.frame(
     channel = c("TV", "Radio", "Digital"),
@@ -157,118 +127,59 @@ plan <- media_plan(
   target_audience = "target_audience"
 )
 plan
-#> Cross-media plan
-#> Universe: 1000000 people | Channels: 3 | Insertions: 13 | Currency: EUR
-#>  channel audience insertions cost_per_insertion target_audience
-#>       TV   250000          3              15000          125000
-#>    Radio   150000          4               3000           75000
-#>  Digital   100000          6                800           60000
 ```
 
 `plan_metrics()` gives impressions, spend, GRP and cost ratios, channel by
 channel and for the whole plan. Every ratio has an explicit denominator:
 
-
-```r
+```{r}
 metrics <- plan_metrics(plan)
 metrics$by_channel[, c("channel", "impressions", "spend", "rating_points",
                        "cpm_impressions")]
-#>   channel impressions spend rating_points cpm_impressions
-#> 1      TV      750000 45000            75              60
-#> 2   Radio      600000 12000            60              20
-#> 3 Digital      600000  4800            60               8
 metrics$totals[c("impressions", "spend", "grps")]
-#> $impressions
-#> [1] 1950000
-#> 
-#> $spend
-#> [1] 61800
-#> 
-#> $grps
-#> [1] 195
 ```
 
 `estimate_reach()` estimates reach and the exposure distribution. Its default
 model is Sainsbury's, which assumes random duplication:
 
-
-```r
+```{r}
 reach <- estimate_reach(plan, model = "sainsbury")
 reach
-#> Reach model: sainsbury
-#> Reach: 88.30% (882965 people) | Average frequency: 2.208
 ```
 
 The result is a list. Reach is available in probability, percent and people,
 and the exposure distribution includes the zero-exposure cell, so it always sums
 to one:
 
-
-```r
+```{r}
 reach$reach$percent
-#> [1] 88.29653
 round(reach$distribution[, c("contacts", "percent")], 2)
-#>    contacts percent
-#> 1         0   11.70
-#> 2         1   27.77
-#> 3         2   29.83
-#> 4         3   19.22
-#> 5         4    8.29
-#> 6         5    2.53
-#> 7         6    0.56
-#> 8         7    0.09
-#> 9         8    0.01
-#> 10        9    0.00
-#> 11       10    0.00
-#> 12       11    0.00
-#> 13       12    0.00
-#> 14       13    0.00
 sum(reach$distribution$probability)
-#> [1] 1
 ```
 
 The `cumulative` element gives the share exposed *at least* N times. The row for
 the effective frequency you choose is the effective reach: with an effective
 frequency of 2, it is the 60.5% shown for `min_contacts = 2`.
 
-
-```r
+```{r}
 reach$cumulative[reach$cumulative$min_contacts %in% 1:4,
                  c("min_contacts", "percent", "people")]
-#>   min_contacts  percent   people
-#> 2            1 88.29653 882965.3
-#> 3            2 60.52948 605294.8
-#> 4            3 30.70311 307031.1
-#> 5            4 11.48740 114874.0
 ```
 
 Passing the estimated reach back to `plan_metrics()` adds the metrics that need
 it, such as the cost of reaching a thousand different people:
 
-
-```r
+```{r}
 plan_metrics(plan, reach = reach$reach$people)$totals[
   c("reach_percent", "average_frequency", "cost_per_thousand_reached")]
-#> $reach_percent
-#> [1] 88.29653
-#> 
-#> $average_frequency
-#> [1] 2.208467
-#> 
-#> $cost_per_thousand_reached
-#> [1] 69.99142
 ```
 
 `compare_reach_models()` places the two models that need no duplication data
 side by side. Sainsbury lets each vehicle keep its own audience; Binomial gives
 every insertion the plan's insertion-weighted average probability:
 
-
-```r
+```{r}
 compare_reach_models(plan, c("sainsbury", "binomial"))
-#>       model reach_probability reach_percent reach_people average_frequency
-#> 1 sainsbury         0.8829653      88.29653     882965.3          2.208467
-#> 2  binomial         0.8790945      87.90945     879094.5          2.218192
 ```
 
 ### Allocating a budget
@@ -280,8 +191,7 @@ that reaches a required effective reach at the lowest cost
 twice, and `max_insertions` caps the insertions of each channel (the search is
 not limited to the insertions of the original plan):
 
-
-```r
+```{r}
 optimized <- optimize_media_plan(
   plan,
   budget = 50000,
@@ -290,17 +200,8 @@ optimized <- optimize_media_plan(
   max_insertions = c(4, 8, 12)
 )
 optimized
-#> Media optimization (verified global optimum)
-#> Spend: 48600.00 / 50000.00 EUR | Reach: 94.23% | Reach 2+: 76.46%
-#>  channel insertions
-#>       TV          1
-#>    Radio          8
-#>  Digital         12
 optimized$allocation
-#>      TV   Radio Digital 
-#>       1       8      12
 optimized$global_optimum
-#> [1] TRUE
 ```
 
 When the number of possible allocations is manageable, the function evaluates
@@ -317,20 +218,13 @@ the share of the target that the channel reaches (*target rating*) and the
 *affinity index*, which compares the target's share of the channel's audience
 with its share of the population (100 means the channel is neutral):
 
-
-```r
+```{r}
 audience_metrics(
   gross_audience = c(250000, 150000),
   target_audience = c(125000, 75000),
   gross_universe = 1000000,
   target_universe = 400000
 )
-#>   gross_audience target_audience target_composition target_rating gross_rating
-#> 1         250000          125000                0.5        0.3125         0.25
-#> 2         150000           75000                0.5        0.1875         0.15
-#>   affinity_index
-#> 1            125
-#> 2            125
 ```
 
 ## Why the choice of model matters
@@ -345,10 +239,8 @@ Consider one vehicle with a 500,000-person audience in a population of
 1,000,000, and five insertions. Under random accumulation each insertion is an
 independent 50% chance, so almost everybody is reached:
 
-
-```r
+```{r}
 calc_binomial(audiences = 500000, population = 1000000, insertions = 5)$reach$percent
-#> [1] 96.875
 ```
 
 Now suppose that audience research shows that the cumulative audience after two
@@ -358,15 +250,11 @@ That is evidence of a loyal audience, and `calc_beta_binomial()` uses it. The
 of exposure and estimates how those probabilities are spread from the two
 audience figures:
 
-
-```r
+```{r}
 beta_binomial <- calc_beta_binomial(A1 = 500000, A2 = 550000, P = 1000000, n = 5)
 beta_binomial$reach$percent
-#> [1] 60.33654
 beta_binomial$distribution$percent
-#> [1]  6.009615  4.326923  4.326923  6.009615 39.663462
 beta_binomial$parameters$zero_contact_probability
-#> [1] 39.66346
 ```
 
 Reach falls from 96.9% to 60.3%, and the distribution is polarized: 39.7% of the
@@ -415,29 +303,16 @@ Every model that needs more than audiences takes a set of arguments that mirror
 a small table. The quickest way to see what a function expects is its example
 dataset, which is already a list of arguments:
 
-
-```r
+```{r}
 data(csd_kim2005)     # reach and duplication figures of a worked example, Kim (2005)
 str(csd_kim2005)
-#> List of 3
-#>  $ vehicles_data    :'data.frame':	3 obs. of  3 variables:
-#>   ..$ insertions: num [1:3] 2 2 2
-#>   ..$ R1        : num [1:3] 0.4902 0.0333 0.03
-#>   ..$ R2        : num [1:3] 0.5805 0.0502 0.0371
-#>  $ duplications     : num [1:3, 1:3] NA 0.0157 0.0139 0.0157 NA 0.0003 0.0139 0.0003 NA
-#>  $ aggregation_order: int [1:3] 1 2 3
 ```
 
 so that `do.call()` runs the model on it:
 
-
-```r
+```{r}
 csd <- do.call(calc_csd, csd_kim2005)
 csd
-#> Canonical Sequential Aggregation Distribution (CSD)
-#> Reach: 61.81% | Average frequency: 1.791
-#> Aggregation order: 1 -> 2 -> 3 (custom)
-#> Probability sum: 1.000000000000 | Mean error: -2.22e-16
 ```
 
 Example datasets exist for the main models (`ratings_example`,
@@ -465,8 +340,7 @@ the population** (between 0 and 1):
 - `population`: the number of people in the population, so that results are also
   expressed in people. The default, 1, leaves them as proportions.
 
-
-```r
+```{r}
 vehicles <- data.frame(
   vehicle    = c("TV", "Radio", "Digital"),
   insertions = c(3, 2, 4),
@@ -489,10 +363,6 @@ csd <- calc_csd(
   population = 8000000
 )
 csd
-#> Canonical Sequential Aggregation Distribution (CSD)
-#> Reach: 65.92% | Average frequency: 2.746
-#> Aggregation order: 1 -> 2 -> 3 (audience_desc)
-#> Probability sum: 1.000000000000 | Mean error: 4.44e-16
 ```
 
 The default print is a summary. `print(x, full = TRUE)` gives the full report:
@@ -501,79 +371,8 @@ distribution and the cumulative distribution. Long distributions are cut after
 `max_rows` exposure levels (30 by default; use `max_rows = Inf` to list them
 all):
 
-
-```r
+```{r}
 print(csd, full = TRUE)
-#> CANONICAL SEQUENTIAL AGGREGATION DISTRIBUTION (CSD)
-#> ===================================================
-#> Description: Beta-Binomial vehicles aggregated sequentially; the reach of every step comes from the second-order canonical expansion
-#> 
-#> HEADLINE METRICS:
-#> -----------------
-#> Total reach: 65.92% (5273987 people)
-#> Average exposures per person reached: 2.75
-#> 
-#> MODEL PARAMETERS:
-#> -----------------
-#> Probability of 0 exposures (%): 34.08
-#> Total insertions (N): 9
-#> Aggregation order: 1 -> 2 -> 3
-#> Aggregation rule: audience_desc
-#> 
-#> VEHICLES:
-#> ---------
-#>  vehicle insertions own_reach_percent aggregation_position
-#>        1          3             48.83                    1
-#>        2          2             24.00                    2
-#>        3          4             20.67                    3
-#> 
-#> AGGREGATION STEPS:
-#> ------------------
-#>  step added_vehicle target_reach_percent zero_probability
-#>     1             2                59.49           0.4051
-#>     2             3                65.92           0.3408
-#>  random_zero_probability expansion_adjustment duplicated_reach
-#>                   0.3889              0.04164           0.1334
-#>                   0.3085              0.10462           0.1424
-#> 
-#> CANONICAL CORRELATIONS BETWEEN VEHICLES:
-#> ----------------------------------------
-#>        V1     V2     V3
-#> V1 1.0000 0.0928 0.1048
-#> V2 0.0928 1.0000 0.1041
-#> V3 0.1048 0.1041 1.0000
-#> 
-#> EXPOSURE DISTRIBUTION:
-#> ----------------------
-#> (Percentage of the population receiving exactly N exposures)
-#> 1 exposure: 15.06% (1204889 people)
-#> 2 exposures: 15.85% (1268318 people)
-#> 3 exposures: 18.73% (1498537 people)
-#> 4 exposures: 8.11% (649123 people)
-#> 5 exposures: 5.07% (405202 people)
-#> 6 exposures: 1.85% (148342 people)
-#> 7 exposures: 0.91% (72930 people)
-#> 8 exposures: 0.25% (20005 people)
-#> 9 exposures: 0.08% (6640 people)
-#> 
-#> CUMULATIVE DISTRIBUTION:
-#> -------------------------
-#> (Percentage of the population receiving N or more exposures)
-#> >= 1 exposure: 65.92% (5273987 people)
-#> >= 2 exposures: 50.86% (4069098 people)
-#> >= 3 exposures: 35.01% (2800779 people)
-#> >= 4 exposures: 16.28% (1302242 people)
-#> >= 5 exposures: 8.16% (653119 people)
-#> >= 6 exposures: 3.10% (247916 people)
-#> >= 7 exposures: 1.24% (99575 people)
-#> >= 8 exposures: 0.33% (26645 people)
-#> >= 9 exposures: 0.08% (6640 people)
-#> 
-#> DIAGNOSTICS:
-#> ------------
-#> Probability sum: 1.000000000000 | Smallest probability: 0.00083 | Mean error: 4.44e-16
-#> Largest margin error across aggregation steps: 1.11e-16
-#> Smallest eigenvalue of the correlation matrix: 0.8915
 ```
 
 `aggregation_order` can be `"audience_desc"` (largest audience first), `"given"`
@@ -584,8 +383,7 @@ arguments; they use different formulas and therefore give different results
 from the same inputs (CSD and CBD obtain reach from the same canonical
 expansion, which is why their reach coincides here):
 
-
-```r
+```{r}
 v <- vehicles[, c("insertions", "R1", "R2")]
 models <- list(CSD = calc_csd, MSAD = calc_msad, CBD = calc_cbd, MBD = calc_mbd)
 data.frame(
@@ -594,11 +392,6 @@ data.frame(
   average_frequency = sapply(models, function(f) f(v, duplications)$average_frequency),
   row.names = NULL
 )
-#>   model reach_percent average_frequency
-#> 1   CSD      65.92483          2.745551
-#> 2  MSAD      64.04448          2.826161
-#> 3   CBD      65.92483          2.724670
-#> 4   MBD      64.69358          2.797805
 ```
 
 The models do not accept every input. When the duplications are incompatible
@@ -610,12 +403,10 @@ the model imputes for three vehicles.
 
 ### The other models
 
-
-```r
+```{r}
 # Random duplication: three vehicles with 2, 1 and 3 insertions
 calc_sainsbury(audiences = c(300000, 400000, 200000),
                population = 1000000, insertions = c(2, 1, 3))$reach$percent
-#> [1] 84.9472
 
 # Several vehicles, one insertion each: duplication matrix in people
 duplication <- matrix(c(NA,     140000, 70000,
@@ -624,7 +415,6 @@ duplication <- matrix(c(NA,     140000, 70000,
 calc_hofmans_duplication(audiences = c(300000, 400000, 200000),
                          population = 1000000,
                          duplication_matrix = duplication)$reach$percent
-#> [1] 64.16971
 
 # Several vehicles and insertions, duplication observed in people. The diagonal
 # holds the duplication between two insertions of the same vehicle, so it is
@@ -637,7 +427,6 @@ calc_metheringham(
                                 180000, 140000, 170000), nrow = 3),
   population = 10000000
 )$reach$percent
-#> [1] 74.34177
 ```
 
 Units differ between families, and the functions check them:
@@ -670,14 +459,10 @@ When you calculate with the objects yourself, two quick coherence checks are
 that the probabilities add up to one and that the average frequency equals the
 mean number of exposures per person divided by the reach.
 
-
-```r
+```{r}
 sum(csd$distribution$probability)
-#> [1] 1
 csd$average_frequency
-#> [1] 2.745551
 sum(vehicles$insertions * vehicles$R1) / csd$reach$probability
-#> [1] 2.745551
 ```
 
 The last two numbers coincide because CSD preserves the plan's mean number of
@@ -694,8 +479,7 @@ its scale (`"count"`, `"probability"` or `"percent"`). The counts below are
 hypothetical: a panel of 1,000 people classified by the number of exposures to
 the three-vehicle schedule of the previous sections (0 to 9 exposures).
 
-
-```r
+```{r}
 observed <- data.frame(
   contacts = 0:9,
   observed = c(330, 150, 160, 190, 80, 50, 25, 10, 5, 0)
@@ -707,8 +491,6 @@ evaluation <- evaluate_exposure_model(
   observed_scale = "count"
 )
 round(unlist(evaluation$summary[c("kim_aer", "kim_ape")]), 3)
-#> kim_aer kim_ape 
-#>   0.016   0.026
 ```
 
 `kim_aer` is the average relative error in reach, |observed - predicted| /
