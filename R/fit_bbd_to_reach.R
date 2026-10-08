@@ -35,7 +35,13 @@
 #' @param reach External schedule reach, in people.
 #' @param population Population size, in people. No audience can exceed it;
 #'   otherwise the function stops with an error.
-#' @param precision Convergence criterion, in people. The default is 100.
+#' @param precision Convergence criterion, in people: the fit is `converged` when
+#'   the fitted and the external reach differ by at most this many people. The
+#'   default, `NULL`, is `1e-4 * population` (100 people for a universe of one
+#'   million). It is expressed in people, so it must be adapted to the scale
+#'   of `population`; with `population = 1`, for example, a value of 100 would
+#'   accept any reach, which is why the default is relative. The same tolerance
+#'   applies to the feasibility checks below.
 #' @param max_iter Maximum number of iterations of the root finder.
 #'
 #' @details
@@ -50,11 +56,29 @@
 #' solves, with [stats::uniroot()] on the log scale of \eqn{c}, for the
 #' concentration whose reach, \eqn{1 - \Pr(K = 0)}, equals the external reach.
 #'
-#' The reach a Beta-Binomial with this mean can take lies between the
-#' polarized limit (\eqn{c \to 0}), \eqn{\bar{p} P}, and the binomial limit
-#' (\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) P}. An external reach
-#' outside that interval, beyond `precision`, is rejected. At either limit the
-#' distribution is computed directly and `alpha` and `beta` are `0` or `Inf`.
+#' Two different conditions are checked, in this order. First, the external
+#' reach must be logically possible for the schedule: at least the largest
+#' audience of a vehicle (one insertion of that vehicle alone reaches those
+#' people) and at most the smaller of the population and the total number of
+#' contacts, \eqn{\sum_i n_i A_i}. A reach outside these bounds cannot occur
+#' whatever the distribution, and the function stops. Second, the reach that a
+#' Beta-Binomial with this mean can take lies between the polarized limit
+#' (\eqn{c \to 0}), \eqn{\bar{p} P}, and the binomial limit
+#' (\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) P}. A reach that is
+#' possible for the schedule but outside that interval, beyond `precision`, is
+#' not representable by this family and is also rejected, with a different
+#' message. At either limit the distribution is computed directly (all the mass
+#' at zero and at `N` in the polarized limit; a Binomial(`N`, `mean_probability`)
+#' in the binomial limit) and `alpha` and `beta` are reported as `0` or `Inf`.
+#' These values only flag the limit, as `fit_type` does: they are not parameters
+#' of a proper Beta distribution (the quotient `alpha / (alpha + beta)` is
+#' undefined there), and the mean stays fixed at `mean_probability`.
+#'
+#' Fitting one distribution to the aggregate reach does not recover the
+#' exposure marginals of each vehicle or the duplication between vehicles, and
+#' `converged = TRUE` shows only that the numerical fit is within `precision`
+#' of the reach supplied, not that the reach is coherent with the individual
+#' vehicles beyond the bounds above.
 #'
 #' Aldás Manzano (1998) starts the original iterative procedure from an
 #' arbitrary initial value of `alpha`; root finding needs no starting value.
@@ -97,7 +121,7 @@
 #' [calc_metheringham()] (also needs the observed duplications).
 #' @export
 fit_bbd_to_reach <- function(insertions, audiences, reach, population,
-                             precision = 100, max_iter = 100) {
+                             precision = NULL, max_iter = 100) {
   assert_numeric_vector(insertions, "insertions", min = 1, integer = TRUE)
   m <- length(insertions)
   assert_numeric_vector(audiences, "audiences", min = 0, min_open = TRUE,
@@ -107,6 +131,7 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, population,
     stop("audiences cannot exceed population.", call. = FALSE)
   }
   assert_number(reach, "reach", min = 0, max = population, min_open = TRUE)
+  if (is.null(precision)) precision <- 1e-4 * population
   assert_number(precision, "precision", min = 0, min_open = TRUE)
   assert_number(max_iter, "max_iter", min = 1, integer = TRUE)
 
@@ -121,11 +146,29 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, population,
     (1 - dbetabinom(0, size = N, alpha = alpha, beta = beta)) * population
   }
 
+  show <- function(x) format(signif(x, 7), scientific = FALSE, trim = TRUE)
+  logical_min <- max(audiences)
+  logical_max <- min(population, sum(insertions * audiences))
+  if (reach < logical_min - precision) {
+    stop("reach (", show(reach), " people) is smaller than the largest ",
+         "audience of a vehicle (", show(logical_min), " people): a single ",
+         "insertion of that vehicle already reaches that many people, so no ",
+         "distribution can have this reach.", call. = FALSE)
+  }
+  if (reach > logical_max + precision) {
+    stop("reach (", show(reach), " people) is larger than the population or ",
+         "the total number of contacts of the schedule (", show(logical_max),
+         "): no distribution can have this reach.", call. = FALSE)
+  }
+
   feasible_min <- mean_probability * population
   feasible_max <- (1 - (1 - mean_probability)^N) * population
   if (reach < feasible_min - precision || reach > feasible_max + precision) {
-    stop(sprintf("reach is outside the feasible Beta-Binomial interval [%.0f, %.0f].",
-                 feasible_min, feasible_max), call. = FALSE)
+    stop(sprintf(paste0("reach is outside the feasible Beta-Binomial interval ",
+                        "[%s, %s]: it is possible for the schedule, but the ",
+                        "Beta-Binomial family with this mean cannot ",
+                        "represent it."),
+                 show(feasible_min), show(feasible_max)), call. = FALSE)
   }
 
   history <- data.frame(
@@ -201,6 +244,8 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, population,
 #' @export
 print.bbd_reach_fit <- function(x, ...) {
   format_number <- function(v) format(v, big.mark = ",", scientific = FALSE)
+  format_people <- function(v) format(signif(v, 6), big.mark = ",",
+                                      scientific = FALSE, trim = TRUE)
   p <- x$parameters
   cat("Beta-Binomial fit to an external reach\n")
   cat("======================================\n")
@@ -209,12 +254,12 @@ print.bbd_reach_fit <- function(x, ...) {
   cat(sprintf("Fit: %s | alpha = %s | beta = %s\n", p$fit_type,
               format(p$alpha, digits = 5), format(p$beta, digits = 5)))
   cat(sprintf("External reach: %s people (%.2f%%)\n",
-              format_number(x$reach$external),
+              format_people(x$reach$external),
               100 * x$reach$external / p$population))
   cat(sprintf("Fitted reach:   %s people (%.2f%%) | difference: %s people\n",
-              format_number(round(x$reach$fitted)),
+              format_people(x$reach$fitted),
               100 * x$reach$fitted / p$population,
-              format_number(round(abs(x$reach$difference)))))
+              format_people(abs(x$reach$difference))))
   cat(sprintf("Iterations: %d | converged: %s\n", p$iterations,
               if (p$converged) "yes" else "no"))
   contacts <- x$distribution$contacts

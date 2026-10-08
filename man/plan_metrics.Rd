@@ -12,7 +12,11 @@ plan_metrics(plan, reach = NULL)
 \item{reach}{Optional unique reach of the plan, in people (for example
 the \code{people} element of the \code{reach} returned by \code{\link[=estimate_reach]{estimate_reach()}}).
 When supplied, average frequency
-and cost per thousand people reached are added to the plan totals.}
+and cost per thousand people reached are added to the plan totals. It must
+be compatible with the plan: at least the largest audience among the
+channels with insertions and at most the smaller of the population and the
+plan's impressions; otherwise the function stops with an error. It must
+refer to the same universe, period and allocation as the plan.}
 }
 \value{
 A \code{media_plan_metrics} object: a list with \code{by_channel} (a data frame
@@ -34,6 +38,14 @@ plan's rating points, \code{cpm_impressions} is the cost per thousand
 impressions and \code{cost_per_rating_point} is \code{spend / rating_points}. When the
 plan has a target audience, \code{target_impressions} and \code{target_composition}
 (\code{target_audience / audience}) are added.
+
+With a \code{reach}, the average frequency is \code{impressions / reach}, the average
+number of contacts among the people reached (it lies between one and the
+total number of insertions). It is \code{NA}, not zero, when the reach is zero,
+because a mean over nobody is undefined; \code{\link[=estimate_reach]{estimate_reach()}} follows the same
+convention. The \code{target_audience} column only gives the
+target's impressions and composition: the reach, rating points and costs
+refer to the whole audience, not to the target (see \code{\link[=audience_metrics]{audience_metrics()}}).
 }
 \examples{
 plan <- media_plan(

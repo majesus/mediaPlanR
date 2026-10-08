@@ -11,6 +11,22 @@
 #' for a particular combination of media and population should be checked
 #' against observed data, for example with [evaluate_exposure_model()].
 #'
+#' Three kinds of evidence must not be confused. *Replication of a published
+#' example or table*: in the maintainer's local tests, whose input tables are
+#' not distributed, the package reproduces, within 0.01 percentage points, the
+#' CBD columns of the 80 two-vehicle plans of Kim (2005) and Hong (1998), but
+#' those sources do not print the duplications, which were reconstructed from
+#' another model's published column; this is a consistency check between
+#' columns, not an independent test. *Fidelity to the printed algorithm*: the
+#' functions follow the procedures described in the sources, and where the
+#' printed numbers cannot be reproduced the difference is recorded in the
+#' tests. *Predictive validation*: agreement with independent observations of
+#' reach and frequency. The package does not provide it and the replicated
+#' tables do not supply it; use [evaluate_exposure_model()] with your own
+#' data. The provenance of each dataset is recorded in the installed file
+#' `DATA-PROVENANCE.md` (see `system.file("DATA-PROVENANCE.md", package =
+#' "mediaPlanR")`).
+#'
 #' @section Notation and units:
 #' The same quantity has the same meaning in every function. Names follow the
 #' sources of each model only where the literature fixes them.
@@ -40,16 +56,40 @@
 #'     [calc_metheringham()]); `duplications`, as proportions of the
 #'     population ([calc_canex()] and the sequential models). The different
 #'     names signal the different units.
-#'   \item *Reach* (also net audience) counts each person once;
-#'     *gross audience* (also duplicated audience) is the sum of the audiences
-#'     and counts a person once per audience, as in impressions.
+#'   \item *Reach* (also net audience) counts each person once. *Contacts*
+#'     (also impressions, or gross audience in the duplication models) count a
+#'     person once per insertion: with several insertions they are the sum of
+#'     each audience times its insertions, \eqn{I = \sum n_i A_i}; with one
+#'     insertion per vehicle they are the sum of the audiences, the *gross
+#'     audience* of [calc_agostini_duplication()] and [calc_hofmans_duplication()].
+#'     The `gross_audience` argument of [audience_metrics()] is something else:
+#'     the total audience of a channel, whatever the profile of its members.
+#'     *Duplications* between vehicles are coincidences between pairs, so a
+#'     person present in three vehicles contributes three pairs, not three
+#'     people. Write the unit (people, contacts, pairs or proportion) before
+#'     forming a ratio. With these symbols, the average frequency is
+#'     \eqn{F = I / R} (contacts per person reached, defined only if \eqn{R > 0})
+#'     and, per person of the universe, the mean number of contacts is
+#'     \eqn{\mu = I / P}, so that \eqn{GRP = 100 \mu}.
 #'   \item *Effective frequency*: `effective_frequency` in
 #'     [optimize_media_plan()] and `frequency` in [calibrate_bbd()]; effective
 #'     reach is the proportion exposed that many times or more.
 #'   \item *Units*: every argument documents its unit. A *proportion* is a
-#'     number between 0 and 1 (0.35 for 35%, not 35); percentages appear only in
-#'     result columns named `percent`; counts of people appear in arguments
-#'     described as "in people" and in result columns named `people`.
+#'     number between 0 and 1 (0.35 for 35%, not 35); percentages appear in
+#'     result columns named `percent` (and `reach_percent`); counts of people
+#'     appear in arguments described as "in people" and in result columns named
+#'     `people`. There are three exceptions, and they are listed in the help
+#'     page of each function: `zero_contact_probability` in
+#'     [calc_beta_binomial()] is a percentage (0 to 100) despite its name;
+#'     `affinity_index` in [audience_metrics()] has base 100 and can exceed 100;
+#'     and the rating points of [plan_metrics()] (`grps`, `rating_points`) are
+#'     points per 100 people of the universe, which can also exceed 100 when
+#'     contacts exceed the population.
+#'   \item *Errors of evaluation*: the average percentage errors of
+#'     [evaluate_exposure_model()] (`kim_aer`, `kim_ape`) are relative errors
+#'     returned as proportions (multiply by 100 for percent); absolute errors of
+#'     reach are differences between proportions (multiply by 100 for
+#'     percentage points, so 0.002 of probability is 0.2 percentage points).
 #' }
 #'
 #' @section Assumptions of the models:
@@ -93,6 +133,25 @@
 #' [audience_metrics()] compute its metrics, [estimate_reach()] and
 #' [compare_reach_models()] estimate reach and the exposure distribution, and
 #' [optimize_media_plan()] allocates insertions under a budget.
+#'
+#' @section Suggested study path:
+#' The help pages of a reference manual are in alphabetical order, which
+#' assumes prior knowledge. For sequential study, read in this order: (1) the
+#' sections "Notation and units" and "Assumptions of the models" above, to fix
+#' what is counted (people, contacts, pairs) and what each model assumes; (2) the
+#' models of independence, [calc_sainsbury()] and [calc_binomial()], and
+#' [estimate_reach()]; (3) the ad hoc duplication formulas,
+#' [calc_agostini_duplication()] and [calc_hofmans_duplication()]; (4) the
+#' accumulation of one vehicle, [calc_beta_binomial()] and
+#' [calc_hofmans_accumulation()], with [fit_bbd_to_reach()] and
+#' [calibrate_bbd()]; (5) the multivariate models, [calc_canex()], [calc_csd()],
+#' [calc_msad()], [calc_cbd()] and [calc_mbd()], and the section "Domain of
+#' validity" of [calc_canex()]; (6) the count approximation
+#' [nbd_exposure_distribution()]; (7) evaluation, [evaluate_exposure_model()];
+#' and (8) optimization, [optimize_media_plan()]. `vignette("mediaPlanR-intro")`
+#' gives worked examples of the planning workflow and of the models; it is
+#' the place for a longer teaching development, which the reference pages do not
+#' attempt.
 #'
 #' @section Reach and exposure-distribution models:
 #' Plans with one or more insertions in each of several vehicles, with random

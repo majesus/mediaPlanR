@@ -103,7 +103,13 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'     \item `R2`: cumulative reach after the second insertion (the proportion
 #'       exposed at least once in two insertions), a proportion between `R1`
 #'       and the independence limit `2 * R1 - R1^2`. If `R2` is outside that
-#'       range the function stops with an explanatory error.
+#'       range the function stops with an explanatory error. Unlike
+#'       [calc_csd()], [calc_msad()], [calc_cbd()] and [calc_mbd()], which accept
+#'       `NA` for a vehicle with a single insertion because they do not use it,
+#'       this function requires a finite `R2` for every vehicle, including those
+#'       with one insertion: a data frame shared with the sequential models
+#'       needs a valid `R2` here. Do not invent an empirical value; for a single
+#'       insertion, any value inside the admissible range gives the same result.
 #'   }
 #' @param duplications Symmetric matrix whose element `[i, j]` is the
 #'   proportion of the population that is exposed to both vehicle `i` and
@@ -167,6 +173,17 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' of 0.0076, and the
 #' truncated distribution has a mean of 1.0227.
 #'
+#' The ratio between contacts and reach holds only within one base. The
+#' `average_frequency` of the result is the mean of the returned (corrected)
+#' distribution divided by its reach, so `average_frequency * reach` equals
+#' `mean_exposures_result`, not the gross contacts per person of the input,
+#' `mean_exposures_expected`, which is what a GRP figure computed from the
+#' audiences measures. In the example above, the contacts of the input per
+#' person are 1 and those of the corrected distribution 1.0227. When
+#' `mean_exposures_result` and `mean_exposures_expected` differ, do not divide
+#' the input GRP by the corrected reach to obtain a frequency; report both
+#' diagnostics and say which base each figure uses.
+#'
 #' @section Domain of validity:
 #' In plain words. These models take the overlaps between vehicles
 #' (the duplications) from your data and use them to build the whole
@@ -188,11 +205,17 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'     one model to another, and the function issues a warning that names the
 #'     pair.
 #' }
-#' An error means that the inputs are impossible: correct them. A warning does
-#' not invalidate the calculation, but it asks for caution: check the
-#' duplication of the pair named, which is often a measurement problem (see
-#' below), and compare the result with another model. The rest of this section
-#' gives the technical detail.
+#' An error has one of two causes. Either the inputs break a constraint of the
+#' data (impossible overlaps: correct them), or the inputs are possible but the
+#' model's approximation cannot reproduce them (the third limit below: a valid
+#' probabilistic construction can still be rejected by an approximate model).
+#' Read the message to tell them apart, and do not change valid data only to
+#' make a model run. A warning does not invalidate the calculation, but it asks
+#' for caution: check the duplication of the pair named, which is often a
+#' measurement problem (see below), and compare the result with another model.
+#' Every diagnostic must be inspected before the result is interpreted; none
+#' can be assumed to be harmless or, on the contrary, to invalidate the result.
+#' The rest of this section gives the technical detail.
 #'
 #' The multivariate models ([calc_canex()], [calc_csd()], [calc_msad()],
 #' [calc_cbd()] and [calc_mbd()]) take the observed one-insertion duplications
@@ -242,7 +265,7 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'   \item `population`: the population size used.
 #'   \item `reach`: list with `probability`, `percent` and `people`.
 #'   \item `average_frequency`: average number of exposures among the people
-#'     reached.
+#'     reached (`NA` if nobody is reached).
 #'   \item `distribution`: data frame with `contacts` (total exposures, from
 #'     zero), `probability`, `percent`, `people` and `cumulative_probability`
 #'     (the probability of `contacts` or more exposures).
@@ -286,6 +309,7 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 #' Doctoral dissertation, The University of Texas at Austin, pp. 56-58.
+#' Handle 2152/1590 (University of Texas at Austin repository).
 #'
 #' @export
 calc_canex <- function(vehicles_data, duplications, population = 1) {
@@ -426,7 +450,7 @@ build_canex_result <- function(distribution, population) {
   average_frequency <- if (reach_probability > 0) {
     sum(distribution$exposures * probability) / reach_probability
   } else {
-    0
+    NA_real_
   }
 
   structure(list(

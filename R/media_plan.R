@@ -12,7 +12,14 @@
 #'   the cost in currency units per insertion. Channel labels must be
 #'   non-empty and unique.
 #' @param target_audience Optional name of a column of `data` with the people
-#'   in the target audience per insertion. It cannot exceed `audience`.
+#'   in the target audience per insertion. It cannot exceed `audience`. It is
+#'   descriptive: [plan_metrics()] uses it to report target impressions and
+#'   composition, but [estimate_reach()] and [optimize_media_plan()] work with
+#'   `audience` and `population` only, so they estimate the reach of the whole
+#'   population, not of the target. To estimate the reach of the target, build a
+#'   separate plan whose `population` is the size of the target universe and
+#'   whose `audience` column holds the people of the target reached by each
+#'   insertion.
 #' @param currency Currency label used in printed output. It does not affect
 #'   any calculation.
 #'
@@ -142,7 +149,11 @@ print.media_plan <- function(x, ...) {
 #' @param reach Optional unique reach of the plan, in people (for example
 #'   the `people` element of the `reach` returned by [estimate_reach()]).
 #'   When supplied, average frequency
-#'   and cost per thousand people reached are added to the plan totals.
+#'   and cost per thousand people reached are added to the plan totals. It must
+#'   be compatible with the plan: at least the largest audience among the
+#'   channels with insertions and at most the smaller of the population and the
+#'   plan's impressions; otherwise the function stops with an error. It must
+#'   refer to the same universe, period and allocation as the plan.
 #'
 #' @details
 #' For each channel, `impressions` is `audience * insertions`, `spend` is
@@ -152,6 +163,14 @@ print.media_plan <- function(x, ...) {
 #' impressions and `cost_per_rating_point` is `spend / rating_points`. When the
 #' plan has a target audience, `target_impressions` and `target_composition`
 #' (`target_audience / audience`) are added.
+#'
+#' With a `reach`, the average frequency is `impressions / reach`, the average
+#' number of contacts among the people reached (it lies between one and the
+#' total number of insertions). It is `NA`, not zero, when the reach is zero,
+#' because a mean over nobody is undefined; [estimate_reach()] follows the same
+#' convention. The `target_audience` column only gives the
+#' target's impressions and composition: the reach, rating points and costs
+#' refer to the whole audience, not to the target (see [audience_metrics()]).
 #'
 #' @return A `media_plan_metrics` object: a list with `by_channel` (a data frame
 #'   of channel-level metrics), `totals` (a list with `impressions`, `spend`,
@@ -207,6 +226,8 @@ plan_metrics <- function(plan, reach = NULL) {
   )
   if (!is.null(reach)) {
     assert_number(reach, "reach", min = 0, max = plan$population)
+    assert_reach_compatible_with_plan(reach, d, plan$population,
+                                      total_impressions)
     totals$reach <- reach
     totals$reach_percent <- reach / plan$population * 100
     totals$average_frequency <- if (reach > 0) total_impressions / reach else NA_real_
@@ -223,6 +244,34 @@ print.media_plan_metrics <- function(x, ...) {
   cat("\nPlan totals\n")
   print(unlist(x$totals))
   invisible(x)
+}
+
+# Logical bounds of the unique reach of a plan under the finite-opportunity
+# contract (a person receives at most one contact per insertion): the plan
+# reaches at least as many people as its largest single audience among the
+# channels with insertions, and at most as many as it has contacts (or the
+# population). With no contacts at all, the reach can only be zero.
+assert_reach_compatible_with_plan <- function(reach, data, population,
+                                              total_impressions) {
+  tolerance <- 1e-9 * population
+  active <- data$audience[data$insertions > 0]
+  lower <- if (length(active)) max(active) else 0
+  upper <- min(population, total_impressions)
+  show <- function(x) format(signif(x, 7), scientific = FALSE, trim = TRUE)
+  if (reach < lower - tolerance) {
+    stop("reach (", show(reach), " people) is smaller than the largest ",
+         "audience among the channels with insertions (", show(lower),
+         " people): a single insertion of that channel already reaches that ",
+         "many people.", call. = FALSE)
+  }
+  if (reach > upper + tolerance) {
+    stop("reach (", show(reach), " people) is larger than the ",
+         if (upper < population) "number of impressions of the plan" else
+           "population", " (", show(upper), "): the plan cannot reach more ",
+         "people than it has contacts, and a person is counted once.",
+         call. = FALSE)
+  }
+  invisible(TRUE)
 }
 
 assert_media_plan <- function(x) {

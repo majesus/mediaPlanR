@@ -22,7 +22,7 @@ new_reach_result <- function(probability, population, model, parameters = list()
   mean_contacts_population <- sum(contacts * probability)
   average_frequency <- if (reach_probability > 0) {
     mean_contacts_population / reach_probability
-  } else 0
+  } else NA_real_
   cumulative <- rev(cumsum(rev(probability)))
   structure(list(
     model = model,
@@ -82,7 +82,8 @@ new_reach_result <- function(probability, population, model, parameters = list()
 #'   `distribution` (`contacts`, `probability`, `percent` and `people` for zero
 #'   up to the total number of insertions `N`), `cumulative` (`min_contacts`, `probability`, `percent`
 #'   and `people` for at least `min_contacts` exposures), `average_frequency`
-#'   (average exposures among the people reached) and model `parameters`.
+#'   (average exposures among the people reached; `NA` when nobody is reached,
+#'   because the mean over nobody is undefined) and model `parameters`.
 #'
 #' @examples
 #' plan <- media_plan(

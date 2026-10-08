@@ -57,8 +57,13 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 #' The exposure distribution is computed exactly, by combining one insertion at
 #' a time (a dynamic convolution of the per-insertion Bernoulli distributions).
 #' The number of calculations grows with the square of the number of insertions
-#' \eqn{N}, so doubling the insertions roughly quadruples the work, which is
-#' negligible for any realistic plan. Reach equals
+#' \eqn{N}, so doubling the insertions roughly quadruples the work. In a test on
+#' a typical computer, a plan with 1,000 insertions took about 0.01 seconds,
+#' one with 5,000 about 0.1 seconds and one with 20,000 about 3 seconds; much
+#' larger numbers of opportunities, such as digital impressions counted one by
+#' one, need another formulation and are outside the scope of this finite
+#' contract, in which each insertion offers at most one opportunity per
+#' person. Reach equals
 #' \eqn{1 - \prod_{i=1}^{m} (1 - A_i / P)^{n_i}}, where \eqn{m} is the number
 #' of vehicles, \eqn{A_i} is the audience of vehicle \eqn{i}, \eqn{n_i} its
 #' number of insertions and \eqn{P} the population.
@@ -168,6 +173,17 @@ calc_sainsbury <- function(audiences, population,
 #' \eqn{N} trials and success probability \eqn{p}, and reach equals
 #' \eqn{1 - (1 - p)^N}.
 #'
+#' The Binomial calculation is exact for the homogenized model that it builds
+#' (every insertion with the same probability), not for any plan of independent
+#' vehicles. Replacing the different probabilities of the vehicles by their
+#' insertion-weighted mean preserves the mean number of contacts but, in
+#' general, changes the reach and the exposure distribution. For example, with
+#' audiences of 10 and 90 people in a universe of 100 and one insertion in each
+#' vehicle, both models have a mean of one contact per person, but
+#' [calc_sainsbury()], which keeps the probability of each vehicle, gives a
+#' reach of 91% and the Binomial 75%. The difference is the effect of unequal
+#' audiences, not a numerical error.
+#'
 #' @return A list of class `"reach_binomial"` with components:
 #' \itemize{
 #'   \item `reach`: list with `percent` and `people`.
@@ -265,11 +281,19 @@ calc_binomial <- function(audiences, population,
 #' The method-of-moments estimators are
 #' \deqn{\hat{\alpha} = \frac{R_1 (R_2 - R_1)}{2 R_1 - R_1^2 - R_2}, \qquad
 #' \hat{\beta} = \frac{\hat{\alpha} (1 - R_1)}{R_1}.}
-#' The estimators require \eqn{R_1 \le R_2 \le 2 R_1 - R_1^2}. The two bounds
-#' are valid degenerate cases: at \eqn{R_2 = R_1} all individuals are either
-#' always or never exposed (the *polarized* limit, `alpha = beta = 0`), and at
-#' \eqn{R_2 = 2 R_1 - R_1^2} exposures are independent (the *binomial* limit,
-#' `alpha = beta = Inf`). Both limits are handled explicitly.
+#' The estimators and the mean and variance formulas of the Beta distribution
+#' apply to the interior, where \eqn{R_1 < R_2 < 2 R_1 - R_1^2} and both
+#' parameters are positive and finite. The two bounds are degenerate cases,
+#' reached as limits keeping the mean \eqn{R_1} fixed while the concentration
+#' \eqn{\alpha + \beta} tends to zero or to infinity: at \eqn{R_2 = R_1} all
+#' individuals are either always exposed or never exposed (the *polarized*
+#' limit: the probability mass is only at zero and at the number of insertions
+#' \eqn{n}), and at \eqn{R_2 = 2 R_1 - R_1^2} exposures are independent (the
+#' *binomial* limit, a Binomial\eqn{(n, R_1)}). The values `alpha = beta = 0`
+#' and `alpha = beta = Inf` that the function reports for them are indicators
+#' of the limit, not parameters of a proper Beta distribution, and the quotient
+#' \eqn{\alpha / (\alpha + \beta)} must not be evaluated with them. Both limits
+#' are handled explicitly. \eqn{R_1 = 1} is also degenerate: everyone is exposed.
 #'
 #' @return A list of class `"reach_beta_binomial"` with components:
 #' \itemize{
@@ -278,14 +302,19 @@ calc_binomial <- function(audiences, population,
 #'     `insertions` exposures.
 #'   \item `cumulative`: list with `percent` and `people`, for individuals
 #'     exposed at least once, at least twice, and so on.
-#'   \item `population`: the population size used (people).
 #'   \item `population`: the population size used, in people.
 #'   \item `parameters`: list with `alpha`, `beta`, `mean_probability` (the
 #'     mean of the Beta distribution, `R1`), `zero_contact_probability`
-#'     (the percentage of the population with no exposure, on a 0-100 scale
-#'     unlike the `probability` columns of other results) and `type`
+#'     (a percentage, on a 0-100 scale: it is an exception to the rule that
+#'     probabilities are proportions between 0 and 1, and its name is kept for
+#'     compatibility; divide by 100 for a probability) and `type`
 #'     (`"beta_binomial"`, `"binomial_limit"` or `"polarized_limit"`).
 #' }
+#' In the two limits, `alpha` and `beta` are `0` (polarized) or `Inf`
+#' (binomial). They are indicators of the limit, as `type` is, not parameters of
+#' a proper Beta distribution: the quotient `alpha / (alpha + beta)` is
+#' undefined there. The mean `R1` stays fixed while the concentration
+#' `alpha + beta` tends to zero or to infinity.
 #'
 #' @examples
 #' result <- calc_beta_binomial(R1 = 0.50, R2 = 0.55, insertions = 5,

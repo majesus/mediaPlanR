@@ -10,7 +10,8 @@ evaluate_exposure_model(
   observed_scale,
   predicted_scale = c("auto", "count", "probability", "percent"),
   schedule_col = NULL,
-  sum_tolerance = 0.005
+  sum_tolerance = 0.005,
+  censored_last_level = FALSE
 )
 }
 \arguments{
@@ -38,12 +39,48 @@ both data frames. Model objects represent one schedule and therefore
 require \code{schedule_col = NULL}.}
 
 \item{sum_tolerance}{Maximum absolute departure from probability mass one
-accepted for probability/percent inputs. The default accepts ordinary
-publication rounding but rejects incomplete distributions.}
+accepted for the total of each probability/percent distribution (in
+probability units, so 0.005 is half a percentage point). The default
+accepts ordinary publication rounding but rejects incomplete
+distributions. The tolerance applies to the total only: no individual
+probability may exceed one (or percentage exceed 100), whatever the
+tolerance. Masses within the tolerance are used as supplied and are not
+renormalized (see Details); counts, in contrast, are always normalized.}
+
+\item{censored_last_level}{\code{FALSE} (default) when the last exposure level of
+both distributions is an exact count. Set it to \code{TRUE} when it is a
+collapsed tail ("\code{k} or more exposures", as when a Negative-Binomial table
+has been truncated at \code{k} identically in observed and predicted data). The
+exact mean number of exposures is then not available: the observed and
+predicted means and \code{mean_contact_bias} are \code{NA}, and the means of the
+censored codes (the last level counted as exactly \code{k}) are reported in
+separate columns instead.}
 }
 \value{
-An \code{exposure_model_evaluation} object with \code{summary},
-\code{by_schedule}, the aligned probability table, and input diagnostics.
+An \code{exposure_model_evaluation} object, a list with:
+\itemize{
+\item \code{summary}: \code{schedules}, \code{kim_aer}, \code{kim_ape} (proportions),
+\code{mean_total_variation}, \code{mean_cell_mae}, \code{mean_reach_absolute_error}
+(a difference between proportions: multiply by 100 for percentage
+points) and \code{mean_contact_bias} (exposures per person). With
+\code{censored_last_level = TRUE}, \code{mean_contact_bias} is \code{NA} and
+\code{mean_censored_contact_bias} is added.
+\item \code{by_schedule}: one row per schedule with \code{observed_reach},
+\code{predicted_reach}, \code{reach_signed_error} (predicted minus observed),
+\code{reach_absolute_error}, \code{kim_relative_reach_error},
+\code{kim_distribution_error}, \code{total_variation}, \code{cell_mae},
+\code{observed_mean_contacts} and \code{predicted_mean_contacts} (plus
+\code{observed_censored_mean} and \code{predicted_censored_mean} when the last
+level is censored). All are proportions or exposures per person.
+\item \code{aligned_distribution}: the observed and predicted probabilities by
+schedule and exposure level, after normalizing counts and converting
+percentages to probabilities.
+\item \code{input_mass}: the total mass of each supplied distribution before any
+normalization, by schedule (\code{observed_input_mass},
+\code{predicted_input_mass}).
+\item \code{inputs}: the scales, the source of the prediction,
+\code{sum_tolerance} and \code{censored_last_level}.
+}
 }
 \description{
 Computes Kim's relative reach error and exposure-distribution error for one
@@ -75,7 +112,26 @@ person (positive when the model overestimates exposures).
 Exact support equality is required. Open-tail NBD output is rejected because
 a cell such as \verb{10+} is not equivalent to an exact ten-exposure cell. To
 evaluate a censored distribution, the analyst must first collapse observed
-and predicted tails identically and provide explicit data frames.
+and predicted tails identically, provide explicit data frames and set
+\code{censored_last_level = TRUE}. The mean number of exposures of such a table
+treats the last cell as exactly \code{k} exposures, so it understates the mean of
+the process (a Negative-Binomial with mean 2, size 1 and a last level of
+\verb{3+} has a table mean of about 1.41); that is why the exact mean and the bias
+are then reported as \code{NA}. The AER and APE of the collapsed cells remain
+valid comparisons of the collapsed distributions, not of the exact ones.
+
+The observed reach must be positive: the relative errors divide by it, so a
+schedule whose observed mass is entirely at zero exposures stops with an
+error, even though the absolute distances could be computed.
+
+Masses are used as supplied. A probability or percent distribution whose
+total is within \code{sum_tolerance} of one is not renormalized, so its reach
+is one minus its zero cell: a predicted table with cells 0.5 and 0.496
+(total 0.996) has a predicted reach of 0.5, and the other metrics are those
+of the rounded tables, not exactly of two normalized distributions;
+\code{input_mass} reports the supplied totals. This keeps the replication of
+published tables, which carry rounding, unaltered. Counts are always
+normalized.
 }
 \examples{
 # Observations must be supplied explicitly. These are percentages from
@@ -103,4 +159,5 @@ evaluate_exposure_model(observed, csd, observed_scale = "percent")
 \references{
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media
 Model. Doctoral dissertation, The University of Texas at Austin, pp. 117-118.
+Handle 2152/1590 (University of Texas at Austin repository).
 }

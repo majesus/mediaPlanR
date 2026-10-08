@@ -43,9 +43,9 @@ proportion of the population exposed at least once) of several insertions in
 one vehicle -- the "accumulation" domain in Aldás
 Manzano's (1998) three-way split. It adapts Agostini's duplication formula
 by replacing the number of vehicles with the number of insertions, and it
-needs only the audience after one and two insertions. It is unrelated to
-\code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}}, the same author's separate model for several
-vehicles with one insertion each.
+needs only the audience after one and two insertions. It is a different
+procedure from \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}}, the same author's separate model
+for several vehicles with one insertion each (they share only the name).
 }
 \details{
 Let \eqn{d = 2 R_1 - R_2} be the duplicated reach of two insertions (the

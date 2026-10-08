@@ -35,8 +35,15 @@ test_that("the BBD-to-reach fit handles both theoretical boundary models", {
   expect_equal(polarized$distribution$probability, c(0.8, 0, 0.2))
   expect_identical(binomial$parameters$fit_type, "binomial_limit")
   expect_equal(binomial$distribution$probability, stats::dbinom(0:2, 2, 0.2))
+  # Below the vehicle's own audience: impossible for any distribution
   expect_error(
     fit_bbd_to_reach(insertions, audiences, reach = 150000, population = population),
+    "smaller than the largest audience of a vehicle"
+  )
+  # Possible for the schedule, but outside the Beta-Binomial family
+  expect_error(
+    fit_bbd_to_reach(c(1, 1), c(500000, 100000), reach = 550000,
+                     population = population),
     "feasible Beta-Binomial interval"
   )
 })

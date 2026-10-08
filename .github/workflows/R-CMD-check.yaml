@@ -75,6 +75,9 @@ jobs:
           # Version 2 treats warnings as release blockers.
           error-on: '"warning"'
 
+      # The published-plan fixtures are local-only (not in the repository), so
+      # the tests that read them are skipped here and run in the maintainer's
+      # local pre-release run.
       - name: Run the complete test suite from the source tree
         shell: Rscript {0}
         run: testthat::test_local(".", load_package = "source", stop_on_failure = TRUE)

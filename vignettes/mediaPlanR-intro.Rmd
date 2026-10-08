@@ -415,9 +415,12 @@ corrected by a first-order consistency check. The five-vehicle example is not:
 Cheong notes that a higher-order check would be needed, which was never
 implemented, and proposes iterative proportional fitting (Deming, 1943) as
 future work. `calc_mbd()` applies exactly the checks Cheong specifies (first
-order only) and, like Cheong's MBD-ADJ variant, sets any cell that remains
-negative to zero and redistributes that mass proportionally. The diagnostics
-report it:
+order only) and then, as a package safety net, sets any cell that remains
+negative in the final distribution to zero and redistributes that mass
+proportionally. This is not Cheong's MBD-ADJ, which applies the correction to
+the table that Cheong calls the UD (univariate distribution) before it is
+expanded and collapsed, so the published evidence for MBD-ADJ does not
+transfer to it. The diagnostics report it:
 
 ```{r mbd-diagnostics}
 mbd_result$diagnostics$negative_mass_adjusted
@@ -456,12 +459,15 @@ cbd_result$distribution
 The implementation reproduces the CBD columns of the two-vehicle comparisons of
 Kim (2005, Appendix B) and Hong (1998, Appendix E) within the rounding of those
 sources (0.01 percentage points), taking the duplication that each source
-implies, and the three-vehicle worked example of Kim (1994, pp. 125-139) except for
+implies (the sources do not print it: it was reconstructed from another
+model's published column, so this checks consistency between published
+columns, not predictive accuracy), and the three-vehicle worked example of Kim (1994, pp. 125-139) except for
 its zero cell. In that example the zero of the canonical expansion is printed as
 0.5066, whereas the formula applied to the printed inputs gives about 0.510;
 `calc_cbd()` evaluates the formula, so its zero and one-contact probabilities
 differ from the printed ones by 0.36 and 0.29 percentage points there. The tests
-check all these cases, and also that the (0,1) grid recovers each vehicle's own
+check these cases (the tables of the two-vehicle plans only in the maintainer's
+local runs, because their input tables are not distributed), and also that the (0,1) grid recovers each vehicle's own
 `R1` as its marginal and that, with zero correlation, the model reduces to the
 exact convolution of the vehicles' own Beta-Binomial marginals.
 
@@ -534,8 +540,8 @@ reference that allows an independent regression test are available.
 | MSAD | Algorithm given by Kim; detailed example in Lee (1988, pp. 81-93); 40 plans of Kim (2005, Appendix B) | Implemented and validated against Lee's example and Kim's plans (plan 19 differs by 0.099 percentage points) |
 | CANEX | Danaher's (1991) formula, the CSD example that uses its reach, and the CANX column of Kim (2005, Appendix B) | Implemented; reports approximation diagnostics |
 | Beta-Binomial and Binomial | Closed-form formulas | Implemented and tested at their limits |
-| MBD | Complete specification and three-vehicle example, Cheong (2007) and Cheong, Leckenby and Eakin (2011); four- and five-vehicle examples show the model's limits | Implemented, with a documented safety net and warnings; differs from the published example by up to 0.002 per cell |
-| CBD | Specification and three-vehicle example in Kim (1994, pp. 115-139); two-vehicle outputs in Kim (2005, Appendix B) and Hong (1998, Appendix E) | Implemented and validated against those outputs; zero cell of Kim's example differs by about 0.4 percentage points |
+| MBD | Complete specification and three-vehicle example, Cheong (2007) and Cheong, Leckenby and Eakin (2011); four- and five-vehicle examples show the model's limits | Implemented, with a package safety net (not Cheong's MBD-ADJ) and warnings; reproduces the published example to within 0.002 per cell |
+| CBD | Specification and three-vehicle example in Kim (1994, pp. 115-139); two-vehicle outputs in Kim (2005, Appendix B) and Hong (1998, Appendix E) | Implemented; reproduces those outputs (a consistency check between published columns); zero cell of Kim's example differs by about 0.4 percentage points |
 | HBBD (Hofmans Beta-Binomial) | Kim (2005, pp. 52-53) gives the Hofmans reach formula followed by iterative mean-zero Beta-Binomial fitting | Not implemented or validated in this release |
 | DMD (Dirichlet multinomial) | Kim (2005, pp. 54-56) specifies the distribution and refers to detailed steps in Boyd (1985) and Kim (1994, pp. 89-98) | Not implemented or validated in this release |
 | HBD | Approximation of MBD described by Cheong (2007), without a verified numeric example | Not implemented |
@@ -557,6 +563,7 @@ reference that allows an independent regression test are available.
 - Cheong, Y. (2007). *Multivariate Beta Binomial Distribution Model as a Web
   Media Exposure Model*. Doctoral dissertation, The University of Texas at
   Austin.
+  Handle 2152/3215 (University of Texas at Austin repository).
 - Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the multivariate
   beta binomial distribution for estimating magazine and Internet exposure
   frequency distributions. *Journal of Advertising*, 40(1), 7-23.
@@ -585,6 +592,7 @@ reference that allows an independent regression test are available.
   of Texas at Austin.
 - Kim, H. G. (2005). *A Canonical Sequential Aggregation Media Model*. Doctoral
   dissertation, The University of Texas at Austin.
+  Handle 2152/1590 (University of Texas at Austin repository).
 - Leckenby, J. D., & Rice, M. D. (1986). The declining reach phenomenon in
   exposure distribution models. *Journal of Advertising*, 15(3), 13-20.
   <https://doi.org/10.1080/00913367.1986.10673014>

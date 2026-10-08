@@ -9,7 +9,7 @@ fit_bbd_to_reach(
   audiences,
   reach,
   population,
-  precision = 100,
+  precision = NULL,
   max_iter = 100
 )
 }
@@ -25,7 +25,13 @@ per insertion.}
 \item{population}{Population size, in people. No audience can exceed it;
 otherwise the function stops with an error.}
 
-\item{precision}{Convergence criterion, in people. The default is 100.}
+\item{precision}{Convergence criterion, in people: the fit is \code{converged} when
+the fitted and the external reach differ by at most this many people. The
+default, \code{NULL}, is \code{1e-4 * population} (100 people for a universe of one
+million). It is expressed in people, so it must be adapted to the scale
+of \code{population}; with \code{population = 1}, for example, a value of 100 would
+accept any reach, which is why the default is relative. The same tolerance
+applies to the feasibility checks below.}
 
 \item{max_iter}{Maximum number of iterations of the root finder.}
 }
@@ -78,11 +84,29 @@ its mean is preserved for every concentration \eqn{c > 0}. The function
 solves, with \code{\link[stats:uniroot]{stats::uniroot()}} on the log scale of \eqn{c}, for the
 concentration whose reach, \eqn{1 - \Pr(K = 0)}, equals the external reach.
 
-The reach a Beta-Binomial with this mean can take lies between the
-polarized limit (\eqn{c \to 0}), \eqn{\bar{p} P}, and the binomial limit
-(\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) P}. An external reach
-outside that interval, beyond \code{precision}, is rejected. At either limit the
-distribution is computed directly and \code{alpha} and \code{beta} are \code{0} or \code{Inf}.
+Two different conditions are checked, in this order. First, the external
+reach must be logically possible for the schedule: at least the largest
+audience of a vehicle (one insertion of that vehicle alone reaches those
+people) and at most the smaller of the population and the total number of
+contacts, \eqn{\sum_i n_i A_i}. A reach outside these bounds cannot occur
+whatever the distribution, and the function stops. Second, the reach that a
+Beta-Binomial with this mean can take lies between the polarized limit
+(\eqn{c \to 0}), \eqn{\bar{p} P}, and the binomial limit
+(\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) P}. A reach that is
+possible for the schedule but outside that interval, beyond \code{precision}, is
+not representable by this family and is also rejected, with a different
+message. At either limit the distribution is computed directly (all the mass
+at zero and at \code{N} in the polarized limit; a Binomial(\code{N}, \code{mean_probability})
+in the binomial limit) and \code{alpha} and \code{beta} are reported as \code{0} or \code{Inf}.
+These values only flag the limit, as \code{fit_type} does: they are not parameters
+of a proper Beta distribution (the quotient \code{alpha / (alpha + beta)} is
+undefined there), and the mean stays fixed at \code{mean_probability}.
+
+Fitting one distribution to the aggregate reach does not recover the
+exposure marginals of each vehicle or the duplication between vehicles, and
+\code{converged = TRUE} shows only that the numerical fit is within \code{precision}
+of the reach supplied, not that the reach is coherent with the individual
+vehicles beyond the bounds above.
 
 Aldás Manzano (1998) starts the original iterative procedure from an
 arbitrary initial value of \code{alpha}; root finding needs no starting value.

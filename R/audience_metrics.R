@@ -18,7 +18,15 @@
 #' All inputs must be finite and logically compatible: the target audience
 #' cannot exceed the gross audience or the target universe, the gross audience
 #' cannot exceed the gross universe, and the target universe cannot exceed the
-#' gross universe. Scalars are recycled to a common length.
+#' gross universe. The audience outside the target must also fit in the
+#' universe outside the target, that is,
+#' \eqn{G - T \le G_u - T_u}{G - T <= Gu - Tu} (equivalently, the target
+#' audience is at least \eqn{G - (G_u - T_u)}{G - (Gu - Tu)}). For example, an
+#' audience of 90 with only 10 people of the target cannot occur in a universe
+#' of 100 people with 80 in the target, because 80 people outside the target
+#' would have to fit in the 20 who are outside it. The function assumes that
+#' the target universe is a subset of the gross universe. Scalars are recycled
+#' to a common length.
 #'
 #' The affinity index compares the target's share of a channel's audience with
 #' the target's share of the universe,
@@ -76,6 +84,15 @@ audience_metrics <- function(gross_audience, target_audience,
       any(target_audience > target_universe)) {
     stop("Audience and universe values are not logically compatible.",
          call. = FALSE)
+  }
+  # The non-target part of the audience must fit in the non-target universe.
+  non_target_excess <- (gross_audience - target_audience) -
+    (gross_universe - target_universe)
+  if (any(non_target_excess > 1e-9 * gross_universe)) {
+    stop("Audience and universe values are not logically compatible: the ",
+         "audience outside the target (gross audience minus target audience) ",
+         "exceeds the universe outside the target (gross universe minus ",
+         "target universe).", call. = FALSE)
   }
   composition <- ifelse(gross_audience > 0, target_audience / gross_audience,
                         NA_real_)

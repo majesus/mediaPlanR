@@ -24,9 +24,10 @@ enumerate_allocations <- function(max_insertions) {
 
 # Greedy search. Each step adds the move with the best gain in effective reach
 # per unit of cost. A move adds between one and `effective_frequency`
-# insertions to a single channel: with an effective frequency of f, fewer than
-# f insertions in total cannot create any effective reach, so single-insertion
-# moves alone would see no gain and stop at once.
+# insertions to a single channel: with an effective frequency of f, an empty
+# allocation with fewer than f insertions in total has no effective reach, so
+# single-insertion moves alone would see no gain and stop at once. After the
+# start, a further insertion can raise the probability of reaching f.
 greedy_allocation <- function(plan, budget, max_insertions, model,
                               effective_frequency, target_reach = NULL) {
   cost <- plan$data$cost_per_insertion
@@ -71,7 +72,12 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #' minimize spend for a required effective reach.
 #'
 #' @param plan A `media_plan` object. Its current insertions are the default
-#'   upper bounds of the search.
+#'   upper bounds of the search. The optimization uses `audience` and
+#'   `population` only: a `target_audience` column of the plan is ignored, so
+#'   the quantity optimized is the effective reach of the whole population,
+#'   not of the target. To optimize for the target, supply a plan whose
+#'   `population` is the target universe and whose `audience` is the part of
+#'   each audience that belongs to the target.
 #' @param budget Maximum total spend, in the plan's currency.
 #' @param objective `"max_reach"` maximizes effective reach within the budget
 #'   (despite its name, the quantity maximized is the effective reach defined by
@@ -85,17 +91,29 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #'   exposures, \eqn{f}, that a person needs to count as effectively reached
 #'   (a positive integer, default 1). Effective reach is the proportion of the
 #'   population exposed `effective_frequency` times or more, that is, \eqn{f} or
-#'   more times; it is not the proportion exposed exactly \eqn{f} times.
+#'   more times; it is not the proportion exposed exactly \eqn{f} times. The
+#'   threshold \eqn{f} is a planning criterion that the analyst justifies for the
+#'   objective, the creative, the medium and the period (it is worth comparing
+#'   several values). Reaching it is a delivery result: the function does not
+#'   estimate that people exposed \eqn{f} times remember, are persuaded or
+#'   buy, and cost per thousand or coverage are delivery and efficiency
+#'   measures, not business outcomes.
 #' @param max_insertions Integer vector with the maximum number of insertions
 #'   allowed in each channel, in the order of the rows of the plan.
-#' @param model `"sainsbury"` or `"binomial"`; see [estimate_reach()]. Only
-#'   these two models can be evaluated for every candidate allocation, because
-#'   they need only the audiences and the insertions that the plan contains;
-#'   the models that need observed duplications or the reach after two
-#'   insertions would require those data for every possible allocation.
-#'   Candidate allocations also routinely place several insertions in the same
-#'   vehicle, so the Negative-Binomial approximation, which is scoped to
-#'   continuous exposure processes and not to finite schedules, is not offered.
+#' @param model `"sainsbury"` or `"binomial"`; see [estimate_reach()]. These are
+#'   the models that the optimizer offers because they need only the audiences
+#'   and the insertions that a `media_plan` contains. The other models are not
+#'   excluded because every allocation would have to be observed again: with
+#'   parameters held fixed for each vehicle (stationary), a model that uses
+#'   observed duplications or the reach after two insertions could in principle
+#'   be evaluated for any allocation. Offering them would need more
+#'   information in the plan (the duplications or `R2` of each vehicle), a
+#'   justification that those parameters do not change when the number of
+#'   insertions changes, and a policy for allocations in which the model fails.
+#'   The Negative-Binomial approximation, which is scoped to continuous
+#'   exposure processes and not to finite schedules, is not offered, since
+#'   candidate allocations routinely place several insertions in the same
+#'   vehicle.
 #' @param method `"exact"`, `"greedy"` or `"auto"`, which uses exhaustive
 #'   search when the number of allocations does not exceed `max_combinations`
 #'   and the greedy heuristic otherwise.
@@ -115,8 +133,13 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #'
 #' The greedy heuristic repeatedly adds the move with the largest gain in
 #' effective reach per unit of cost. A move adds between one and
-#' `effective_frequency` insertions to one channel, because fewer insertions
-#' than the effective frequency cannot by themselves create effective reach.
+#' `effective_frequency` insertions to one channel. Starting from an empty plan,
+#' fewer insertions in total than the effective frequency cannot create any
+#' effective reach, so a search that added one insertion at a time would see no
+#' gain and stop at once; this is why the first moves may add up to \eqn{f}
+#' insertions together. Once insertions have been assigned, one further
+#' insertion can raise the probability of reaching \eqn{f} exposures, and the
+#' later moves of one or a few insertions capture that smaller marginal gain.
 #' The result is not guaranteed to be optimal and is always reported as a
 #' heuristic. With `objective = "min_cost"`, a warning is issued if the target
 #' cannot be reached within the budget.

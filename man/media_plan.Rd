@@ -27,7 +27,14 @@ the cost in currency units per insertion. Channel labels must be
 non-empty and unique.}
 
 \item{target_audience}{Optional name of a column of \code{data} with the people
-in the target audience per insertion. It cannot exceed \code{audience}.}
+in the target audience per insertion. It cannot exceed \code{audience}. It is
+descriptive: \code{\link[=plan_metrics]{plan_metrics()}} uses it to report target impressions and
+composition, but \code{\link[=estimate_reach]{estimate_reach()}} and \code{\link[=optimize_media_plan]{optimize_media_plan()}} work with
+\code{audience} and \code{population} only, so they estimate the reach of the whole
+population, not of the target. To estimate the reach of the target, build a
+separate plan whose \code{population} is the size of the target universe and
+whose \code{audience} column holds the people of the target reached by each
+insertion.}
 
 \item{currency}{Currency label used in printed output. It does not affect
 any calculation.}

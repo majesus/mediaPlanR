@@ -1,5 +1,11 @@
 # Published numeric benchmarks
 
+The two CSV files described below are local-only files of the maintainer: they
+are not tracked by git, not published in the repository and not distributed in
+the package archive. The tests that read them are skipped when they are absent.
+This README records how they were built, so that anyone with access to the
+sources can rebuild them.
+
 `cbd_published_plans.csv` contains all 40 two-vehicle schedules from Kim (2005),
 Appendix B, printed pp. 184-195, and all 40 two-vehicle schedules from Hong
 (1998), Appendix E, printed pp. 622-632. There are two insertions per vehicle.

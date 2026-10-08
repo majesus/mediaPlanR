@@ -19,6 +19,7 @@
 #'
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 #' Doctoral dissertation, The University of Texas at Austin, pp. 44-45.
+#' Handle 2152/1590 (University of Texas at Austin repository).
 #'
 #' @param audiences Numeric vector with the audience of each vehicle for one
 #'   insertion, in people.
@@ -42,7 +43,12 @@
 #' them (Aldás Manzano, 1998, "audiencia bruta"; Kim, 2005, "gross audience").
 #' It is not the reach, which counts each person once. Let
 #' \eqn{D = \sum_{i=1}^{m-1} \sum_{j=i+1}^{m} A_{ij}} be the sum of the
-#' duplicated audiences of every pair of vehicles, each pair counted once. Agostini observed that
+#' duplicated audiences of every pair of vehicles, each pair counted once. Both
+#' \eqn{A} and \eqn{D} are in people, and neither counts distinct people: with
+#' one insertion per vehicle, \eqn{A} is the number of contacts of the plan,
+#' and \eqn{D} is a sum of coincidences between pairs of vehicles, so a person
+#' who belongs to three audiences adds three pairs to \eqn{D} (not one person).
+#' The reach \eqn{R_m} is the only quantity that counts people once. Agostini observed that
 #' the ratio of reach to gross audience is a function of the ratio of
 #' duplication to gross audience, \eqn{R_m / A = 1 / (1 + k D / A)}, which
 #' gives

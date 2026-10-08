@@ -195,9 +195,16 @@ mbd_peel_vehicle <- function(table, other_keys_subsets, v, alpha_c, beta_c, p_c,
   new_table
 }
 
-# Cheong's (2007) "MBD-ADJ": zero any remaining negative cell of the final
-# collapsed distribution and redistribute that mass proportionally across the
-# non-negative cells (Ch. 4.4, steps 1-4).
+# Package safety net, applied to the FINAL collapsed distribution: zero any
+# remaining negative cell and redistribute that mass proportionally across the
+# non-negative cells. It uses the correction of Cheong's (2007, Ch. 4.4, steps
+# 1-4) "MBD-ADJ", but it is not that procedure: MBD-ADJ applies it to the table
+# that Cheong calls the UD (univariate distribution; one cell per exposure
+# pattern, 2^m cells), once it is formed and before it is expanded and
+# collapsed, so the results can differ even when the final distribution has no
+# negative cell (see Cheong's Tables 4.4.3 and 4.4.4). The function is also used
+# on the UD of schedule #151 in the tests, to check the direction of the
+# correction.
 mbd_safety_net <- function(distribution, tolerance) {
   negative_mass <- -sum(pmin(distribution, 0))
   adjusted <- pmax(distribution, 0)
@@ -253,12 +260,15 @@ mbd_safety_net <- function(distribution, tolerance) {
 #'   (`contacts`, `probability`, `percent`, `people` and
 #'   `cumulative_probability`), the `aggregation_order` and `aggregation_rule`,
 #'   the peeling `steps` and `diagnostics`, which report whether the final
-#'   negative-probability safety net (Cheong's "MBD-ADJ") had to be engaged and
+#'   negative-probability safety net (this package's correction of the final
+#'   distribution, not Cheong's "MBD-ADJ", which corrects the UD before it is
+#'   expanded; see Details) had to be engaged and
 #'   how much probability mass it redistributed (`negative_mass_adjusted`,
 #'   `cells_adjusted`).
 #'
 #' @details
-#' `calc_mbd()` (Cheong, 2007) is unrelated to [fit_bbd_to_reach()], which fits
+#' `calc_mbd()` (Cheong, 2007) is a different procedure from
+#' [fit_bbd_to_reach()], which fits
 #' one Beta-Binomial to an externally given reach. MBD is the *Multivariate*
 #' Beta Binomial Distribution of several vehicles described here, whereas
 #' [fit_bbd_to_reach()] fits a single Beta-Binomial to a whole schedule.
@@ -276,13 +286,27 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' increasingly complex higher-order checks that were never implemented,
 #' proposing iterative proportional fitting as future work. `calc_mbd()`
 #' therefore applies exactly the checks Cheong specifies (first order only)
-#' and, like Cheong's MBD-ADJ variant, sets any cell that is still negative to
-#' zero and redistributes that mass proportionally across the non-negative
-#' cells of the final collapsed distribution. This is reported in
+#' and then, as a package safety net, sets any cell that is still negative in
+#' the final collapsed distribution to zero and redistributes that mass
+#' proportionally across the non-negative cells. This is reported in
 #' `diagnostics`; a non-zero value means the result for that schedule relies on
 #' this fallback rather than on a value Cheong verified as internally
 #' consistent without it. The function warns for four or more vehicles, the
 #' range where Cheong's own checks are known to be insufficient by themselves.
+#'
+#' This safety net is not Cheong's MBD-ADJ. Cheong (2007, Ch. 4.4) applies the
+#' same zero-and-redistribute correction to the table that the dissertation
+#' calls the UD (univariate distribution; one cell for each pattern of exposure
+#' to the `m` vehicles, `2^m` cells), once it is formed and *before* it is
+#' expanded and collapsed, so that the later steps work with non-negative
+#' values; here the
+#' correction acts only on the final distribution, and only if it contains a
+#' negative cell. The two procedures can give different results even when the
+#' final distribution has no negative cell, so no result of this function
+#' should be described as "MBD-ADJ", and the empirical evidence for MBD-ADJ
+#' does not transfer to it. The package does not implement the variants MBD,
+#' MBD-ADJ and MBD-ADJ2 of the study as such (see the comparison of variants
+#' below).
 #'
 #' Cheong also reports that the aggregation order can change the collapsed
 #' distribution, that this was not investigated systematically, and that the
@@ -294,8 +318,11 @@ mbd_safety_net <- function(distribution, tolerance) {
 #'
 #' For the three-vehicle example of Cheong (2007, p. 75), which Cheong,
 #' Leckenby and Eakin (2011, Table 4) also publish, the function reproduces
-#' the published distribution to within 0.002 in every cell, which is more than
-#' the rounding of the published values (0.0005). An independent
+#' the published distribution to within 0.002 in probability in every cell (0.2
+#' percentage points; the largest observed deviation is about 0.0019 and the
+#' package tests accept up to 0.0025), which is more than
+#' the rounding of the published values (0.0005). This is a replication of one
+#' printed example, not an independent validation of the model's predictions. An independent
 #' reimplementation of the printed algorithm agrees with this function to
 #' 1e-4, so the gap originates in the printed intermediate tables, which contain
 #' arithmetic inconsistencies: a product printed as .024(.057) = .003 (it is
@@ -307,22 +334,37 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' coincide, so the result of this model does not depend on the duplication
 #' between vehicles in that limit; this follows from Cheong's construction.
 #'
-#' Of the eleven models Cheong evaluated (comScore 2003 data, 440 schedules),
-#' the three versions of MBD were the most accurate for reach alone (average
-#' percentage error in reach of 1.18% for the best version), but not for the
-#' complete exposure distribution, where [calc_canex()] (6.91% average
-#' percentage error) and the Conditional Beta Distribution model ([calc_cbd()],
-#' 8.80%) were more accurate than the MBD versions (10.19% to 12.10%).
+#' # Published evidence belongs to the study's variants
+#'
+#' Of the eleven models Cheong evaluated (comScore 2003 data, 440 schedules;
+#' Cheong, 2007, Table 6.2.1), the three versions of MBD were the most accurate
+#' for reach alone, but not for the complete exposure distribution. The figures
+#' below are the study's, for its own implementations of each version, not
+#' measurements of this package:
+#' \tabular{lrr}{
+#'   Model of the study \tab AER (percent) \tab APE (percent)\cr
+#'   MBD \tab 1.34 \tab 10.19\cr
+#'   MBD-ADJ \tab 1.40 \tab 12.10\cr
+#'   MBD-ADJ2 \tab 1.18 \tab 11.83\cr
+#'   CANEX \tab 1.69 \tab 6.91\cr
+#'   CBD \tab 1.60 \tab 8.80
+#' }
+#' The best result for reach (1.18%) belongs to MBD-ADJ2, not to a plain MBD,
+#' and not to the safety net of this function, so it must not be read as the
+#' expected error of [calc_mbd()]. For the complete distribution, [calc_canex()]
+#' and the Conditional Beta Distribution model ([calc_cbd()]) were more accurate
+#' than all the MBD versions.
 #'
 #' @references
 #' Cheong, Y. (2007). Multivariate Beta Binomial Distribution Model as a Web
 #' Media Exposure Model. Doctoral dissertation, The University of Texas at
 #' Austin.
+#' Handle 2152/3215 (University of Texas at Austin repository).
 #'
 #' Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
 #' multivariate beta binomial distribution for estimating magazine and
 #' Internet exposure frequency distributions. Journal of Advertising, 40(1),
-#' 7-23. <https://doi.org/10.2753/JOA0091-3367400101>
+#' 7-23. doi:10.2753/JOA0091-3367400101
 #'
 #' Waring, E. (1792). On the principles of translating algebraic quantities into
 #' probable relations and annuities. Cambridge. (The work Cheong, 2007, and
@@ -451,7 +493,7 @@ print.reach_mbd <- function(x, full = TRUE, max_rows = 30L, ...) {
   cat(sprintf("Probability sum: %.12f | Mean error: %.3g\n",
               x$diagnostics$probability_sum, x$diagnostics$mean_error))
   if (x$diagnostics$negative_mass_adjusted > 0) {
-    cat(sprintf("Safety net engaged: %d cell(s), %.6g probability mass adjusted (Cheong's MBD-ADJ).\n",
+    cat(sprintf("Safety net engaged on the final distribution: %d cell(s), %.6g probability mass adjusted (not Cheong's UD-stage MBD-ADJ).\n",
                 x$diagnostics$cells_adjusted, x$diagnostics$negative_mass_adjusted))
   }
   invisible(x)

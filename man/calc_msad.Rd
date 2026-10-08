@@ -28,8 +28,9 @@ vehicle \code{j} (one insertion in each), a number between 0 and 1 (not a
 percentage). It is not the proportion exposed to each vehicle separately.
 The diagonal is ignored.}
 
-\item{aggregation_order}{Either \code{"audience_desc"} (Kim's larger-audience-
-first rule: vehicles in decreasing order of one-insertion reach \code{R1}),
+\item{aggregation_order}{Either \code{"audience_desc"} (Kim's rule of combining
+the vehicle with the largest audience first: vehicles in decreasing order
+of one-insertion reach \code{R1}),
 \code{"given"} (the row order), or a permutation of the row indices. The
 vehicles are combined one at a time in this order. The order does not
 change the reach of the whole schedule but can change the exposure
@@ -116,11 +117,17 @@ pair overlaps clearly less than that, the results can differ a lot from
 one model to another, and the function issues a warning that names the
 pair.
 }
-An error means that the inputs are impossible: correct them. A warning does
-not invalidate the calculation, but it asks for caution: check the
-duplication of the pair named, which is often a measurement problem (see
-below), and compare the result with another model. The rest of this section
-gives the technical detail.
+An error has one of two causes. Either the inputs break a constraint of the
+data (impossible overlaps: correct them), or the inputs are possible but the
+model's approximation cannot reproduce them (the third limit below: a valid
+probabilistic construction can still be rejected by an approximate model).
+Read the message to tell them apart, and do not change valid data only to
+make a model run. A warning does not invalidate the calculation, but it asks
+for caution: check the duplication of the pair named, which is often a
+measurement problem (see below), and compare the result with another model.
+Every diagnostic must be inspected before the result is interpreted; none
+can be assumed to be harmless or, on the contrary, to invalidate the result.
+The rest of this section gives the technical detail.
 
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
@@ -180,7 +187,8 @@ exposure distribution models. Journal of Advertising, 15(3), 13-20.
 \doi{10.1080/00913367.1986.10673014}
 
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
-Doctoral dissertation, The University of Texas at Austin, pp. 65-71. Kim
+Doctoral dissertation, The University of Texas at Austin, pp. 65-71. Handle
+2152/1590 (University of Texas at Austin repository). Kim
 identifies the detailed MSAD numerical example as Lee, H.-K. (1988),
 Sequential aggregation advertising media models, unpublished doctoral
 dissertation, The University of Texas at Austin, pp. 81-101; the numerical

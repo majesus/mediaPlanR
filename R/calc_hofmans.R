@@ -5,9 +5,9 @@
 #' one vehicle -- the "accumulation" domain in Aldás
 #' Manzano's (1998) three-way split. It adapts Agostini's duplication formula
 #' by replacing the number of vehicles with the number of insertions, and it
-#' needs only the audience after one and two insertions. It is unrelated to
-#' [calc_hofmans_duplication()], the same author's separate model for several
-#' vehicles with one insertion each.
+#' needs only the audience after one and two insertions. It is a different
+#' procedure from [calc_hofmans_duplication()], the same author's separate model
+#' for several vehicles with one insertion each (they share only the name).
 #'
 #' @references
 #' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
@@ -190,8 +190,9 @@ print.reach_hofmans_accumulation <- function(x, ...) {
 #' computes a pairwise coefficient directly from each pair's own audiences and
 #' duplication, so no coefficient has to be fitted to external data. Like
 #' Agostini's formula, it estimates total reach only, not the exposure
-#' distribution. It is unrelated to [calc_hofmans_accumulation()], the same
-#' author's model for one vehicle with several insertions.
+#' distribution. It is a different procedure from
+#' [calc_hofmans_accumulation()], the same author's model for one vehicle with
+#' several insertions (they share only the name).
 #'
 #' @references
 #' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
@@ -206,6 +207,7 @@ print.reach_hofmans_accumulation <- function(x, ...) {
 #'
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 #' Doctoral dissertation, The University of Texas at Austin, pp. 44-45.
+#' Handle 2152/1590 (University of Texas at Austin repository).
 #'
 #' @param audiences Numeric vector with the audience of each vehicle for one
 #'   insertion, in people.
@@ -223,7 +225,12 @@ print.reach_hofmans_accumulation <- function(x, ...) {
 #' every pair of a plan with \eqn{m} vehicles:
 #' \deqn{R_m = \frac{(\sum_{i=1}^{m} A_i)^2}{\sum_{i=1}^{m} A_i +
 #' \sum_{i=1}^{m-1} \sum_{j=i+1}^{m} k_{ij} A_{ij}}.}
-#' The double sum runs over every pair of vehicles, each pair counted once.
+#' The double sum runs over every pair of vehicles, each pair counted once. The
+#' gross audience \eqn{\sum_i A_i} counts the contacts of the plan (one
+#' insertion per vehicle), and the duplications \eqn{A_{ij}} are coincidences
+#' between pairs, so a person present in three vehicles contributes three pairs,
+#' not three people: only the reach \eqn{R_m} counts each person once. Keep the
+#' units (people) of each term before forming any ratio.
 #'
 #' The formula is empirical and can return a reach outside its logical range
 #' (below the largest audience, or above the population or the gross

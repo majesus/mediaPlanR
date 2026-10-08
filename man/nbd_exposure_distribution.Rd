@@ -28,8 +28,33 @@ impossible counts above that number.}
 \item{tail_tolerance}{Non-negative diagnostic tolerance.}
 }
 \value{
-An \code{nbd_exposure} object with the open-tail distribution, reach,
-conditional average frequency, and scope diagnostics.
+An \code{nbd_exposure} object, a list with:
+\itemize{
+\item \code{reach}: \code{probability} and \code{percent} of people with at least one
+exposure.
+\item \code{mean_contacts}: the mean number of exposures per person of the
+whole process, as supplied. It is not censored: the mean of the reported
+table is lower, because its last row stands for \code{report_max} or more
+exposures but is counted as exactly \code{report_max}.
+\item \code{average_frequency}: conditional mean among the people reached,
+\code{mean_contacts / reach} (exposures per person reached).
+\item \code{size} and \code{variance}: the heterogeneity parameter and the variance of
+the number of exposures per person, \code{mean_contacts + mean_contacts^2 / size}.
+\item \code{distribution}: data frame with \code{contacts} (an integer code; the last
+row carries \code{report_max}), \code{label} (\code{"0"}, \code{"1"}, ..., and
+\code{"report_max+"} for the last row), \code{open_tail} (\code{TRUE} only in that last
+row, whose probability is that of \code{report_max} or more exposures),
+\code{probability} and \code{cumulative_probability}.
+\item \code{diagnostics}: \code{process} and \code{scope} (text), \code{report_max},
+\code{opportunities} (as supplied or \code{NULL}), \code{probability_above_opportunities}
+(the probability that the unbounded model assigns to more than
+\code{opportunities} exposures; \code{NA} if \code{opportunities} is \code{NULL}),
+\code{finite_opportunity_compatible} and \code{tail_tolerance}.
+}
+\code{finite_opportunity_compatible} is \code{TRUE} when the mass above \code{opportunities}
+is within \code{tail_tolerance}, or when \code{opportunities} was not supplied (then
+compatibility with a finite plan has not been checked). It is an approximate
+diagnostic only: it does not turn this unbounded model into a finite one.
 }
 \description{
 Builds a Poisson-Gamma (Negative-Binomial) distribution for exposure counts.

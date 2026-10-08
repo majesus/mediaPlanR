@@ -7,7 +7,17 @@
 fit_nbd_exposure(counts, report_max = NULL, conf_level = 0.95)
 }
 \arguments{
-\item{counts}{Vector of observed non-negative integer exposure counts.}
+\item{counts}{Vector of observed non-negative integer exposure counts, one
+per person (not the frequencies of a histogram), for a sample of the
+whole universe and period of interest that includes the people with zero
+exposures. A sample made only of exposed people, such as the records of an
+ad server, is truncated at zero, and fitting the ordinary
+Negative-Binomial to it estimates another distribution and does not recover
+the reach of the universe; the zero-truncated model is not implemented. At
+least two counts, at least one of them positive, are required. Observations
+should be comparable in exposure period and unweighted: the likelihood
+treats the people as an independent sample with equal weight, without
+survey weights or dependence between observations.}
 
 \item{report_max}{Optional open-tail threshold passed to
 \code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}}.}
@@ -16,8 +26,24 @@ fit_nbd_exposure(counts, report_max = NULL, conf_level = 0.95)
 on the log scale of \code{size}, when an interior Negative-Binomial solution exists.}
 }
 \value{
-An \code{nbd_exposure_fit} object containing estimates, likelihood
-diagnostics, observed frequencies, and the fitted distribution.
+An \code{nbd_exposure_fit} object, a list with:
+\itemize{
+\item \code{estimates}: \code{mean_contacts} (the sample mean), \code{size} (\code{Inf} at the
+Poisson boundary), \code{size_interval} (a Wald interval on the log scale of
+\code{size}, \code{NA} at the boundary or where the curvature is not usable; it
+describes the uncertainty of \code{size} only, not that of the reach, and is
+not a prediction interval) and \code{variance} (of the fitted distribution).
+\item \code{diagnostics}: \code{n}, \code{observed_variance}, \code{dispersion_index}
+(variance over mean; one for a Poisson), \code{poisson_boundary} (\code{TRUE} when
+the data show no overdispersion and the Poisson solution is returned, so
+that the implied \code{size} is infinite), \code{converged} (the likelihood was
+maximized inside the search range; it is not a test of goodness of fit),
+\code{log_likelihood} and \code{AIC}.
+\item \code{observed}: data frame with \code{contacts}, \code{count} (number of people) and
+\code{proportion}, for 0 up to the maximum observed count.
+\item \code{fitted_distribution}: the \code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}} object of
+the fitted parameters.
+}
 }
 \description{
 Estimates the mean and Gamma heterogeneity parameter from observed person-

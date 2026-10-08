@@ -115,30 +115,48 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' Unlike [calc_mbd()], the between-vehicle step of CBD needs no imputation
 #' for three or more vehicles. The canonical expansion uses the mean
 #' \eqn{R_{1i}} and variance \eqn{R_{1i}(1 - R_{1i})} of each vehicle's
-#' one-insertion exposure; this guarantees that summing out all other vehicles
-#' returns each vehicle's own Bernoulli marginal exactly, and with zero
-#' correlation the model reduces to the exact convolution of the vehicles'
-#' Beta-Binomial marginals.
-#' With correlation, the final zero-cell adjustment does not
-#' preserve the mean number of exposures of each vehicle exactly; the
-#' departure is reported in `diagnostics$mean_error` and was between 0.0003 and
-#' 0.013 exposures in the package's reference schedules.
+#' one-insertion exposure; this guarantees that, in the grid built in step 1
+#' and before any correction, summing out all other vehicles returns each
+#' vehicle's own Bernoulli marginal exactly, and with zero correlation the model
+#' reduces to the exact convolution of the vehicles' Beta-Binomial marginals.
+#' That property belongs to the uncorrected grid, not to the returned
+#' distribution: the zero-cell adjustment of step 3 and, if it is engaged, the
+#' truncation of negative cells and renormalization change the marginals of each
+#' vehicle and the mean number of exposures. The departure of the mean is
+#' reported in `diagnostics$mean_error` (between 0.0003 and 0.013 exposures in
+#' the package's reference schedules), so the marginals of the result should be
+#' judged through those diagnostics, separating the binary marginal of each
+#' vehicle, its distribution within the vehicle and the final distribution of
+#' the plan. As with [calc_canex()], the `average_frequency` is the mean of the
+#' returned distribution over its reach: it uses the corrected mean, not the
+#' gross contacts per person of the input, so the two bases should not be mixed.
 #'
 #' # Validation against published results
 #'
 #' The implementation reproduces the CBD columns of the two-vehicle
 #' comparisons of Kim (2005, Appendix B) and of Hong (1998, Appendix E) within
 #' the rounding of those sources (0.01 percentage points), taking the
-#' duplication that each source implies, and the worked example of Kim (1994,
+#' duplication that each source implies. The sources do not print those
+#' duplications: they were reconstructed from another model's published column
+#' (CANEX for Kim, the MSAD reach for Hong), so this agreement checks the
+#' consistency between columns of published tables, and algorithmic fidelity,
+#' not predictive accuracy against independent observations (the maintainer's
+#' local tests, whose input tables are not distributed, accept up to 0.02
+#' percentage points, although the largest deviation measured is below 0.01).
+#' The function also reproduces the worked example of Kim (1994,
 #' pp. 125-139; three vehicles with 2, 1 and 3 insertions, SMRB 1979 data) except
 #' for its zero cell. In that example the zero of the canonical expansion is
 #' printed as 0.5066,
 #' whereas the formula applied to the printed inputs gives about 0.510 (and no
 #' choice of the inputs within their rounding goes below 0.507), so the printed
-#' value is an arithmetic error of the source; this
-#' function evaluates the formula, so its zero and one-contact probabilities
-#' differ from the printed ones by 0.36 and 0.29 percentage points in that
-#' example. See the package tests for the exact cases.
+#' value cannot be reproduced from the printed inputs. Page 139 of that source
+#' contains verifiable errata (a probability of 0.0055 printed as 0.06% instead
+#' of 0.55%, and percentages that add to 99.54% although labeled 100), but they
+#' do not by themselves establish the cause of the discrepancy in the zero
+#' cell, which is treated here as an unexplained difference with the printed
+#' value. This function evaluates the formula, so its zero and one-contact
+#' probabilities differ from the printed ones by 0.36 and 0.29 percentage points
+#' in that example. See the package tests for the exact cases.
 #'
 #' Because the canonical expansion can assign small negative probabilities to
 #' some (0,1) cells -- the limitation documented for [calc_canex()] -- any
@@ -158,6 +176,7 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #'
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 #' Doctoral dissertation, The University of Texas at Austin, pp. 59-64.
+#' Handle 2152/1590 (University of Texas at Austin repository).
 #'
 #' Hong, J. (1998). Advertising media models for Internet reach/frequency
 #' estimation. Unpublished doctoral dissertation, The University of Texas at

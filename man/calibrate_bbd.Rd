@@ -47,25 +47,46 @@ A \code{bbd_calibration} object: a list with \code{alpha}, \code{beta},
 \code{cumulative_probability}) and the \code{candidates} evaluated for each \code{n}.
 }
 \description{
-Calibrates a Beta-Binomial exposure distribution so that it reproduces a
-target effective reach. The reach after one insertion fixes the mean of
-the Beta distribution, and only its concentration is calibrated, by a
+Searches for a Beta-Binomial exposure distribution whose effective reach is
+as close as possible to a target. The reach after one insertion fixes the
+mean of the Beta distribution, and only its concentration is searched, by a
 one-dimensional search instead of a two-dimensional grid over both shape
-parameters.
+parameters. The search returns the closest candidate within the stated
+bounds; it does not guarantee that the target is reached. Always check
+\code{converged}, \code{predicted_reach} and \code{error} before using \code{alpha} and \code{beta}.
 }
 \details{
+The effective frequency \code{frequency} is a threshold chosen by the analyst for
+the objective, the creative, the medium and the period; the function does not
+estimate a relation between that number of exposures and recall, persuasion,
+sales or profit. Reaching the threshold is a delivery measure, not an
+outcome. It is advisable to examine several thresholds.
+
 For every number of insertions \code{n} from \code{frequency} to \code{max_insertions}, the
 function searches for the concentration of the Beta-Binomial, with mean
 \code{R1}, whose probability equals \code{target_reach}, first on a grid of
 the log concentration and then by \code{\link[stats:optimize]{stats::optimize()}} around the best grid
 point. It returns the number of insertions with the smallest error, the
-smaller \code{n} in case of ties.
+smaller \code{n} in case of ties: the error is the criterion, and neither cost
+nor the minimum number of insertions is prioritized except to break ties.
+When the target cannot be reached, \code{converged} is \code{FALSE} and the closest
+candidate is returned. For example, with \code{R1 = 0.3}, \code{target_reach = 0.99},
+\code{frequency = 1} and \code{max_insertions = 1} the only candidate has a
+probability of 0.3, so \code{predicted_reach} is 0.3, \code{error} is 0.69 and
+\code{converged} is \code{FALSE}.
 }
 \examples{
 # A first insertion reaches 30\% and the share exposed two or more times
 # should be 20\%
 calibrate_bbd(R1 = 0.30, target_reach = 0.20, frequency = 2,
               max_insertions = 6)
+
+# A target that cannot be reached: the closest candidate is returned and
+# `converged` is FALSE
+unreachable <- calibrate_bbd(R1 = 0.30, target_reach = 0.99, frequency = 1,
+                             max_insertions = 1)
+unreachable$converged
+unreachable$error
 
 }
 \seealso{

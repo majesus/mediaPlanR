@@ -18,7 +18,13 @@ and 1 (not a percentage), in (0, 1];
 \item \code{R2}: cumulative reach after the second insertion (the proportion
 exposed at least once in two insertions), a proportion between \code{R1}
 and the independence limit \code{2 * R1 - R1^2}. If \code{R2} is outside that
-range the function stops with an explanatory error.
+range the function stops with an explanatory error. Unlike
+\code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}, which accept
+\code{NA} for a vehicle with a single insertion because they do not use it,
+this function requires a finite \code{R2} for every vehicle, including those
+with one insertion: a data frame shared with the sequential models
+needs a valid \code{R2} here. Do not invent an empirical value; for a single
+insertion, any value inside the admissible range gives the same result.
 }}
 
 \item{duplications}{Symmetric matrix whose element \verb{[i, j]} is the
@@ -38,7 +44,7 @@ A list of class \code{"reach_canex"} with components:
 \item \code{population}: the population size used.
 \item \code{reach}: list with \code{probability}, \code{percent} and \code{people}.
 \item \code{average_frequency}: average number of exposures among the people
-reached.
+reached (\code{NA} if nobody is reached).
 \item \code{distribution}: data frame with \code{contacts} (total exposures, from
 zero), \code{probability}, \code{percent}, \code{people} and \code{cumulative_probability}
 (the probability of \code{contacts} or more exposures).
@@ -109,6 +115,17 @@ expected mean of 1 exposure per person (2 insertions x 0.3 plus 2
 insertions x 0.2, counted over the whole population) and a negative mass
 of 0.0076, and the
 truncated distribution has a mean of 1.0227.
+
+The ratio between contacts and reach holds only within one base. The
+\code{average_frequency} of the result is the mean of the returned (corrected)
+distribution divided by its reach, so \code{average_frequency * reach} equals
+\code{mean_exposures_result}, not the gross contacts per person of the input,
+\code{mean_exposures_expected}, which is what a GRP figure computed from the
+audiences measures. In the example above, the contacts of the input per
+person are 1 and those of the corrected distribution 1.0227. When
+\code{mean_exposures_result} and \code{mean_exposures_expected} differ, do not divide
+the input GRP by the corrected reach to obtain a frequency; report both
+diagnostics and say which base each figure uses.
 }
 
 \section{Domain of validity}{
@@ -133,11 +150,17 @@ pair overlaps clearly less than that, the results can differ a lot from
 one model to another, and the function issues a warning that names the
 pair.
 }
-An error means that the inputs are impossible: correct them. A warning does
-not invalidate the calculation, but it asks for caution: check the
-duplication of the pair named, which is often a measurement problem (see
-below), and compare the result with another model. The rest of this section
-gives the technical detail.
+An error has one of two causes. Either the inputs break a constraint of the
+data (impossible overlaps: correct them), or the inputs are possible but the
+model's approximation cannot reproduce them (the third limit below: a valid
+probabilistic construction can still be rejected by an approximate model).
+Read the message to tell them apart, and do not change valid data only to
+make a model run. A warning does not invalidate the calculation, but it asks
+for caution: check the duplication of the pair named, which is often a
+measurement problem (see below), and compare the result with another model.
+Every diagnostic must be inspected before the result is interpreted; none
+can be assumed to be harmless or, on the contrary, to invalidate the result.
+The rest of this section gives the technical detail.
 
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
@@ -209,6 +232,7 @@ law". Journal of Marketing Research, 28(3), 361-367.
 
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 Doctoral dissertation, The University of Texas at Austin, pp. 56-58.
+Handle 2152/1590 (University of Texas at Austin repository).
 }
 \seealso{
 \code{\link[=calc_beta_binomial]{calc_beta_binomial()}} for the univariate model (one vehicle), and

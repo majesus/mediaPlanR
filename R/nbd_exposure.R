@@ -31,8 +31,33 @@ nbd_upper_tail <- function(q, mean_contacts, size) {
 #'   impossible counts above that number.
 #' @param tail_tolerance Non-negative diagnostic tolerance.
 #'
-#' @return An `nbd_exposure` object with the open-tail distribution, reach,
-#'   conditional average frequency, and scope diagnostics.
+#' @return An `nbd_exposure` object, a list with:
+#' \itemize{
+#'   \item `reach`: `probability` and `percent` of people with at least one
+#'     exposure.
+#'   \item `mean_contacts`: the mean number of exposures per person of the
+#'     whole process, as supplied. It is not censored: the mean of the reported
+#'     table is lower, because its last row stands for `report_max` or more
+#'     exposures but is counted as exactly `report_max`.
+#'   \item `average_frequency`: conditional mean among the people reached,
+#'     `mean_contacts / reach` (exposures per person reached).
+#'   \item `size` and `variance`: the heterogeneity parameter and the variance of
+#'     the number of exposures per person, `mean_contacts + mean_contacts^2 / size`.
+#'   \item `distribution`: data frame with `contacts` (an integer code; the last
+#'     row carries `report_max`), `label` (`"0"`, `"1"`, ..., and
+#'     `"report_max+"` for the last row), `open_tail` (`TRUE` only in that last
+#'     row, whose probability is that of `report_max` or more exposures),
+#'     `probability` and `cumulative_probability`.
+#'   \item `diagnostics`: `process` and `scope` (text), `report_max`,
+#'     `opportunities` (as supplied or `NULL`), `probability_above_opportunities`
+#'     (the probability that the unbounded model assigns to more than
+#'     `opportunities` exposures; `NA` if `opportunities` is `NULL`),
+#'     `finite_opportunity_compatible` and `tail_tolerance`.
+#' }
+#' `finite_opportunity_compatible` is `TRUE` when the mass above `opportunities`
+#' is within `tail_tolerance`, or when `opportunities` was not supplied (then
+#' compatibility with a finite plan has not been checked). It is an approximate
+#' diagnostic only: it does not turn this unbounded model into a finite one.
 #'
 #' @details
 #' The model assumes an individual Poisson exposure process with a Gamma-
@@ -154,14 +179,40 @@ nbd_exposure_distribution <- function(mean_contacts, size, report_max = NULL,
 #' [nbd_exposure_distribution()]. It is not used for plans with a fixed number
 #' of insertions.
 #'
-#' @param counts Vector of observed non-negative integer exposure counts.
+#' @param counts Vector of observed non-negative integer exposure counts, one
+#'   per person (not the frequencies of a histogram), for a sample of the
+#'   whole universe and period of interest that includes the people with zero
+#'   exposures. A sample made only of exposed people, such as the records of an
+#'   ad server, is truncated at zero, and fitting the ordinary
+#'   Negative-Binomial to it estimates another distribution and does not recover
+#'   the reach of the universe; the zero-truncated model is not implemented. At
+#'   least two counts, at least one of them positive, are required. Observations
+#'   should be comparable in exposure period and unweighted: the likelihood
+#'   treats the people as an independent sample with equal weight, without
+#'   survey weights or dependence between observations.
 #' @param report_max Optional open-tail threshold passed to
 #'   [nbd_exposure_distribution()].
 #' @param conf_level Confidence level of the Wald interval for `size`, computed
 #'   on the log scale of `size`, when an interior Negative-Binomial solution exists.
 #'
-#' @return An `nbd_exposure_fit` object containing estimates, likelihood
-#' diagnostics, observed frequencies, and the fitted distribution.
+#' @return An `nbd_exposure_fit` object, a list with:
+#' \itemize{
+#'   \item `estimates`: `mean_contacts` (the sample mean), `size` (`Inf` at the
+#'     Poisson boundary), `size_interval` (a Wald interval on the log scale of
+#'     `size`, `NA` at the boundary or where the curvature is not usable; it
+#'     describes the uncertainty of `size` only, not that of the reach, and is
+#'     not a prediction interval) and `variance` (of the fitted distribution).
+#'   \item `diagnostics`: `n`, `observed_variance`, `dispersion_index`
+#'     (variance over mean; one for a Poisson), `poisson_boundary` (`TRUE` when
+#'     the data show no overdispersion and the Poisson solution is returned, so
+#'     that the implied `size` is infinite), `converged` (the likelihood was
+#'     maximized inside the search range; it is not a test of goodness of fit),
+#'     `log_likelihood` and `AIC`.
+#'   \item `observed`: data frame with `contacts`, `count` (number of people) and
+#'     `proportion`, for 0 up to the maximum observed count.
+#'   \item `fitted_distribution`: the [nbd_exposure_distribution()] object of
+#'     the fitted parameters.
+#' }
 #'
 #' @examples
 #' counts <- c(rep(0, 40), rep(1, 25), rep(2, 15), rep(3, 8), 5, 7)

@@ -30,14 +30,19 @@ A list of class \code{"reach_beta_binomial"} with components:
 \code{insertions} exposures.
 \item \code{cumulative}: list with \code{percent} and \code{people}, for individuals
 exposed at least once, at least twice, and so on.
-\item \code{population}: the population size used (people).
 \item \code{population}: the population size used, in people.
 \item \code{parameters}: list with \code{alpha}, \code{beta}, \code{mean_probability} (the
 mean of the Beta distribution, \code{R1}), \code{zero_contact_probability}
-(the percentage of the population with no exposure, on a 0-100 scale
-unlike the \code{probability} columns of other results) and \code{type}
+(a percentage, on a 0-100 scale: it is an exception to the rule that
+probabilities are proportions between 0 and 1, and its name is kept for
+compatibility; divide by 100 for a probability) and \code{type}
 (\code{"beta_binomial"}, \code{"binomial_limit"} or \code{"polarized_limit"}).
 }
+In the two limits, \code{alpha} and \code{beta} are \code{0} (polarized) or \code{Inf}
+(binomial). They are indicators of the limit, as \code{type} is, not parameters of
+a proper Beta distribution: the quotient \code{alpha / (alpha + beta)} is
+undefined there. The mean \code{R1} stays fixed while the concentration
+\code{alpha + beta} tends to zero or to infinity.
 }
 \description{
 Implements the Beta-Binomial model for one vehicle with several
@@ -57,11 +62,19 @@ after two insertions (\code{R2}), to estimate both shape parameters.
 The method-of-moments estimators are
 \deqn{\hat{\alpha} = \frac{R_1 (R_2 - R_1)}{2 R_1 - R_1^2 - R_2}, \qquad
 \hat{\beta} = \frac{\hat{\alpha} (1 - R_1)}{R_1}.}
-The estimators require \eqn{R_1 \le R_2 \le 2 R_1 - R_1^2}. The two bounds
-are valid degenerate cases: at \eqn{R_2 = R_1} all individuals are either
-always or never exposed (the \emph{polarized} limit, \code{alpha = beta = 0}), and at
-\eqn{R_2 = 2 R_1 - R_1^2} exposures are independent (the \emph{binomial} limit,
-\code{alpha = beta = Inf}). Both limits are handled explicitly.
+The estimators and the mean and variance formulas of the Beta distribution
+apply to the interior, where \eqn{R_1 < R_2 < 2 R_1 - R_1^2} and both
+parameters are positive and finite. The two bounds are degenerate cases,
+reached as limits keeping the mean \eqn{R_1} fixed while the concentration
+\eqn{\alpha + \beta} tends to zero or to infinity: at \eqn{R_2 = R_1} all
+individuals are either always exposed or never exposed (the \emph{polarized}
+limit: the probability mass is only at zero and at the number of insertions
+\eqn{n}), and at \eqn{R_2 = 2 R_1 - R_1^2} exposures are independent (the
+\emph{binomial} limit, a Binomial\eqn{(n, R_1)}). The values \code{alpha = beta = 0}
+and \code{alpha = beta = Inf} that the function reports for them are indicators
+of the limit, not parameters of a proper Beta distribution, and the quotient
+\eqn{\alpha / (\alpha + \beta)} must not be evaluated with them. Both limits
+are handled explicitly. \eqn{R_1 = 1} is also degenerate: everyone is exposed.
 }
 \examples{
 result <- calc_beta_binomial(R1 = 0.50, R2 = 0.55, insertions = 5,

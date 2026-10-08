@@ -189,6 +189,13 @@
 #' which Kim (2005) uses and Cheong, Leckenby and Eakin (2011, Table 5) also
 #' publish.
 #'
+#' @section Source:
+#' The numeric inputs of one worked example of Kim (2005), reproduced with
+#' attribution so that users can verify the implementation. No text, figures,
+#' page layout or complete tables of the dissertation are included, and no
+#' source file is distributed. The provenance of the data is recorded in
+#' `DATA-PROVENANCE.md`, installed with the package.
+#'
 #' @format A list with the components:
 #' \describe{
 #'   \item{vehicles_data}{Data frame with columns `insertions`, `R1` and `R2`
@@ -201,6 +208,7 @@
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 #' Doctoral dissertation, The University of Texas at Austin, pp. 65-71 and
 #' 80-97.
+#' Handle 2152/1590 (University of Texas at Austin repository).
 #' @examples
 #' data(msad_kim2005)
 #' do.call(calc_msad, msad_kim2005)
@@ -242,6 +250,13 @@
 #' Metrix data of September 2003, which Kim (2005) uses and Cheong, Leckenby
 #' and Eakin (2011, Table 5) also publish.
 #'
+#' @section Source:
+#' The numeric inputs of one worked example of Kim (2005), reproduced with
+#' attribution so that users can verify the implementation. No text, figures,
+#' page layout or complete tables of the dissertation are included, and no
+#' source file is distributed. The provenance of the data is recorded in
+#' `DATA-PROVENANCE.md`, installed with the package.
+#'
 #' @format A list ready for `do.call(calc_csd, csd_kim2005)` with the
 #' components:
 #' \describe{
@@ -254,6 +269,7 @@
 #' @references
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 #' Doctoral dissertation, The University of Texas at Austin, pp. 80-97.
+#' Handle 2152/1590 (University of Texas at Austin repository).
 #' @examples
 #' data(csd_kim2005)
 #' result <- do.call(calc_csd, csd_kim2005)
@@ -300,6 +316,14 @@
 #' of 1979; the same example appears in Kim (1994, pp. 125-139) and in Cheong,
 #' Leckenby and Eakin (2011, Tables 2 to 4).
 #'
+#' @section Source:
+#' The numeric inputs of one worked example of Cheong (2007, Ch. 4.2), also
+#' published by Cheong, Leckenby and Eakin (2011), reproduced with attribution
+#' so that users can verify the implementation. No text, figures, page layout
+#' or complete tables of the dissertation are included, and no source file is
+#' distributed. The provenance of the data is recorded in `DATA-PROVENANCE.md`,
+#' installed with the package.
+#'
 #' @format A list ready for `do.call(calc_mbd, mbd_cheong2007)` with the
 #' components:
 #' \describe{
@@ -313,11 +337,12 @@
 #' Cheong, Y. (2007). Multivariate Beta Binomial Distribution Model as a Web
 #' Media Exposure Model. Doctoral dissertation, The University of Texas at
 #' Austin, Ch. 4.2.
+#' Handle 2152/3215 (University of Texas at Austin repository).
 #'
 #' Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
 #' multivariate beta binomial distribution for estimating magazine and
 #' Internet exposure frequency distributions. Journal of Advertising, 40(1),
-#' 7-23. <https://doi.org/10.2753/JOA0091-3367400101>
+#' 7-23. doi:10.2753/JOA0091-3367400101
 #' @examples
 #' data(mbd_cheong2007)
 #' result <- do.call(calc_mbd, mbd_cheong2007)

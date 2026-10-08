@@ -134,6 +134,7 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #'
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 #' Doctoral dissertation, The University of Texas at Austin, pp. 78-97.
+#' Handle 2152/1590 (University of Texas at Austin repository).
 #'
 #' @examples
 #' # Kim (2005), Tables 4.2.2.1-4.2.2.10: the order of Kim's worked example

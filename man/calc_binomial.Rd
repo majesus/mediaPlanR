@@ -54,6 +54,17 @@ preserves the plan's expected number of exposures in general.
 The number of exposures then follows a Binomial distribution with
 \eqn{N} trials and success probability \eqn{p}, and reach equals
 \eqn{1 - (1 - p)^N}.
+
+The Binomial calculation is exact for the homogenized model that it builds
+(every insertion with the same probability), not for any plan of independent
+vehicles. Replacing the different probabilities of the vehicles by their
+insertion-weighted mean preserves the mean number of contacts but, in
+general, changes the reach and the exposure distribution. For example, with
+audiences of 10 and 90 people in a universe of 100 and one insertion in each
+vehicle, both models have a mean of one contact per person, but
+\code{\link[=calc_sainsbury]{calc_sainsbury()}}, which keeps the probability of each vehicle, gives a
+reach of 91\% and the Binomial 75\%. The difference is the effect of unequal
+audiences, not a numerical error.
 }
 \examples{
 audiences <- c(300000, 400000, 200000)

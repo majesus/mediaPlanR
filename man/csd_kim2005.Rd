@@ -30,6 +30,15 @@ the dissertation. The audiences and reaches originate from comScore Media
 Metrix data of September 2003, which Kim (2005) uses and Cheong, Leckenby
 and Eakin (2011, Table 5) also publish.
 }
+\section{Source}{
+
+The numeric inputs of one worked example of Kim (2005), reproduced with
+attribution so that users can verify the implementation. No text, figures,
+page layout or complete tables of the dissertation are included, and no
+source file is distributed. The provenance of the data is recorded in
+\code{DATA-PROVENANCE.md}, installed with the package.
+}
+
 \examples{
 data(csd_kim2005)
 result <- do.call(calc_csd, csd_kim2005)
@@ -38,6 +47,7 @@ result$distribution
 \references{
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 Doctoral dissertation, The University of Texas at Austin, pp. 80-97.
+Handle 2152/1590 (University of Texas at Austin repository).
 }
 \seealso{
 \code{\link[=calc_csd]{calc_csd()}}, \link{csd_example}, \link{msad_kim2005}

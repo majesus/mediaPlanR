@@ -833,6 +833,7 @@ never infers them from model inputs.
 - Cheong, Y. (2007). *Multivariate Beta Binomial Distribution Model as a Web
   Media Exposure Model*. Doctoral dissertation, The University of Texas at
   Austin.
+  Handle 2152/3215 (University of Texas at Austin repository).
 - Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the multivariate
   beta binomial distribution for estimating magazine and Internet exposure
   frequency distributions. *Journal of Advertising*, 40(1), 7-23.
@@ -849,6 +850,7 @@ never infers them from model inputs.
   Austin.
 - Kim, H. G. (2005). *A Canonical Sequential Aggregation Media Model*. Doctoral
   dissertation, The University of Texas at Austin.
+  Handle 2152/1590 (University of Texas at Austin repository).
 - Leckenby, J. D., & Rice, M. D. (1986). The declining reach phenomenon in
   exposure distribution models. *Journal of Advertising*, 15(3), 13-20.
   <https://doi.org/10.1080/00913367.1986.10673014>

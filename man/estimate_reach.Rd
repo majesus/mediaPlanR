@@ -23,7 +23,8 @@ A \code{media_reach} object: a list with the \code{model}, the \code{population}
 \code{distribution} (\code{contacts}, \code{probability}, \code{percent} and \code{people} for zero
 up to the total number of insertions \code{N}), \code{cumulative} (\code{min_contacts}, \code{probability}, \code{percent}
 and \code{people} for at least \code{min_contacts} exposures), \code{average_frequency}
-(average exposures among the people reached) and model \code{parameters}.
+(average exposures among the people reached; \code{NA} when nobody is reached,
+because the mean over nobody is undefined) and model \code{parameters}.
 }
 \description{
 A \code{media_plan} front end for \code{\link[=calc_sainsbury]{calc_sainsbury()}} and \code{\link[=calc_binomial]{calc_binomial()}}: it

@@ -37,8 +37,9 @@ Agostini uses one empirical coefficient for every vehicle pair, Hofmans
 computes a pairwise coefficient directly from each pair's own audiences and
 duplication, so no coefficient has to be fitted to external data. Like
 Agostini's formula, it estimates total reach only, not the exposure
-distribution. It is unrelated to \code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}, the same
-author's model for one vehicle with several insertions.
+distribution. It is a different procedure from
+\code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}, the same author's model for one vehicle with
+several insertions (they share only the name).
 }
 \details{
 For two vehicles, reach is exactly \eqn{A_1 + A_2 - A_{12}}. Equating that
@@ -47,7 +48,12 @@ value to Agostini's formula gives the coefficient
 every pair of a plan with \eqn{m} vehicles:
 \deqn{R_m = \frac{(\sum_{i=1}^{m} A_i)^2}{\sum_{i=1}^{m} A_i +
 \sum_{i=1}^{m-1} \sum_{j=i+1}^{m} k_{ij} A_{ij}}.}
-The double sum runs over every pair of vehicles, each pair counted once.
+The double sum runs over every pair of vehicles, each pair counted once. The
+gross audience \eqn{\sum_i A_i} counts the contacts of the plan (one
+insertion per vehicle), and the duplications \eqn{A_{ij}} are coincidences
+between pairs, so a person present in three vehicles contributes three pairs,
+not three people: only the reach \eqn{R_m} counts each person once. Keep the
+units (people) of each term before forming any ratio.
 
 The formula is empirical and can return a reach outside its logical range
 (below the largest audience, or above the population or the gross
@@ -77,6 +83,7 @@ combination of media. Journal of Marketing Research, 3(3), 269-278.
 
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 Doctoral dissertation, The University of Texas at Austin, pp. 44-45.
+Handle 2152/1590 (University of Texas at Austin repository).
 }
 \seealso{
 \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}, the single-coefficient formula

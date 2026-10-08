@@ -6,6 +6,56 @@ backward compatible with them: function names, arguments, example datasets and
 returned objects changed. The Shiny explorers and the budget/KPI helpers of the
 earlier snapshots are not part of this package.
 
+## Corrections from the academic audit of the manual (2026-10-08)
+
+Validation:
+
+* `plan_metrics(reach =)` stops when the reach cannot be produced by the plan:
+  below the largest audience among the channels with insertions, or above the
+  smaller of the population and the plan's impressions.
+* `fit_bbd_to_reach()` separates two cases: a reach that is logically impossible
+  for the schedule (below the largest audience or above its contacts) and a
+  reach that is possible but that the Beta-Binomial family cannot represent.
+  Its `precision` default is now `NULL`, meaning `1e-4 * population` (the former
+  100 people for a universe of one million, and a scale-appropriate tolerance
+  for small universes); the printed fit shows the reaches with enough digits.
+* `audience_metrics()` also requires that the audience outside the target fits
+  in the universe outside the target.
+* `evaluate_exposure_model()` rejects any probability above one (or percentage
+  above 100) before applying the tolerance of the total, and has a new argument
+  `censored_last_level` for tables whose last level is a collapsed tail: the
+  exact mean and `mean_contact_bias` are then `NA`, and the means of the
+  censored codes are reported separately.
+* The average frequency of a plan with no reach is `NA` in `estimate_reach()`
+  and `calc_canex()` (as it already was in `plan_metrics()`), instead of zero.
+
+Documentation:
+
+* The safety net of `calc_mbd()` is described as a package correction of the
+  final distribution, not as Cheong's MBD-ADJ, which acts on the joint-exposure
+  table before it is expanded; the study's accuracy figures are attributed to
+  its own variants (MBD, MBD-ADJ, MBD-ADJ2).
+* The help pages state the unit and scope of every quantity that the audit found
+  ambiguous: the exceptions to the percentage rule, contacts versus people versus
+  pairs, the limits of the Beta-Binomial family (`alpha`, `beta` of `0` and
+  `Inf` are indicators of a limit), the homogenized Binomial, the target
+  columns (descriptive; they do not change `estimate_reach()` or the
+  optimizer), effective frequency as an analyst's threshold, calibration as a
+  search that can fail, the Negative-Binomial result and evaluation result structures,
+  the open-tail mean, the sample required by `fit_nbd_exposure()`, normalization
+  and the positive observed reach of the evaluator, and the contract
+  differences of `calc_canex()` (`R2` for every vehicle).
+* The general statement about errors and warnings distinguishes violated data
+  constraints from approximations that fail on feasible data.
+* The replication of published tables is separated from validation against
+  independent observations, the datasets state what is and is not distributed,
+  and a suggested study path is added to `?mediaPlanR`.
+* The DOI of Cheong, Leckenby and Eakin (2011) in `calc_mbd()` and
+  `mbd_cheong2007` is written as plain text (`doi:10.2753/...`) instead of a
+  `https://doi.org/` link: `R CMD check --as-cran` asks for the `\doi{}` macro
+  for links, but that macro drops the hyphen of this particular DOI when the
+  PDF manual is typeset.
+
 ## Harmonized argument names (2026-10-08)
 
 * `calc_beta_binomial()` now takes the reach proportions `R1` and `R2`, the
