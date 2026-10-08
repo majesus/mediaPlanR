@@ -28,9 +28,14 @@ through `.Rbuildignore`.
   skipped in the archive: 6 because the local-only validation tables are
   absent, 1 because it does not run on CRAN, 1 because a directory is absent
   in that context) and the rebuilt vignette.
-* GitHub Actions: not run on this commit at the time of writing (the commit
-  had not been pushed). The previous archive, commit `3919706`, passed all six
-  jobs (run 37813128785).
+* GitHub Actions, run 37844335813, commit `26d32f1` (it differs from the source
+  of the archive only in this file): `R CMD check --as-cran --run-donttest` on
+  Ubuntu (R release, oldrel-1 and devel), macOS (R release) and Windows (R
+  release), plus a job with R 4.0.5 on Ubuntu that installs the package and
+  runs a smoke test using only base and recommended packages (it checks the
+  declared minimum, `Depends: R (>= 4.0)`). All six jobs succeeded; the
+  workflow treats warnings as failures. The notes reported by each job were
+  not reviewed.
 
 Not run: win-builder and R-hub.
 
