@@ -2,7 +2,7 @@ Package: mediaPlanR
 Type: Package
 Title: Reliable Cross-Media Reach and Frequency Planning
 Version: 2.0.0
-Date: 2026-10-07
+Date: 2026-10-08
 Authors@R: 
     person(given = "Manuel J.", family = "Sánchez-Franco",
            email = "majesus@us.es", role = c("aut", "cre"),
