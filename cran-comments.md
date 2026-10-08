@@ -3,8 +3,8 @@
 mediaPlanR 2.0.0, a new submission (first release on CRAN). Date field 2026-10-08.
 
 Source archive: `mediaPlanR_2.0.0.tar.gz`, built with `R CMD build` (R 4.4.1,
-Windows) from commit `cc29cf12fbc196ca5839818ed33ce348d578c47f`.
-SHA-256: `84e9e89d592699328a1b2bdf21f63d8083405e3cbe49378476b3468603476789`.
+Windows) from commit `d1cd8db87a8ecfbfea01f23266aa401dfa3eebe4`.
+SHA-256: `b7d20cea7c83e1e90d2c770664abcba285d5f1b929bc5d5ce694d54da26379d0`.
 Later commits change only this file, which is excluded from the archive
 through `.Rbuildignore`.
 
