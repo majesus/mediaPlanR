@@ -3,8 +3,8 @@
 mediaPlanR 2.0.0, a new submission (first release on CRAN). Date field 2026-10-08.
 
 Source archive: `mediaPlanR_2.0.0.tar.gz`, built with `R CMD build` (R 4.4.1,
-Windows) from commit `39197063e458af18ab2fd34ebf5e6be48f3226f0`.
-SHA-256: `2b662491fcccacf916179536376cc39a9febfc79aaba15f333d24be5b06d89ff`.
+Windows) from commit `cc29cf12fbc196ca5839818ed33ce348d578c47f`.
+SHA-256: `84e9e89d592699328a1b2bdf21f63d8083405e3cbe49378476b3468603476789`.
 Later commits change only this file, which is excluded from the archive
 through `.Rbuildignore`.
 
@@ -24,16 +24,13 @@ through `.Rbuildignore`.
 * Windows 11, R 4.4.1 (2024-06-14 ucrt), local: `R CMD check --as-cran
   --run-donttest` with `_R_CHECK_FORCE_SUGGESTS_` and
   `_R_CHECK_CRAN_INCOMING_` set to true, on the archive above, including the
-  PDF manual, the examples, the tests (2537 expectations pass and 8 are
-  skipped in the archive) and the rebuilt vignette. The complete suite in the
-  source tree (2553 expectations, 0 failures) also passes locally.
-* GitHub Actions, run 37813128785, commit `3919706` (the source of the archive):
-  `R CMD check --as-cran --run-donttest` on Ubuntu (R release, oldrel-1 and
-  devel), macOS (R release) and Windows (R release), plus a job with R 4.0.5
-  on Ubuntu that installs the package and runs a smoke test using only base
-  and recommended packages (it checks the declared minimum, `Depends: R
-  (>= 4.0)`). All six jobs succeeded; the workflow treats warnings as
-  failures. The notes reported by each job were not reviewed in this revision.
+  PDF manual, the examples, the tests (2963 expectations pass and 8 are
+  skipped in the archive: 6 because the local-only validation tables are
+  absent, 1 because it does not run on CRAN, 1 because a directory is absent
+  in that context) and the rebuilt vignette.
+* GitHub Actions: not run on this commit at the time of writing (the commit
+  had not been pushed). The previous archive, commit `3919706`, passed all six
+  jobs (run 37813128785).
 
 Not run: win-builder and R-hub.
 
@@ -51,23 +48,29 @@ Not run: win-builder and R-hub.
 ## Notes for the reviewer
 
 * The package implements published reach and exposure-distribution models. Where
-  it differs from a published table, the vignette and `inst/DATA-PROVENANCE.md`
-  state by how much and why: the zero cell of Kim (1994, p. 139), the cells of the
-  three-vehicle example of Cheong (2007, p. 75; up to 0.002) and plan 19 of Kim
-  (2005, Appendix B). Each has an identified cause and explicit test bounds.
+  it differs from a published table, `inst/DATA-PROVENANCE.md` states by how
+  much, with the comparison cell by cell: the zero cell of Kim (1994, p. 139),
+  the three-vehicle example of Cheong (2007, p. 75; largest absolute difference
+  0.0020348568 in probability) and plan 19 of Kim (2005, Appendix B). The cause
+  of these differences is not established: the documentation records the
+  evidence that bears on each one (arithmetic inconsistencies in the printed
+  tables, a duplication input that reproduces a printed row) and the regression
+  bounds, which are above the real maxima. The comparisons assess numerical
+  replication and consistency, not predictive accuracy against independent
+  measurements.
 * The safety net of `calc_mbd()` is a correction of the final distribution that
   the package adds; the help page states that it is not Cheong's MBD-ADJ.
-* Three datasets (`csd_kim2005`, `msad_kim2005`, `mbd_cheong2007`) reproduce the
-  numeric inputs of one worked example each (reach and duplication figures)
-  published in two doctoral dissertations and one article, with attribution, so
-  that users can check the package against the sources. No text, figures or
-  complete tables are included. `inst/DATA-PROVENANCE.md` records their origin.
-  Two larger published-plan tables used only for validation are neither in the
-  archive nor in the public repository; the tests that read them are skipped
-  when the files are absent.
+* All packaged datasets are original illustrative examples. The inputs of
+  published worked examples (Kim 2005, Cheong 2007) are not distributed in the
+  archive or tracked in the repository: the comparisons with them are
+  local-only tests of the maintainer, skipped when the files are absent. The
+  earlier datasets that held them were removed because the basis for
+  redistributing them was not established.
 * The three doctoral dissertations cited in DESCRIPTION (Kim 1994, Kim 2005 and
-  Cheong 2007) have no DOI and are listed as author (year) only. The
-  repository handles of Kim (2005) and Cheong (2007) appear, as plain text, in
+  Cheong 2007) have no DOI; DESCRIPTION gives their type and institution
+  (doctoral dissertation, University of Texas at Austin) and refers to the help
+  pages for the complete references. The repository handles of Kim (2005) and
+  Cheong (2007) appear, as plain text, in
   the references of the help pages: the repository answers HTTP 403 to automated
   requests, so a link would fail the URL check. No repository identifier was
   found for Kim (1994).
