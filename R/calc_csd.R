@@ -122,9 +122,9 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' the analyst.
 #'
 #' Kim's worked example rounds intermediate values to four decimals. Exact
-#' calculations from the published inputs therefore differ by a few hundredths
-#' of a percentage point from some displayed cells; the unrounded calculation
-#' is returned.
+#' calculations from the same inputs therefore differ by a few hundredths of a
+#' percentage point from some displayed cells; the unrounded calculation is
+#' returned. The inputs of that example are not distributed with the package.
 #'
 #' @references
 #' Danaher, P. J. (1991). A canonical expansion model for multivariate media

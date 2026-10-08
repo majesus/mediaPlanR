@@ -100,8 +100,8 @@ Documentation:
 * The replication of published tables is separated from validation against
   independent observations, the datasets state what is and is not distributed,
   and a suggested study path is added to `?mediaPlanR`.
-* The DOI of Cheong, Leckenby and Eakin (2011) in `calc_mbd()` and
-  `mbd_cheong2007` is written as plain text (`doi:10.2753/...`) instead of a
+* The DOI of Cheong, Leckenby and Eakin (2011) in `calc_mbd()` is written as
+  plain text (`doi:10.2753/...`) instead of a
   `https://doi.org/` link: `R CMD check --as-cran` asks for the `\doi{}` macro
   for links, but that macro drops the hyphen of this particular DOI when the
   PDF manual is typeset.
@@ -243,10 +243,8 @@ Documentation:
   are documented, with the evidence that bears on each one and explicit
   regression bounds, in `inst/DATA-PROVENANCE.md`; the cause of none of them is
   established beyond that evidence. The test suite checks all of these.
-* (Removed in the second audit of 2026-10-08, see below.) `csd_kim2005`,
-  `msad_kim2005` and `mbd_cheong2007` contained the published
-  numeric inputs of those examples, with attribution. All other example
-  datasets are original illustrative data, ready for `do.call()`.
+* The example datasets are original illustrative data, ready for `do.call()`.
+  The inputs of published worked examples are not distributed.
 
 ## Dependencies
 
