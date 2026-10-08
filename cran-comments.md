@@ -1,47 +1,52 @@
 ## Submission
 
-mediaPlanR 2.0.0, a new submission (first release on CRAN). Date field 2026-10-07.
+mediaPlanR 2.0.0, a new submission (first release on CRAN). Date field 2026-10-08.
 
-Source archive: `mediaPlanR_2.0.0.tar.gz`, built with `R CMD build` from commit
-`ad73fa684a4814d8531e6759ff1f9aca240d1182` (R 4.6.1).
-SHA-256: `53ee4de2af66824761b0816732f1d315dcf4ceded9ebaf07f16f985fa9b38413`.
+Source archive: `mediaPlanR_2.0.0.tar.gz`, built with `R CMD build` (R 4.4.1,
+Windows) from commit `39197063e458af18ab2fd34ebf5e6be48f3226f0`.
+SHA-256: `2b662491fcccacf916179536376cc39a9febfc79aaba15f333d24be5b06d89ff`.
 Later commits change only this file, which is excluded from the archive
 through `.Rbuildignore`.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 3 notes
 
 * This is a new submission.
+* "unable to verify current time" (checking for future file timestamps). It
+  appears only on the local Windows machine, which could not reach a time
+  server; it does not depend on the package.
+* "Skipping checking math rendering: package 'V8' unavailable" (checking HTML
+  version of manual). V8 is not installed on the local machine.
 
 ## Test environments
 
-All with `R CMD check --as-cran --run-donttest`, with `_R_CHECK_FORCE_SUGGESTS_`
-and `_R_CHECK_CRAN_INCOMING_` set to true.
-
-* Windows 11, R 4.6.1 (2026-06-24 ucrt), local. The archive above, including
-  the PDF manual, the HTML manual (with V8 and tidy), the examples, the tests
-  (2472 expectations in the source tree) and the rebuilt vignette. Only the
-  new-submission note.
-* GitHub Actions, run 37665171464, commit `798ad88` (it differs from the
-  archive only by the `Date` field and the spelling word list): macOS arm64 R 4.6.1,
-  Windows Server 2022 R 4.6.1, Ubuntu 24.04 R 4.6.1 (with the PDF manual),
-  R 4.5.3 and R-devel (r90643, 2026-10-06). Each reports 0 errors, 0 warnings
-  and only the new-submission note. The complete logs were reviewed.
-* GitHub Actions, same run: R 4.0.5 on Ubuntu, installation and a smoke test
-  that uses only base and recommended packages (it checks the declared minimum,
-  `Depends: R (>= 4.0)`).
+* Windows 11, R 4.4.1 (2024-06-14 ucrt), local: `R CMD check --as-cran
+  --run-donttest` with `_R_CHECK_FORCE_SUGGESTS_` and
+  `_R_CHECK_CRAN_INCOMING_` set to true, on the archive above, including the
+  PDF manual, the examples, the tests (2537 expectations pass and 8 are
+  skipped in the archive) and the rebuilt vignette. The complete suite in the
+  source tree (2553 expectations, 0 failures) also passes locally.
+* GitHub Actions, run 37813128785, commit `3919706` (the source of the archive):
+  `R CMD check --as-cran --run-donttest` on Ubuntu (R release, oldrel-1 and
+  devel), macOS (R release) and Windows (R release), plus a job with R 4.0.5
+  on Ubuntu that installs the package and runs a smoke test using only base
+  and recommended packages (it checks the declared minimum, `Depends: R
+  (>= 4.0)`). All six jobs succeeded; the workflow treats warnings as
+  failures. The notes reported by each job were not reviewed in this revision.
 
 Not run: win-builder and R-hub.
 
 ## Other checks
 
 * `spelling::spell_check_package(vignettes = TRUE)`: no findings.
-* `urlchecker::url_check()`: all 14 URLs correct. The identity of the nine DOIs
-  cited was verified against Crossref metadata in the review of 2026-10-03; some
-  publishers answer HTTP 403 to automated requests.
+* `urlchecker::url_check()`: 14 URLs; 6 correct and 8 `https://doi.org/` links
+  (README.md and the vignette) answered HTTP 403 to automated requests from the
+  local machine, as publishers commonly do. The DOIs cited in DESCRIPTION are
+  written as `<doi:...>`. The identity of the nine DOIs cited was verified
+  against Crossref metadata in the review of 2026-10-03.
 * mediaPlanR was absent from the CRAN package index and from the archive on
-  2026-10-07 (HTTP 404). This is a dated availability check, not a reservation.
+  2026-10-08 (HTTP 404). This is a dated availability check, not a reservation.
 
 ## Notes for the reviewer
 
@@ -50,25 +55,34 @@ Not run: win-builder and R-hub.
   state by how much and why: the zero cell of Kim (1994, p. 139), the cells of the
   three-vehicle example of Cheong (2007, p. 75; up to 0.002) and plan 19 of Kim
   (2005, Appendix B). Each has an identified cause and explicit test bounds.
+* The safety net of `calc_mbd()` is a correction of the final distribution that
+  the package adds; the help page states that it is not Cheong's MBD-ADJ.
 * Three datasets (`csd_kim2005`, `msad_kim2005`, `mbd_cheong2007`) reproduce the
-  minimal numeric inputs (reach and duplication figures) published in two
-  doctoral dissertations and one article, with attribution, so that users can
-  check the package against the sources. `inst/DATA-PROVENANCE.md` records their
-  origin and the maintainer's redistribution basis. Two larger published-plan
-  fixtures used only for validation are not distributed in the archive; the tests
-  that read them are skipped when they are absent.
+  numeric inputs of one worked example each (reach and duplication figures)
+  published in two doctoral dissertations and one article, with attribution, so
+  that users can check the package against the sources. No text, figures or
+  complete tables are included. `inst/DATA-PROVENANCE.md` records their origin.
+  Two larger published-plan tables used only for validation are neither in the
+  archive nor in the public repository; the tests that read them are skipped
+  when the files are absent.
+* The three doctoral dissertations cited in DESCRIPTION (Kim 1994, Kim 2005 and
+  Cheong 2007) have no DOI and are listed as author (year) only. The
+  repository handles of Kim (2005) and Cheong (2007) appear, as plain text, in
+  the references of the help pages: the repository answers HTTP 403 to automated
+  requests, so a link would fail the URL check. No repository identifier was
+  found for Kim (1994).
+* The DOI of Cheong, Leckenby and Eakin (2011) is written as plain text in two
+  help pages instead of a `\doi{}` link, because that macro drops the hyphen of
+  this DOI when the PDF manual is typeset.
 
 ## Before submitting (maintainer's checklist)
 
-* Confirm that the Actions run for the last pushed commit is green and that its
-  `Date` and word-list changes are the only difference with `798ad88`.
+* The tag `v2.0.0` already exists on GitHub and points to an old commit
+  (`846c336`, 2026-09-24). Decide whether to move it to the submitted commit or
+  to tag the release only after CRAN accepts it.
 * The redistribution basis in `inst/DATA-PROVENANCE.md` is the maintainer's
   position, not a permission granted by the authors or their institutions;
-  attribution does not establish permission. Decide whether to keep the three
-  datasets as they are.
-* Persistent identifiers for the Kim (1994, 2005) and Cheong (2007) theses are not
-  all verified (candidate Texas repository handles returned HTTP 403), so they were
-  not added to the references.
+  attribution does not establish permission.
 * Submit through <https://cran.r-project.org/submit.html> with the archive above,
   then confirm the e-mail sent to the maintainer address. Paste the sections
   "R CMD check results" and "Notes for the reviewer" in the comments field.
