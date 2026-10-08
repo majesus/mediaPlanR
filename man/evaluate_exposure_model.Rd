@@ -23,8 +23,9 @@ its maximum. For several schedules, also include the column named by
 \item{predicted}{Either a supported model result whose \code{distribution} is a
 data frame with \code{contacts} and \code{probability} or \code{percent} columns (for
 example the results of \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}},
-\code{\link[=calc_mbd]{calc_mbd()}}, \code{\link[=calc_canex]{calc_canex()}} and \code{\link[=estimate_reach]{estimate_reach()}}), or a data frame with
-columns \code{contacts} and \code{predicted}. Data-frame predictions must use the
+\code{\link[=calc_mbd]{calc_mbd()}}, \code{\link[=calc_canex]{calc_canex()}} and also of
+\code{\link[=estimate_reach]{estimate_reach()}}), or a data frame with columns \code{contacts} and
+\code{predicted}. Data-frame predictions must use the
 same schedule column when \code{schedule_col} is supplied.}
 
 \item{observed_scale}{Required declaration of the \code{observed} column:
@@ -41,11 +42,15 @@ require \code{schedule_col = NULL}.}
 \item{sum_tolerance}{Maximum absolute departure from probability mass one
 accepted for the total of each probability/percent distribution (in
 probability units, so 0.005 is half a percentage point). The default
-accepts ordinary publication rounding but rejects incomplete
-distributions. The tolerance applies to the total only: no individual
-probability may exceed one (or percentage exceed 100), whatever the
-tolerance. Masses within the tolerance are used as supplied and are not
-renormalized (see Details); counts, in contrast, are always normalized.}
+tolerates small deviations compatible with publication rounding and
+rejects total-mass discrepancies larger than the stated threshold. It
+cannot distinguish rounding from a small omitted tail: the analyst must
+establish that both tables cover the same complete support, or identically
+collapsed tails, before interpreting the comparison. The tolerance applies
+to the total only: no individual probability may exceed one (or percentage
+exceed 100), whatever the tolerance. Masses within the tolerance are used
+as supplied and are not renormalized (see Details); counts, in contrast,
+are always normalized.}
 
 \item{censored_last_level}{\code{FALSE} (default) when the last exposure level of
 both distributions is an exact count. Set it to \code{TRUE} when it is a
@@ -65,13 +70,15 @@ An \code{exposure_model_evaluation} object, a list with:
 points) and \code{mean_contact_bias} (exposures per person). With
 \code{censored_last_level = TRUE}, \code{mean_contact_bias} is \code{NA} and
 \code{mean_censored_contact_bias} is added.
-\item \code{by_schedule}: one row per schedule with \code{observed_reach},
-\code{predicted_reach}, \code{reach_signed_error} (predicted minus observed),
-\code{reach_absolute_error}, \code{kim_relative_reach_error},
-\code{kim_distribution_error}, \code{total_variation}, \code{cell_mae},
-\code{observed_mean_contacts} and \code{predicted_mean_contacts} (plus
-\code{observed_censored_mean} and \code{predicted_censored_mean} when the last
-level is censored). All are proportions or exposures per person.
+\item \code{by_schedule}: one row per schedule. The reaches are
+\code{observed_reach} and \code{predicted_reach}. The errors in reach are
+\code{reach_signed_error} (predicted minus observed), \code{reach_absolute_error}
+and \code{kim_relative_reach_error}. The errors in the distribution are
+\code{kim_distribution_error}, \code{total_variation} and \code{cell_mae}. The mean
+numbers of exposures are \code{observed_mean_contacts} and
+\code{predicted_mean_contacts}. When the last level is censored, the columns
+\code{observed_censored_mean} and \code{predicted_censored_mean} are added.
+All are proportions or exposures per person.
 \item \code{aligned_distribution}: the observed and predicted probabilities by
 schedule and exposure level, after normalizing counts and converting
 percentages to probabilities.
@@ -102,12 +109,15 @@ proportions (multiply by 100 for percentages). They are descriptive
 predictive-error measures, not inferential tests.
 
 The other elements of \code{summary} are, averaged over schedules:
-\code{mean_total_variation}, half the sum over all exposure levels (including
-zero) of the absolute difference between observed and predicted
-probabilities; \code{mean_cell_mae}, the mean absolute difference per exposure
-level; \code{mean_reach_absolute_error}, \eqn{|R_i^{obs}-R_i^{pred}|}; and
-\code{mean_contact_bias}, predicted minus observed mean number of exposures per
-person (positive when the model overestimates exposures).
+\itemize{
+\item \code{mean_total_variation}: half the sum over all exposure levels
+(including zero) of the absolute difference between observed and
+predicted probabilities;
+\item \code{mean_cell_mae}: the mean absolute difference per exposure level;
+\item \code{mean_reach_absolute_error}: \eqn{|R_i^{obs}-R_i^{pred}|};
+\item \code{mean_contact_bias}: predicted minus observed mean number of
+exposures per person (positive when the model overestimates exposures).
+}
 
 Exact support equality is required. Open-tail NBD output is rejected because
 a cell such as \verb{10+} is not equivalent to an exact ten-exposure cell. To
@@ -131,29 +141,36 @@ is one minus its zero cell: a predicted table with cells 0.5 and 0.496
 of the rounded tables, not exactly of two normalized distributions;
 \code{input_mass} reports the supplied totals. This keeps the replication of
 published tables, which carry rounding, unaltered. Counts are always
-normalized.
+normalized. A total within \code{sum_tolerance} of one does not show that a table
+is complete: a mass of 0.996 can be rounding or a small omitted tail, and
+having every level up to the declared maximum does not show that no
+posterior tail was omitted. The total only rejects larger deficits.
+Whether both tables cover the same complete support, or identically
+collapsed tails, is a property of how the data were prepared and is the
+responsibility of the analyst.
 }
 \examples{
-# Observations must be supplied explicitly. These are percentages from
-# Kim's Table 4.2.2.10.
+# Observations must be supplied explicitly. These counts are invented for
+# the example (they are not real data); there is one row per exposure level,
+# from zero to the total number of insertions, and zero exposures included.
+data(csd_example)
+csd <- do.call(calc_csd, csd_example)
 observed <- data.frame(
-  contacts = 0:6,
-  observed = c(38.41, 17.89, 39.66, 2.67, 1.36, 0, 0)
+  contacts = 0:9,
+  observed = c(520, 150, 130, 80, 50, 40, 20, 5, 3, 2)
 )
 predicted <- data.frame(
-  contacts = 0:6,
-  predicted = c(38.20, 18.57, 39.18, 2.49, 1.51, 0.05, 0.01)
+  contacts = 0:9,
+  predicted = 100 * csd$distribution$probability
 )
 evaluation <- evaluate_exposure_model(
   observed, predicted,
-  observed_scale = "percent", predicted_scale = "percent"
+  observed_scale = "count", predicted_scale = "percent"
 )
 evaluation$summary[c("kim_aer", "kim_ape")]
 
 # A fitted model object can be passed directly as the prediction.
-data(csd_kim2005)
-csd <- do.call(calc_csd, csd_kim2005)
-evaluate_exposure_model(observed, csd, observed_scale = "percent")
+evaluate_exposure_model(observed, csd, observed_scale = "count")
 
 }
 \references{

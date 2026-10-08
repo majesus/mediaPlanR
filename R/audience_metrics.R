@@ -88,7 +88,7 @@ audience_metrics <- function(gross_audience, target_audience,
   # The non-target part of the audience must fit in the non-target universe.
   non_target_excess <- (gross_audience - target_audience) -
     (gross_universe - target_universe)
-  if (any(non_target_excess > 1e-9 * gross_universe)) {
+  if (any(non_target_excess > exact_constraint_slack(gross_universe))) {
     stop("Audience and universe values are not logically compatible: the ",
          "audience outside the target (gross audience minus target audience) ",
          "exceeds the universe outside the target (gross universe minus ",

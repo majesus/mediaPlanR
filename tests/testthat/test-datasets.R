@@ -28,19 +28,14 @@ test_that("every example dataset works with do.call() on its matching function",
   expect_s3_class(do.call(calc_mbd, mbd_example), "reach_mbd")
 })
 
-test_that("the literature-validation datasets feed their matching functions", {
-  data(csd_kim2005)
-  data(msad_kim2005)
-  data(mbd_cheong2007)
-  expect_s3_class(do.call(calc_csd, csd_kim2005), "reach_csd")
-  expect_s3_class(do.call(calc_msad, msad_kim2005), "reach_msad")
-  expect_s3_class(do.call(calc_mbd, mbd_cheong2007), "reach_mbd")
-})
-
-test_that("the CANEX example is original, not Kim's published inputs", {
-  data(canex_example)
-  data(csd_kim2005)
-  expect_false(any(canex_example$vehicles_data$R1 %in% csd_kim2005$vehicles_data$R1))
+test_that("the package distributes only original illustrative datasets", {
+  # The numeric inputs of published worked examples (Kim 2005, Cheong 2007) are
+  # not distributed: their redistribution basis is not established, and the
+  # comparisons with them are local-only tests (inst/DATA-PROVENANCE.md).
+  items <- utils::data(package = "mediaPlanR")$results[, "Item"]
+  expect_true(length(items) > 0)
+  expect_true(all(grepl("_example$", items)))
+  expect_false(any(c("csd_kim2005", "msad_kim2005", "mbd_cheong2007") %in% items))
 })
 
 test_that("mediaPlanR does not export anything called binomial (it would mask stats::binomial)", {

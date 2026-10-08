@@ -49,8 +49,8 @@ the canonical zero probability, and MBD lists the peeling steps. The four
 methods are documented together on this page.
 }
 \examples{
-data(csd_kim2005)
-csd <- do.call(calc_csd, csd_kim2005)
+data(csd_example)
+csd <- do.call(calc_csd, csd_example)
 csd
 print(csd, full = FALSE)
 }

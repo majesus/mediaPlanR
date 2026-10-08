@@ -307,8 +307,8 @@ a small table. The quickest way to see what a function expects is its example
 dataset, which is already a list of arguments:
 
 ```{r}
-data(csd_kim2005)     # reach and duplication figures of a worked example, Kim (2005)
-str(csd_kim2005)
+data(csd_example)     # reach and duplication figures of an illustrative scenario
+str(csd_example)
 ```
 
 so that `do.call()` runs the model on it. Printing a result gives the full report
@@ -316,16 +316,16 @@ of the model: headline metrics, parameters, the exposure distribution, the
 cumulative distribution and diagnostics.
 
 ```{r}
-csd <- do.call(calc_csd, csd_kim2005)
+csd <- do.call(calc_csd, csd_example)
 csd
 ```
 
 Example datasets exist for the main models (`ratings_example`,
 `beta_binomial_example`, `hofmans_accumulation_example`, `duplication_example`,
 `metheringham_example`, `canex_example`, `csd_example`, `msad_example`,
-`mbd_example` and `bbd_reach_example`). `csd_kim2005`, `msad_kim2005` and
-`mbd_cheong2007` reproduce the published figures of the worked examples of Kim
-(2005) and Cheong (2007) so that you can check the package against the sources.
+`mbd_example` and `bbd_reach_example`). All of them are original illustrative
+scenarios: the package does not distribute the figures of published worked
+examples, whose redistribution basis is not established.
 
 ### CSD, MSAD, CBD and MBD
 

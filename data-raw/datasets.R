@@ -1,12 +1,11 @@
 # Builds every example dataset of mediaPlanR. Run from the package root:
 #   source("data-raw/datasets.R")
 #
-# Datasets whose name ends in "_example" are original illustrative inputs, not
-# derived from any published source, and are ready for do.call() on the
-# matching function. csd_kim2005, msad_kim2005 and mbd_cheong2007 reproduce
-# the minimal factual inputs (reach and duplication figures) published by
-# Kim (2005) and Cheong (2007), so that users can verify that the package
-# reproduces the published worked examples.
+# Every dataset is an original illustrative input, not derived from any
+# published source, and is ready for do.call() on the matching function. The
+# published worked examples (Kim 2005, Cheong 2007, Lee 1988) are not
+# distributed: the comparisons with them are local-only tests of the
+# maintainer (see inst/DATA-PROVENANCE.md).
 
 save_dataset <- function(name, value) {
   assign(name, value)
@@ -94,33 +93,4 @@ save_dataset("mbd_example", list(
                              R2 = c(0.27, 0.38)),
   duplications = square(c(NA, 0.05, 0.05, NA), 2),
   aggregation_order = 1:2
-))
-
-# --- Published inputs reused for validation ----------------------------------
-
-# Kim (2005), Tables 4.2.2.1-4.2.2.2: three vehicles, TD forward order.
-kim2005_vehicles <- data.frame(insertions = c(2, 2, 2),
-                               R1 = c(0.4902, 0.0333, 0.0300),
-                               R2 = c(0.5805, 0.0502, 0.0371))
-kim2005_duplications <- square(c(NA, 0.0157, 0.0139,
-                                 0.0157, NA, 0.0003,
-                                 0.0139, 0.0003, NA), 3)
-save_dataset("csd_kim2005", list(
-  vehicles_data = kim2005_vehicles, duplications = kim2005_duplications,
-  aggregation_order = 1:3
-))
-save_dataset("msad_kim2005", list(
-  vehicles_data = kim2005_vehicles, duplications = kim2005_duplications,
-  aggregation_order = 1:3
-))
-
-# Cheong (2007), Chapter 4.2: vehicle A (2 insertions), B (1) and C (3).
-save_dataset("mbd_cheong2007", list(
-  vehicles_data = data.frame(insertions = c(2, 1, 3),
-                             R1 = c(0.146, 0.110, 0.252),
-                             R2 = c(0.191, NA, 0.318)),
-  duplications = square(c(NA, 0.032, 0.063,
-                          0.032, NA, 0.041,
-                          0.063, 0.041, NA), 3),
-  aggregation_order = 1:3
 ))

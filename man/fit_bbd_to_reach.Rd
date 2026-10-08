@@ -30,8 +30,13 @@ the fitted and the external reach differ by at most this many people. The
 default, \code{NULL}, is \code{1e-4 * population} (100 people for a universe of one
 million). It is expressed in people, so it must be adapted to the scale
 of \code{population}; with \code{population = 1}, for example, a value of 100 would
-accept any reach, which is why the default is relative. The same tolerance
-applies to the feasibility checks below.}
+accept any reach, which is why the default is relative. It measures the
+fit to the target, and it is also the margin by which a reach may lie
+outside the interval of the Beta-Binomial family with this mean (see
+below). It never widens the bounds of the schedule: those are checked with
+the rounding error of double arithmetic only, so a reach one person below
+the largest audience, or above the population or the total number of
+contacts, is rejected whatever \code{precision} is.}
 
 \item{max_iter}{Maximum number of iterations of the root finder.}
 }
@@ -41,8 +46,10 @@ A list of class \code{"bbd_reach_fit"} with components:
 \item \code{parameters}: list with \code{alpha}, \code{beta}, \code{N} (total insertions), \code{m}
 (number of vehicles), \code{population}, \code{iterations}, \code{converged}, \code{fit_type}
 (\code{"beta_binomial"}, \code{"polarized_limit"} or \code{"binomial_limit"}),
-\code{mean_probability} and \code{feasible_reach} (the admissible interval, in
-people).
+\code{mean_probability}, \code{feasible_reach} (the interval of reaches that a
+Beta-Binomial with this mean can take, in people) and \code{schedule_bounds}
+(the logical bounds of the schedule, in people; the reach that can be
+used lies in the intersection of both).
 \item \code{reach}: list with the \code{external} reach, the \code{fitted} Beta-Binomial
 reach and their \code{difference}, in people.
 \item \code{distribution}: data frame with \code{contacts} (0 to \code{N}), \code{probability}
@@ -95,12 +102,27 @@ Beta-Binomial with this mean can take lies between the polarized limit
 (\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) P}. A reach that is
 possible for the schedule but outside that interval, beyond \code{precision}, is
 not representable by this family and is also rejected, with a different
-message. At either limit the distribution is computed directly (all the mass
-at zero and at \code{N} in the polarized limit; a Binomial(\code{N}, \code{mean_probability})
-in the binomial limit) and \code{alpha} and \code{beta} are reported as \code{0} or \code{Inf}.
-These values only flag the limit, as \code{fit_type} does: they are not parameters
-of a proper Beta distribution (the quotient \code{alpha / (alpha + beta)} is
-undefined there), and the mean stays fixed at \code{mean_probability}.
+message. That interval, returned as \code{feasible_reach}, belongs to the family
+with this mean and ignores the audiences of the vehicles: the interval that
+the schedule can actually use is its intersection with the bounds of the
+first condition, which are returned as \code{schedule_bounds}.
+
+The fitted reach is also checked against the bounds of the schedule before
+it is returned. A limit is chosen only when the target lies at or beyond the
+reach that the family attains at that end of the concentration range, and
+only if that limit is itself inside the bounds of the schedule; it is not
+chosen merely because it is within \code{precision} of the target. When no
+Beta-Binomial with this mean is compatible with the schedule, the function
+stops instead of returning an impossible fit. For two insertions of
+audiences of 50 and 10 people in a universe of 100, for example, the family
+covers 30 to 51 people, the schedule 50 to 60, and a reach of 50 is fitted
+with a reach of 50, not with the polarized limit of 30. At either limit the
+distribution is computed directly (all the mass at zero and at \code{N} in the
+polarized limit; a Binomial(\code{N}, \code{mean_probability}) in the binomial limit)
+and \code{alpha} and \code{beta} are reported as \code{0} or \code{Inf}. These values only flag
+the limit, as \code{fit_type} does: they are not parameters of a proper Beta
+distribution (the quotient \code{alpha / (alpha + beta)} is undefined there), and
+the mean stays fixed at \code{mean_probability}.
 
 Fitting one distribution to the aggregate reach does not recover the
 exposure marginals of each vehicle or the duplication between vehicles, and

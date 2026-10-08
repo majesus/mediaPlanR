@@ -152,8 +152,13 @@ print.media_plan <- function(x, ...) {
 #'   and cost per thousand people reached are added to the plan totals. It must
 #'   be compatible with the plan: at least the largest audience among the
 #'   channels with insertions and at most the smaller of the population and the
-#'   plan's impressions; otherwise the function stops with an error. It must
-#'   refer to the same universe, period and allocation as the plan.
+#'   plan's impressions; otherwise the function stops with an error. These
+#'   bounds are exact: the only slack is the rounding error of double
+#'   arithmetic, so a value that is one person outside them is rejected,
+#'   whatever the size of the universe. It must refer to the same universe,
+#'   period and allocation as the plan. The reach of the `"binomial"` model of
+#'   [estimate_reach()] belongs to a homogenized plan and can fall below the
+#'   largest audience; it is then rejected here (see [calc_binomial()]).
 #'
 #' @details
 #' For each channel, `impressions` is `audience * insertions`, `spend` is
@@ -251,12 +256,21 @@ print.media_plan_metrics <- function(x, ...) {
 # reaches at least as many people as its largest single audience among the
 # channels with insertions, and at most as many as it has contacts (or the
 # population). With no contacts at all, the reach can only be zero.
+plan_reach_bounds <- function(data, population, total_impressions) {
+  active <- data$audience[data$insertions > 0]
+  c(lower = if (length(active)) max(active) else 0,
+    upper = min(population, total_impressions))
+}
+
+# The bounds are structural: the only slack is the rounding error of double
+# arithmetic (see exact_constraint_slack()), never a fraction of the universe,
+# so that one person more or fewer than the bound is always reported.
 assert_reach_compatible_with_plan <- function(reach, data, population,
                                               total_impressions) {
-  tolerance <- 1e-9 * population
-  active <- data$audience[data$insertions > 0]
-  lower <- if (length(active)) max(active) else 0
-  upper <- min(population, total_impressions)
+  tolerance <- exact_constraint_slack(population)
+  bounds <- plan_reach_bounds(data, population, total_impressions)
+  lower <- bounds[["lower"]]
+  upper <- bounds[["upper"]]
   show <- function(x) format(signif(x, 7), scientific = FALSE, trim = TRUE)
   if (reach < lower - tolerance) {
     stop("reach (", show(reach), " people) is smaller than the largest ",

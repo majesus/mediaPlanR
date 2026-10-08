@@ -305,22 +305,24 @@ renormalizes; the diagnostics report how much mass was truncated.
 
 ## CSD and MSAD: two reach estimators, one sequential architecture
 
-`calc_csd()` reproduces the complete numerical example of Kim (2005): three
-vehicles, Beta-Binomial marginals, second-order canonical-expansion reach, and
-non-random convolution that preserves the margins. `csd_kim2005` contains the
-published inputs (reach and duplication figures, with attribution).
+`calc_csd()` implements the Canonical Sequential Aggregation Distribution of
+Kim (2005): Beta-Binomial marginals, second-order canonical-expansion reach,
+and non-random convolution that preserves the margins. `csd_example` is an
+original three-vehicle scenario.
 
 ```{r csd}
-data(csd_kim2005)
-csd_result <- do.call(calc_csd, csd_kim2005)
+data(csd_example)
+csd_result <- do.call(calc_csd, csd_example)
 csd_result$reach
 csd_result$distribution
 csd_result$steps
 ```
 
-The exact results can differ by a few hundredths of a percentage point from
-Kim's tables, because the dissertation rounds parameters and intermediate
-matrices to four decimals; the function keeps the precision of its inputs.
+The function reproduces the worked example of Kim (2005) to within a few
+hundredths of a percentage point in the maintainer's local tests (the figures
+of that example are not distributed with the package). The small differences
+arise because the dissertation rounds parameters and intermediate matrices to
+four decimals, whereas the function keeps the precision of its inputs.
 
 ### MSAD: Morgensztern's sequential aggregation
 
@@ -330,8 +332,8 @@ reach for each sub-schedule, and a non-random convolution that preserves the
 marginals and sets the zero-exposure probability to `1 - reach`.
 
 ```{r msad}
-data(msad_kim2005)
-msad_result <- do.call(calc_msad, msad_kim2005)
+data(msad_example)
+msad_result <- do.call(calc_msad, msad_example)
 msad_result$reach
 msad_result$steps
 msad_result$diagnostics
@@ -343,11 +345,11 @@ function stops if the duplications or the Morgensztern reach violate
 probabilistic bounds.
 
 Kim specifies MSAD but refers to Lee (1988) for the complete numerical example.
-`msad_kim2005` therefore reuses the inputs of Kim's CSD example, and its output
-is a derived calculation, not an MSAD result published in the dissertation.
-`calc_msad()` does reproduce the three-vehicle numerical example of Lee (1988,
-pp. 81-93) to within 0.0011 in every cell, which Lee prints to three decimals;
-that comparison is part of the test suite.
+`calc_msad()` reproduces the three-vehicle numerical example of Lee (1988,
+pp. 81-93) with a largest absolute difference of 0.001077973 in probability in
+the cell of three exposures, where Lee prints three decimals; that comparison
+is part of the maintainer's local tests, because the example is not
+distributed with the package (see `inst/DATA-PROVENANCE.md`).
 
 ## Validation against observed data
 
@@ -357,15 +359,16 @@ exposures, and the scale of the values (counts, probabilities or percentages)
 must be declared.
 
 ```{r evaluation}
-kim_observed <- data.frame(
-  contacts = 0:6,
-  observed = c(38.41, 17.89, 39.66, 2.67, 1.36, 0, 0)
+# Invented counts, for illustration only: they are not real data
+observed_counts <- data.frame(
+  contacts = 0:9,
+  observed = c(520, 150, 130, 80, 50, 40, 20, 5, 3, 2)
 )
 
 csd_evaluation <- evaluate_exposure_model(
-  observed = kim_observed,
+  observed = observed_counts,
   predicted = csd_result,
-  observed_scale = "percent"
+  observed_scale = "count"
 )
 
 csd_evaluation$summary
@@ -394,19 +397,23 @@ order, expanding each remaining pattern with a conditional Beta-Binomial
 allocation.
 
 ```{r mbd}
-data(mbd_cheong2007)
-mbd_result <- do.call(calc_mbd, mbd_cheong2007)
+data(mbd_example)
+mbd_result <- do.call(calc_mbd, mbd_example)
 mbd_result$reach
 mbd_result$distribution
 ```
 
-This is the three-vehicle example of Cheong (2007, p. 75), also published as
-Table 4 of Cheong, Leckenby and Eakin (2011). The function reproduces the
-published distribution to within 0.002 in every cell, more than the rounding of
-the published values (0.0005); an independent reimplementation of the printed
-algorithm agrees with the function, and the gap comes from arithmetic
-inconsistencies in the printed intermediate tables. The tests fix the accepted
-deviation per cell.
+Against the three-vehicle example of Cheong (2007, p. 75), also published as
+Table 4 of Cheong, Leckenby and Eakin (2011), the function reproduces the
+published distribution (in the maintainer's local tests, because that example
+is not distributed with the package) with a largest absolute difference of 0.0020348568 in
+probability (0.20348568 percentage points, in the cell of three exposures),
+larger than the rounding of one printed cell (0.0005). The regression test
+accepts differences below 0.0025, a threshold above the real maximum. The
+printed intermediate tables contain arithmetic inconsistencies, which are a
+plausible explanation for part of the differences; their full causal
+attribution has not been established, and this is an approximate replication of
+a printed example, not an independent validation.
 
 Unlike CSD and MSAD, the model can produce negative probabilities when it
 combines four or more vehicles, because the co-exposure of three or more
@@ -451,7 +458,7 @@ all the insertions and its remaining levels are rescaled so that the cell keeps
 its probability. The result does not depend on the aggregation order.
 
 ```{r cbd}
-cbd_result <- do.call(calc_cbd, csd_kim2005)
+cbd_result <- do.call(calc_cbd, csd_example)
 cbd_result$reach
 cbd_result$distribution
 ```
@@ -465,9 +472,10 @@ columns, not predictive accuracy), and the three-vehicle worked example of Kim (
 its zero cell. In that example the zero of the canonical expansion is printed as
 0.5066, whereas the formula applied to the printed inputs gives about 0.510;
 `calc_cbd()` evaluates the formula, so its zero and one-contact probabilities
-differ from the printed ones by 0.36 and 0.29 percentage points there. The tests
-check these cases (the tables of the two-vehicle plans only in the maintainer's
-local runs, because their input tables are not distributed), and also that the (0,1) grid recovers each vehicle's own
+differ from the printed ones by 0.36 and 0.29 percentage points there. The
+comparisons with those published cases are made only in the maintainer's local
+runs, because their input tables are not distributed; the public tests check
+that the (0,1) grid recovers each vehicle's own
 `R1` as its marginal and that, with zero correlation, the model reduces to the
 exact convolution of the vehicles' own Beta-Binomial marginals.
 
@@ -482,13 +490,10 @@ str(canex_example)
 do.call(calc_canex, canex_example)$reach$percent
 ```
 
-Datasets whose name ends in `_example` are original illustrative scenarios,
-meant for quick experimentation. `csd_kim2005`, `msad_kim2005` and
-`mbd_cheong2007` instead reproduce the minimal numeric inputs (reach and
-duplication figures) published by Kim (2005) and Cheong (2007), so that anyone
-can verify that `calc_csd()`, `calc_msad()` and `calc_mbd()` reproduce the
-published examples. They are bare factual figures reused for validation, not a
-reproduction of the dissertations. `ratings_example` serves `calc_sainsbury()`
+Every dataset is an original illustrative scenario, meant for quick
+experimentation; none reproduces inputs published by a third party, whose
+redistribution basis is not established (the comparisons with published
+examples are local-only tests of the maintainer). `ratings_example` serves `calc_sainsbury()`
 and `calc_binomial()`, and `duplication_example` serves
 `calc_agostini_duplication()` and `calc_hofmans_duplication()`, because each
 pair shares the same input shape. No dataset is named `binomial`, so that
@@ -540,7 +545,7 @@ reference that allows an independent regression test are available.
 | MSAD | Algorithm given by Kim; detailed example in Lee (1988, pp. 81-93); 40 plans of Kim (2005, Appendix B) | Implemented and validated against Lee's example and Kim's plans (plan 19 differs by 0.099 percentage points) |
 | CANEX | Danaher's (1991) formula, the CSD example that uses its reach, and the CANX column of Kim (2005, Appendix B) | Implemented; reports approximation diagnostics |
 | Beta-Binomial and Binomial | Closed-form formulas | Implemented and tested at their limits |
-| MBD | Complete specification and three-vehicle example, Cheong (2007) and Cheong, Leckenby and Eakin (2011); four- and five-vehicle examples show the model's limits | Implemented, with a package safety net (not Cheong's MBD-ADJ) and warnings; reproduces the published example to within 0.002 per cell |
+| MBD | Complete specification and three-vehicle example, Cheong (2007) and Cheong, Leckenby and Eakin (2011); four- and five-vehicle examples show the model's limits | Implemented, with a package safety net (not Cheong's MBD-ADJ) and warnings; approximately reproduces the published example (largest absolute difference 0.0020348568 in probability) |
 | CBD | Specification and three-vehicle example in Kim (1994, pp. 115-139); two-vehicle outputs in Kim (2005, Appendix B) and Hong (1998, Appendix E) | Implemented; reproduces those outputs (a consistency check between published columns); zero cell of Kim's example differs by about 0.4 percentage points |
 | HBBD (Hofmans Beta-Binomial) | Kim (2005, pp. 52-53) gives the Hofmans reach formula followed by iterative mean-zero Beta-Binomial fitting | Not implemented or validated in this release |
 | DMD (Dirichlet multinomial) | Kim (2005, pp. 54-56) specifies the distribution and refers to detailed steps in Boyd (1985) and Kim (1994, pp. 89-98) | Not implemented or validated in this release |

@@ -174,10 +174,8 @@ or 0.5, instead of altering an invalid target.
 }
 
 \examples{
-# MSAD calculation derived from the inputs of Kim's CSD example. The
-# resulting MSAD values are not presented by Kim as a published benchmark.
-data(msad_kim2005)
-result <- do.call(calc_msad, msad_kim2005)
+data(msad_example)
+result <- do.call(calc_msad, msad_example)
 result$reach
 
 }

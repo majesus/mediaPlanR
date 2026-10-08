@@ -1,39 +1,32 @@
-kim_csd_inputs <- function() {
-  list(
-    vehicles_data = data.frame(
-      insertions = c(2, 2, 2),
-      R1 = c(0.4902, 0.0333, 0.0300),
-      R2 = c(0.5805, 0.0502, 0.0371)
-    ),
-    duplications = matrix(
-      c(NA, 0.0157, 0.0139,
-        0.0157, NA, 0.0003,
-        0.0139, 0.0003, NA),
-      nrow = 3, byrow = TRUE
-    )
-  )
+csd_inputs <- function() {
+  data(csd_example, package = "mediaPlanR", envir = environment())
+  csd_example
 }
 
-test_that("CSD reproduces Kim's complete three-vehicle example", {
-  inputs <- kim_csd_inputs()
+test_that("CSD returns its steps, the canonical reach and a valid distribution", {
+  inputs <- csd_inputs()
   fit <- calc_csd(
     inputs$vehicles_data, inputs$duplications,
     aggregation_order = 1:3
   )
 
   expect_s3_class(fit, "reach_csd")
-  expect_equal(fit$steps$target_reach, c(0.6022075, 0.6180583),
-               tolerance = 1e-7)
-  # Published percentages (two decimals); the bound is an absolute error per
-  # cell, in percentage points. The largest observed difference is 0.0143.
-  published <- c(38.20, 18.57, 39.18, 2.49, 1.51, 0.05, 0.01)
-  expect_length(fit$distribution$percent, length(published))
-  expect_lt(max(abs(fit$distribution$percent - published)), 0.02)
-  expect_equal(fit$reach$probability, 0.6180583, tolerance = 1e-7)
+  # One conformed reach per aggregation step after the first vehicle, and the
+  # final reach is the last step's reach
+  expect_length(fit$steps$target_reach, 2)
+  expect_equal(fit$reach$probability, fit$steps$target_reach[2],
+               tolerance = 1e-12)
+  expect_equal(sum(fit$distribution$probability), 1, tolerance = 1e-12)
+  expect_length(fit$distribution$probability,
+                sum(inputs$vehicles_data$insertions) + 1L)
+  # The reach is at least the reach of the largest vehicle (one insertion)
+  # and a probability
+  expect_gte(fit$reach$probability, max(inputs$vehicles_data$R1))
+  expect_lte(fit$reach$probability, 1)
 })
 
 test_that("CSD preserves probability, exposure mean, and non-negative cells", {
-  inputs <- kim_csd_inputs()
+  inputs <- csd_inputs()
   fit <- calc_csd(inputs$vehicles_data, inputs$duplications,
                   aggregation_order = 1:3, population = 1e6)
 
@@ -46,7 +39,7 @@ test_that("CSD preserves probability, exposure mean, and non-negative cells", {
 })
 
 test_that("CSD exposes sequential order sensitivity without changing canonical reach", {
-  inputs <- kim_csd_inputs()
+  inputs <- csd_inputs()
   forward <- calc_csd(inputs$vehicles_data, inputs$duplications,
                       aggregation_order = 1:3)
   reverse <- calc_csd(inputs$vehicles_data, inputs$duplications,
@@ -62,7 +55,7 @@ test_that("CSD exposes sequential order sensitivity without changing canonical r
 })
 
 test_that("CSD validates duplication and aggregation inputs", {
-  inputs <- kim_csd_inputs()
+  inputs <- csd_inputs()
   asymmetric <- inputs$duplications
   asymmetric[1, 2] <- 0.02
 
@@ -82,7 +75,7 @@ test_that("CSD validates duplication and aggregation inputs", {
 })
 
 test_that("CSD has a concise print method", {
-  inputs <- kim_csd_inputs()
+  inputs <- csd_inputs()
   fit <- calc_csd(inputs$vehicles_data, inputs$duplications,
                   aggregation_order = 1:3)
   expect_output(print(fit, full = FALSE), "Canonical Sequential")

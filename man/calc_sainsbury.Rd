@@ -31,7 +31,8 @@ exposed at least once, at least twice, and so on.
 \description{
 Implements the Sainsbury model, which Aldás Manzano (1998, Section 3.2.2.2)
 reports as developed at the London Press Exchange and formalized by Caffyn
-and Sagovsky (1963), to calculate reach and the exposure distribution (and its
+and Sagovsky (1963) (a secondary citation: the attribution is Aldás
+Manzano's, and the original work was not consulted), to calculate reach and the exposure distribution (and its
 cumulative counterpart) of a set of advertising vehicles, with one or more
 insertions in each of them (argument \code{insertions}). The model assumes
 random duplication \emph{and} random accumulation, homogeneous individual

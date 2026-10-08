@@ -1,40 +1,51 @@
-kim_observed_distribution <- function() {
+# Illustrative percentages (not data from any publication), complete to the
+# rounding of the third decimal.
+observed_distribution <- function() {
   data.frame(
     contacts = 0:6,
-    observed = c(38.41, 17.89, 39.66, 2.67, 1.36, 0, 0)
+    observed = c(40.00, 18.00, 38.00, 2.50, 1.50, 0, 0)
   )
 }
 
-kim_predicted_distribution <- function() {
+predicted_distribution <- function() {
   data.frame(
     contacts = 0:6,
-    predicted = c(38.20, 18.57, 39.18, 2.49, 1.51, 0.05, 0.01)
+    predicted = c(39.50, 18.60, 37.80, 2.40, 1.40, 0.20, 0.10)
   )
 }
 
-test_that("Kim's published example reproduces AER and APE", {
+test_that("AER and APE follow their definitions on a worked example", {
+  observed <- observed_distribution()
+  predicted <- predicted_distribution()
   evaluation <- evaluate_exposure_model(
-    kim_observed_distribution(), kim_predicted_distribution(),
-    observed_scale = "percent", predicted_scale = "percent"
+    observed, predicted, observed_scale = "percent", predicted_scale = "percent"
   )
 
   expect_s3_class(evaluation, "exposure_model_evaluation")
-  expect_equal(evaluation$summary$kim_aer, 0.003409644422795712,
+  # AER = |R_obs - R_pred| / R_obs and APE = sum_{j >= 1} |p_obs - p_pred| / R_obs,
+  # computed here directly from the probabilities
+  p_obs <- observed$observed / 100
+  p_pred <- predicted$predicted / 100
+  reach_obs <- 1 - p_obs[1]
+  reach_pred <- 1 - p_pred[1]
+  expect_equal(evaluation$summary$kim_aer, abs(reach_obs - reach_pred) / reach_obs,
                tolerance = 1e-12)
-  expect_equal(evaluation$summary$kim_ape, 0.02516642312063641,
-               tolerance = 1e-12)
+  expect_equal(evaluation$summary$kim_ape,
+               sum(abs(p_obs[-1] - p_pred[-1])) / reach_obs, tolerance = 1e-12)
   expect_equal(evaluation$summary$schedules, 1)
-  expect_equal(evaluation$input_mass$observed_input_mass, 0.9999)
-  expect_equal(evaluation$input_mass$predicted_input_mass, 1.0001)
+  expect_equal(evaluation$input_mass$observed_input_mass, 1)
+  expect_equal(evaluation$input_mass$predicted_input_mass, 1)
   expect_output(print(evaluation), "Kim AER")
 })
 
 test_that("observations can be evaluated directly against a CSD result", {
-  data(csd_kim2005)
-  fit <- do.call(calc_csd, csd_kim2005)
-  evaluation <- evaluate_exposure_model(
-    kim_observed_distribution(), fit, observed_scale = "percent"
+  data(csd_example)
+  fit <- do.call(calc_csd, csd_example)
+  observed <- data.frame(
+    contacts = 0:9,
+    observed = c(520, 150, 130, 80, 50, 40, 20, 5, 3, 2)
   )
+  evaluation <- evaluate_exposure_model(observed, fit, observed_scale = "count")
 
   expect_identical(evaluation$inputs$prediction_source, "reach_csd")
   expect_equal(evaluation$by_schedule$predicted_reach,
@@ -86,8 +97,8 @@ test_that("multiple schedules produce averaged Kim metrics", {
 })
 
 test_that("evaluation rejects ambiguous or incomplete distributions", {
-  observed <- kim_observed_distribution()
-  predicted <- kim_predicted_distribution()
+  observed <- observed_distribution()
+  predicted <- predicted_distribution()
 
   expect_error(
     evaluate_exposure_model(observed, predicted,
@@ -120,7 +131,7 @@ test_that("open NBD tails are not mistaken for exact contact cells", {
   nbd <- nbd_exposure_distribution(2, 1.5, report_max = 6)
   expect_error(
     evaluate_exposure_model(
-      kim_observed_distribution(), nbd, observed_scale = "percent"
+      observed_distribution(), nbd, observed_scale = "percent"
     ),
     "open tail"
   )

@@ -137,9 +137,8 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' Handle 2152/1590 (University of Texas at Austin repository).
 #'
 #' @examples
-#' # Kim (2005), Tables 4.2.2.1-4.2.2.10: the order of Kim's worked example
-#' data(csd_kim2005)
-#' result <- do.call(calc_csd, csd_kim2005)
+#' data(csd_example)
+#' result <- do.call(calc_csd, csd_example)
 #' result$reach
 #' result$distribution
 #'
@@ -276,8 +275,8 @@ calc_csd <- function(vehicles_data, duplications,
 #' @param ... Unused.
 #' @return `x`, invisibly.
 #' @examples
-#' data(csd_kim2005)
-#' csd <- do.call(calc_csd, csd_kim2005)
+#' data(csd_example)
+#' csd <- do.call(calc_csd, csd_example)
 #' csd
 #' print(csd, full = FALSE)
 #' @name print_sequential

@@ -131,6 +131,24 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #' allocation that reaches `target_reach` is returned, and an error is raised
 #' when none does.
 #'
+#' The `"binomial"` model evaluates every allocation as a homogenized plan in
+#' which each insertion has the insertion-weighted mean audience. Its reach is
+#' therefore the reach of that homogenized plan, and it can be smaller than the
+#' audience of a single channel of the original plan. With audiences of 90 and
+#' 10 people in a universe of 100 and one insertion in each channel, the
+#' Binomial reach is 75 people and the probability of two exposures is 0.25,
+#' while the first channel alone already reaches 90 people (the Sainsbury model,
+#' which keeps both audiences, gives 91 people and 0.09). A reach below the
+#' largest audience cannot be the reach of the plan, and [plan_metrics()] rejects
+#' it. When the selected allocation has this property, the function still
+#' returns the allocation and the effective reach, which are results of the
+#' homogenized model and of nothing else, but it issues a warning (class
+#' `mediaPlanR_homogenized_reach_incompatible`), sets
+#' `reach_compatible_with_plan` to `FALSE` and leaves out of `metrics` the
+#' quantities that need a reach of the plan itself (`reach`, `reach_percent`,
+#' `average_frequency` and `cost_per_thousand_reached`). The model `"sainsbury"`
+#' keeps the audience of each channel and does not have this limitation.
+#'
 #' The greedy heuristic repeatedly adds the move with the largest gain in
 #' effective reach per unit of cost. A move adds between one and
 #' `effective_frequency` insertions to one channel. Starting from an empty plan,
@@ -148,7 +166,9 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #'   named `allocation`, the `reach` result of [estimate_reach()], the plan
 #'   `metrics`, the `effective_frequency` and `effective_reach` (a proportion of the
 #'   population exposed `effective_frequency` times or more), `spend`,
-#'   `budget`, `target_reach` and `target_met`, the `method` used,
+#'   `budget`, `target_reach` and `target_met`, the `method` used, the reach
+#'   `model`, `reach_compatible_with_plan` (`FALSE` when the model's reach is
+#'   below the largest audience of the channels with insertions; see Details),
 #'   `global_optimum` (`TRUE` only for exhaustive search),
 #'   `combinations_evaluated` and, for exhaustive search, a `search_table` with
 #'   the spend, reach and effective reach of each evaluated allocation.
@@ -261,7 +281,41 @@ optimize_media_plan <- function(plan, budget,
   optimized_plan <- plan
   optimized_plan$data$insertions <- allocation
   reach_result <- estimate_reach(optimized_plan, model)
-  metrics <- plan_metrics(optimized_plan, reach = reach_result$reach$people)
+  # The Binomial model replaces the audience of every channel by their
+  # insertion-weighted mean, so its reach describes that homogenized plan. It
+  # can fall below the largest audience of the original plan, a reach that the
+  # plan itself cannot have. The search and the effective reach are valid for
+  # the model, but the physical metrics that use the reach (average frequency
+  # and cost per thousand people reached) are not built on an incompatible
+  # figure: they are left out and the result says so.
+  reach_bounds <- plan_reach_bounds(optimized_plan$data, plan$population,
+                                    sum(optimized_plan$data$audience *
+                                          optimized_plan$data$insertions))
+  reach_compatible <- reach_result$reach$people >=
+    reach_bounds[["lower"]] - exact_constraint_slack(plan$population) &&
+    reach_result$reach$people <=
+    reach_bounds[["upper"]] + exact_constraint_slack(plan$population)
+  metrics <- plan_metrics(
+    optimized_plan,
+    reach = if (reach_compatible) reach_result$reach$people
+  )
+  if (!reach_compatible) {
+    warning(warningCondition(
+      paste0("The ", model, " model gives a reach of ",
+             format(signif(reach_result$reach$people, 7), scientific = FALSE,
+                    trim = TRUE),
+             " people for the selected allocation, below the largest audience ",
+             "of the channels with insertions (",
+             format(signif(reach_bounds[["lower"]], 7), scientific = FALSE,
+                    trim = TRUE),
+             " people): a figure that the plan itself cannot have, because the ",
+             "model replaces every audience by the insertion-weighted mean. ",
+             "The allocation and the effective reach are valid for that ",
+             "homogenized model only; the average frequency and the cost per ",
+             "thousand people reached are not reported. Use model = ",
+             "\"sainsbury\" to keep the audience of each channel."),
+      class = "mediaPlanR_homogenized_reach_incompatible", call = NULL))
+  }
   idx <- match(effective_frequency, reach_result$cumulative$min_contacts)
   effective_reach <- if (is.na(idx)) 0 else reach_result$cumulative$probability[idx]
   target_met <- is.null(target_reach) || effective_reach >= target_reach - 1e-12
@@ -284,6 +338,8 @@ optimize_media_plan <- function(plan, budget,
     target_reach = target_reach,
     target_met = target_met,
     method = selected_method,
+    model = model,
+    reach_compatible_with_plan = reach_compatible,
     global_optimum = identical(selected_method, "exact"),
     combinations_evaluated = if (selected_method == "exact") nrow(search_table) else NA_integer_,
     search_table = search_table
@@ -299,5 +355,9 @@ print.media_optimization <- function(x, ...) {
               as.integer(x$effective_frequency), 100 * x$effective_reach))
   print(data.frame(channel = names(x$allocation), insertions = x$allocation),
         row.names = FALSE)
+  if (identical(x$reach_compatible_with_plan, FALSE)) {
+    cat("Note: the reach of the homogenized", x$model, "model is below the",
+        "largest audience of the plan; see ?optimize_media_plan.\n")
+  }
   invisible(x)
 }

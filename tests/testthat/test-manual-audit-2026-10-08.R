@@ -176,7 +176,8 @@ test_that("H21: CANEX needs R2 for every vehicle, and a single insertion ignores
 })
 
 test_that("H05: the MBD safety net is reported as a package correction, not as MBD-ADJ", {
-  result <- do.call(calc_mbd, mbd_cheong2007)
+  data(mbd_example)
+  result <- do.call(calc_mbd, mbd_example)
   result$diagnostics$negative_mass_adjusted <- 1e-3
   result$diagnostics$cells_adjusted <- 1L
   expect_output(print(result, full = FALSE), "not Cheong's UD-stage MBD-ADJ")

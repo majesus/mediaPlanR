@@ -18,3 +18,4 @@
 ^tests/testthat/fixtures/kim2005_appB_models\.csv$
 ^tests/testthat/fixtures/README\.md$
 ^Claude outputs$
+^tests/testthat/test-local-published-examples\.R$

@@ -6,6 +6,56 @@ backward compatible with them: function names, arguments, example datasets and
 returned objects changed. The Shiny explorers and the budget/KPI helpers of the
 earlier snapshots are not part of this package.
 
+## Corrections from the follow-up audit of the corrected manual (2026-10-08)
+
+Validation:
+
+* Exact structural constraints are checked with the rounding error of double
+  arithmetic only, never with a fraction of the universe: `plan_metrics(reach =)`
+  rejects a reach one person below the largest audience (or above the number of
+  impressions, or any positive reach for an empty plan) in universes of any
+  size, `audience_metrics()` rejects one person outside the target in a universe
+  that has none outside it, and the duplication matrices of Agostini, Hofmans
+  and Metheringham use the same rule.
+* `fit_bbd_to_reach()`: `precision` measures the fit to the target and no longer
+  widens the bounds of the schedule. A reach below the largest audience is
+  rejected whatever the precision; a limit (polarized or binomial) is selected
+  only if it lies inside the bounds of the schedule; the fitted reach is checked
+  against those bounds, and the function stops when no Beta-Binomial with the
+  mean of the schedule is compatible with it. The reach is computed with a
+  numerically stable formula, and `parameters$schedule_bounds` reports the
+  bounds next to `feasible_reach` (the interval of the family).
+* `optimize_media_plan(model = "binomial")` no longer fails when the reach of
+  the homogenized model is below the largest audience of the plan. It returns
+  the allocation and the effective reach (valid for the model), warns, sets
+  `reach_compatible_with_plan` to `FALSE`, and leaves out the metrics that need
+  a reach of the plan itself.
+
+Documentation:
+
+* The largest discrepancy of `calc_mbd()` with the printed three-vehicle example
+  of Cheong is 0.0020348568 in probability, not 0.002 or 0.0019; the test
+  threshold (0.0025) is distinguished from the real maximum, the printed
+  intermediate tables are described as a plausible explanation and not as an
+  established cause, and the maximum of MSAD with Lee (1988) is 0.001077973.
+  The cell-by-cell comparisons are in `inst/DATA-PROVENANCE.md`.
+* `sum_tolerance` of `evaluate_exposure_model()` does not guarantee that a
+  table is complete: it rejects total-mass deficits above the threshold and
+  cannot distinguish rounding from a small omitted tail.
+* `DESCRIPTION` states what the three doctoral dissertations are and that they
+  have no DOI; the Sainsbury help page marks Caffyn and Sagovsky (1963) as a
+  secondary citation.
+* A long line of the value of `evaluate_exposure_model()` that overflowed the
+  right margin of the PDF manual was split.
+
+Data:
+
+* The datasets `csd_kim2005`, `msad_kim2005` and `mbd_cheong2007` were removed,
+  because the basis for redistributing the inputs of published examples was not
+  established. The examples and the vignette use `csd_example`, `msad_example`
+  and `mbd_example`; the comparisons with the published examples are local-only
+  tests of the maintainer.
+
 ## Corrections from the academic audit of the manual (2026-10-08)
 
 Validation:
@@ -184,15 +234,17 @@ Documentation:
   pp. 81-93); `calc_cbd()` the worked example of Kim (1994, p. 139) except for
   its zero cell (about 0.4 percentage points) and the CBD columns of Kim (2005,
   Appendix B) and Hong (1998, Appendix E); and `calc_mbd()` the worked example of
-  Cheong (2007, p. 75; also Cheong, Leckenby and Eakin, 2011), to within 0.002
-  per cell. `calc_canex()`, `calc_csd()` and `calc_msad()` also reproduce the 40
+  Cheong (2007, p. 75; also Cheong, Leckenby and Eakin, 2011), with a largest
+  absolute difference of 0.0020348568 in probability. `calc_canex()`, `calc_csd()` and `calc_msad()` also reproduce the 40
   plans of Kim (2005, Appendix B) within 0.02 percentage points per cell
   (MSAD plan 19, 0.099 with the common reconstructed duplication; its printed
   row is reproduced with random duplication). The three remaining differences
-  with published values (Kim 1994 zero cell, Cheong MBD 0.002, Kim 2005 MSAD
-  plan 19) have identified causes recorded in `inst/DATA-PROVENANCE.md`. The
-  test suite checks all of these.
-* `csd_kim2005`, `msad_kim2005` and `mbd_cheong2007` contain the published
+  with published values (Kim 1994 zero cell, Cheong MBD, Kim 2005 MSAD plan 19)
+  are documented, with the evidence that bears on each one and explicit
+  regression bounds, in `inst/DATA-PROVENANCE.md`; the cause of none of them is
+  established beyond that evidence. The test suite checks all of these.
+* (Removed in the second audit of 2026-10-08, see below.) `csd_kim2005`,
+  `msad_kim2005` and `mbd_cheong2007` contained the published
   numeric inputs of those examples, with attribution. All other example
   datasets are original illustrative data, ready for `do.call()`.
 

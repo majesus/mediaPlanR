@@ -7,3 +7,5 @@ docs
 # Local-only validation tables (see inst/DATA-PROVENANCE.md)
 tests/testthat/fixtures/cbd_published_plans.csv
 tests/testthat/fixtures/kim2005_appB_models.csv
+
+tests/testthat/test-local-published-examples.R

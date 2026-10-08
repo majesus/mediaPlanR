@@ -419,14 +419,14 @@ dataset, which is already a list of arguments:
 
 
 ``` r
-data(csd_kim2005)     # reach and duplication figures of a worked example, Kim (2005)
-str(csd_kim2005)
+data(csd_example)     # reach and duplication figures of an illustrative scenario
+str(csd_example)
 #> List of 3
 #>  $ vehicles_data    :'data.frame':	3 obs. of  3 variables:
-#>   ..$ insertions: num [1:3] 2 2 2
-#>   ..$ R1        : num [1:3] 0.4902 0.0333 0.03
-#>   ..$ R2        : num [1:3] 0.5805 0.0502 0.0371
-#>  $ duplications     : num [1:3, 1:3] NA 0.0157 0.0139 0.0157 NA 0.0003 0.0139 0.0003 NA
+#>   ..$ insertions: num [1:3] 3 2 4
+#>   ..$ R1        : num [1:3] 0.35 0.18 0.1
+#>   ..$ R2        : num [1:3] 0.44 0.24 0.15
+#>  $ duplications     : num [1:3, 1:3] NA 0.07 0.04 0.07 NA 0.02 0.04 0.02 NA
 #>  $ aggregation_order: int [1:3] 1 2 3
 ```
 
@@ -436,7 +436,7 @@ cumulative distribution and diagnostics.
 
 
 ``` r
-csd <- do.call(calc_csd, csd_kim2005)
+csd <- do.call(calc_csd, csd_example)
 csd
 #> CANONICAL SEQUENTIAL AGGREGATION DISTRIBUTION (CSD)
 #> ===================================================
@@ -444,72 +444,78 @@ csd
 #> 
 #> HEADLINE METRICS:
 #> -----------------
-#> Total reach: 61.81%
-#> Average exposures per person reached: 1.79
+#> Total reach: 68.10%
+#> Average exposures per person reached: 2.66
 #> 
 #> MODEL PARAMETERS:
 #> -----------------
-#> Probability of 0 exposures (%): 38.19
-#> Total insertions (N): 6
+#> Probability of 0 exposures (%): 31.90
+#> Total insertions (N): 9
 #> Aggregation order: 1 -> 2 -> 3
 #> Aggregation rule: custom
 #> 
 #> VEHICLES:
 #> ---------
 #>  vehicle insertions own_reach_percent aggregation_position
-#>        1          2             58.05                    1
-#>        2          2              5.02                    2
-#>        3          2              3.71                    3
+#>        1          3             48.83                    1
+#>        2          2             24.00                    2
+#>        3          4             20.67                    3
 #> 
 #> AGGREGATION STEPS:
 #> ------------------
 #>  step added_vehicle target_reach_percent zero_probability
-#>     1             2                60.22           0.3978
-#>     2             3                61.81           0.3819
+#>     1             2                60.45           0.3955
+#>     2             3                68.10           0.3190
 #>  random_zero_probability expansion_adjustment duplicated_reach
-#>                   0.3984            -0.001628          0.02849
-#>                   0.3837            -0.004476          0.02125
+#>                   0.3889              0.01715           0.1239
+#>                   0.3085              0.03416           0.1302
 #> 
 #> CANONICAL CORRELATIONS BETWEEN VEHICLES:
 #> ----------------------------------------
-#>         V1      V2      V3
-#> V1  1.0000 -0.0070 -0.0095
-#> V2 -0.0070  1.0000 -0.0228
-#> V3 -0.0095 -0.0228  1.0000
+#>        V1     V2     V3
+#> V1 1.0000 0.0382 0.0349
+#> V2 0.0382 1.0000 0.0174
+#> V3 0.0349 0.0174 1.0000
 #> 
 #> EXPOSURE DISTRIBUTION:
 #> ----------------------
 #> (Percentage of the population receiving exactly N exposures)
-#> 1 exposure: 18.58%
-#> 2 exposures: 39.18%
-#> 3 exposures: 2.49%
-#> 4 exposures: 1.50%
-#> 5 exposures: 0.04%
-#> 6 exposures: 0.01%
+#> 1 exposure: 16.60%
+#> 2 exposures: 16.91%
+#> 3 exposures: 19.35%
+#> 4 exposures: 7.80%
+#> 5 exposures: 4.70%
+#> 6 exposures: 1.65%
+#> 7 exposures: 0.80%
+#> 8 exposures: 0.21%
+#> 9 exposures: 0.07%
 #> 
 #> CUMULATIVE DISTRIBUTION:
 #> -------------------------
 #> (Percentage of the population receiving N or more exposures)
-#> >= 1 exposure: 61.81%
-#> >= 2 exposures: 43.22%
-#> >= 3 exposures: 4.05%
-#> >= 4 exposures: 1.55%
-#> >= 5 exposures: 0.06%
-#> >= 6 exposures: 0.01%
+#> >= 1 exposure: 68.10%
+#> >= 2 exposures: 51.49%
+#> >= 3 exposures: 34.59%
+#> >= 4 exposures: 15.23%
+#> >= 5 exposures: 7.43%
+#> >= 6 exposures: 2.73%
+#> >= 7 exposures: 1.08%
+#> >= 8 exposures: 0.28%
+#> >= 9 exposures: 0.07%
 #> 
 #> DIAGNOSTICS:
 #> ------------
-#> Probability sum: 1.000000000000 | Smallest probability: 0.00014 | Mean error: -2.22e-16
+#> Probability sum: 1.000000000000 | Smallest probability: 0.000694 | Mean error: 4.44e-16
 #> Largest margin error across aggregation steps: 1.11e-16
-#> Smallest eigenvalue of the correlation matrix: 0.9723
+#> Smallest eigenvalue of the correlation matrix: 0.9561
 ```
 
 Example datasets exist for the main models (`ratings_example`,
 `beta_binomial_example`, `hofmans_accumulation_example`, `duplication_example`,
 `metheringham_example`, `canex_example`, `csd_example`, `msad_example`,
-`mbd_example` and `bbd_reach_example`). `csd_kim2005`, `msad_kim2005` and
-`mbd_cheong2007` reproduce the published figures of the worked examples of Kim
-(2005) and Cheong (2007) so that you can check the package against the sources.
+`mbd_example` and `bbd_reach_example`). All of them are original illustrative
+scenarios: the package does not distribute the figures of published worked
+examples, whose redistribution basis is not established.
 
 ### CSD, MSAD, CBD and MBD
 

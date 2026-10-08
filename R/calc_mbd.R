@@ -317,18 +317,22 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' # Validation against the published example
 #'
 #' For the three-vehicle example of Cheong (2007, p. 75), which Cheong,
-#' Leckenby and Eakin (2011, Table 4) also publish, the function reproduces
-#' the published distribution to within 0.002 in probability in every cell (0.2
-#' percentage points; the largest observed deviation is about 0.0019 and the
-#' package tests accept up to 0.0025), which is more than
-#' the rounding of the published values (0.0005). This is a replication of one
-#' printed example, not an independent validation of the model's predictions. An independent
-#' reimplementation of the printed algorithm agrees with this function to
-#' 1e-4, so the gap originates in the printed intermediate tables, which contain
-#' arithmetic inconsistencies: a product printed as .024(.057) = .003 (it is
-#' .0014), a sum of Beta-Binomial parameters of 7.294 (the printed formula gives
-#' 7.543), and an exclusive-grid sum of 1.001. The package tests fix the
-#' accepted deviation per cell.
+#' Leckenby and Eakin (2011, Table 4) also publish, the largest absolute
+#' difference between this function and the printed seven-cell distribution is
+#' 0.0020348568 in probability (0.20348568 percentage points), in the cell of
+#' three exposures. The regression test accepts differences below 0.0025: that
+#' is a threshold above the real maximum, not an estimate of the error of the
+#' function. The rounding of one printed cell to three decimals (at most
+#' 0.0005) is smaller than that maximum. The difference of every cell is
+#' recorded in the installed file `DATA-PROVENANCE.md`. This is an approximate
+#' replication of one printed example, not an independent validation of the
+#' model's predictions. The printed intermediate tables contain arithmetic
+#' inconsistencies (a product printed as .024(.057) = .003, which is .0014; a
+#' sum of Beta-Binomial parameters of 7.294, where the printed formula gives
+#' 7.543; an exclusive-grid sum of 1.001). They are a plausible explanation for
+#' some of the differences, but their full causal attribution has not been
+#' established: the public tests do not include an independent implementation
+#' of the printed procedure.
 #' In the binomial limit of a vehicle's own distribution (`R2` equal to the
 #' reach under independence), the conditional distributions of the peeling step
 #' coincide, so the result of this model does not depend on the duplication
@@ -372,9 +376,8 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' *Meditationes Algebraicae*, 1770.)
 #'
 #' @examples
-#' # Cheong (2007), Chapter 4.2: three-vehicle conceptual example
-#' data(mbd_cheong2007)
-#' result <- do.call(calc_mbd, mbd_cheong2007)
+#' data(mbd_example)
+#' result <- do.call(calc_mbd, mbd_example)
 #' result$reach
 #' result$distribution
 #'

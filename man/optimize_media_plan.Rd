@@ -80,7 +80,9 @@ A \code{media_optimization} object: a list with the optimized \code{plan}, the
 named \code{allocation}, the \code{reach} result of \code{\link[=estimate_reach]{estimate_reach()}}, the plan
 \code{metrics}, the \code{effective_frequency} and \code{effective_reach} (a proportion of the
 population exposed \code{effective_frequency} times or more), \code{spend},
-\code{budget}, \code{target_reach} and \code{target_met}, the \code{method} used,
+\code{budget}, \code{target_reach} and \code{target_met}, the \code{method} used, the reach
+\code{model}, \code{reach_compatible_with_plan} (\code{FALSE} when the model's reach is
+below the largest audience of the channels with insertions; see Details),
 \code{global_optimum} (\code{TRUE} only for exhaustive search),
 \code{combinations_evaluated} and, for exhaustive search, a \code{search_table} with
 the spend, reach and effective reach of each evaluated allocation.
@@ -100,6 +102,24 @@ differently). Ties in effective reach are broken in favor of lower
 spend and then higher reach. For \code{objective = "min_cost"} the cheapest
 allocation that reaches \code{target_reach} is returned, and an error is raised
 when none does.
+
+The \code{"binomial"} model evaluates every allocation as a homogenized plan in
+which each insertion has the insertion-weighted mean audience. Its reach is
+therefore the reach of that homogenized plan, and it can be smaller than the
+audience of a single channel of the original plan. With audiences of 90 and
+10 people in a universe of 100 and one insertion in each channel, the
+Binomial reach is 75 people and the probability of two exposures is 0.25,
+while the first channel alone already reaches 90 people (the Sainsbury model,
+which keeps both audiences, gives 91 people and 0.09). A reach below the
+largest audience cannot be the reach of the plan, and \code{\link[=plan_metrics]{plan_metrics()}} rejects
+it. When the selected allocation has this property, the function still
+returns the allocation and the effective reach, which are results of the
+homogenized model and of nothing else, but it issues a warning (class
+\code{mediaPlanR_homogenized_reach_incompatible}), sets
+\code{reach_compatible_with_plan} to \code{FALSE} and leaves out of \code{metrics} the
+quantities that need a reach of the plan itself (\code{reach}, \code{reach_percent},
+\code{average_frequency} and \code{cost_per_thousand_reached}). The model \code{"sainsbury"}
+keeps the audience of each channel and does not have this limitation.
 
 The greedy heuristic repeatedly adds the move with the largest gain in
 effective reach per unit of cost. A move adds between one and

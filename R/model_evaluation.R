@@ -183,8 +183,9 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' @param predicted Either a supported model result whose `distribution` is a
 #'   data frame with `contacts` and `probability` or `percent` columns (for
 #'   example the results of [calc_csd()], [calc_msad()], [calc_cbd()],
-#'   [calc_mbd()], [calc_canex()] and [estimate_reach()]), or a data frame with
-#'   columns `contacts` and `predicted`. Data-frame predictions must use the
+#'   [calc_mbd()], [calc_canex()] and also of
+#'   [estimate_reach()]), or a data frame with columns `contacts` and
+#'   `predicted`. Data-frame predictions must use the
 #'   same schedule column when `schedule_col` is supplied.
 #' @param observed_scale Required declaration of the `observed` column:
 #'   `"count"`, `"probability"`, or `"percent"`. Counts may be weighted and
@@ -197,11 +198,15 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' @param sum_tolerance Maximum absolute departure from probability mass one
 #'   accepted for the total of each probability/percent distribution (in
 #'   probability units, so 0.005 is half a percentage point). The default
-#'   accepts ordinary publication rounding but rejects incomplete
-#'   distributions. The tolerance applies to the total only: no individual
-#'   probability may exceed one (or percentage exceed 100), whatever the
-#'   tolerance. Masses within the tolerance are used as supplied and are not
-#'   renormalized (see Details); counts, in contrast, are always normalized.
+#'   tolerates small deviations compatible with publication rounding and
+#'   rejects total-mass discrepancies larger than the stated threshold. It
+#'   cannot distinguish rounding from a small omitted tail: the analyst must
+#'   establish that both tables cover the same complete support, or identically
+#'   collapsed tails, before interpreting the comparison. The tolerance applies
+#'   to the total only: no individual probability may exceed one (or percentage
+#'   exceed 100), whatever the tolerance. Masses within the tolerance are used
+#'   as supplied and are not renormalized (see Details); counts, in contrast,
+#'   are always normalized.
 #' @param censored_last_level `FALSE` (default) when the last exposure level of
 #'   both distributions is an exact count. Set it to `TRUE` when it is a
 #'   collapsed tail ("`k` or more exposures", as when a Negative-Binomial table
@@ -219,13 +224,15 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #'     points) and `mean_contact_bias` (exposures per person). With
 #'     `censored_last_level = TRUE`, `mean_contact_bias` is `NA` and
 #'     `mean_censored_contact_bias` is added.
-#'   \item `by_schedule`: one row per schedule with `observed_reach`,
-#'     `predicted_reach`, `reach_signed_error` (predicted minus observed),
-#'     `reach_absolute_error`, `kim_relative_reach_error`,
-#'     `kim_distribution_error`, `total_variation`, `cell_mae`,
-#'     `observed_mean_contacts` and `predicted_mean_contacts` (plus
-#'     `observed_censored_mean` and `predicted_censored_mean` when the last
-#'     level is censored). All are proportions or exposures per person.
+#'   \item `by_schedule`: one row per schedule. The reaches are
+#'     `observed_reach` and `predicted_reach`. The errors in reach are
+#'     `reach_signed_error` (predicted minus observed), `reach_absolute_error`
+#'     and `kim_relative_reach_error`. The errors in the distribution are
+#'     `kim_distribution_error`, `total_variation` and `cell_mae`. The mean
+#'     numbers of exposures are `observed_mean_contacts` and
+#'     `predicted_mean_contacts`. When the last level is censored, the columns
+#'     `observed_censored_mean` and `predicted_censored_mean` are added.
+#'     All are proportions or exposures per person.
 #'   \item `aligned_distribution`: the observed and predicted probabilities by
 #'     schedule and exposure level, after normalizing counts and converting
 #'     percentages to probabilities.
@@ -250,12 +257,15 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' predictive-error measures, not inferential tests.
 #'
 #' The other elements of `summary` are, averaged over schedules:
-#' `mean_total_variation`, half the sum over all exposure levels (including
-#' zero) of the absolute difference between observed and predicted
-#' probabilities; `mean_cell_mae`, the mean absolute difference per exposure
-#' level; `mean_reach_absolute_error`, \eqn{|R_i^{obs}-R_i^{pred}|}; and
-#' `mean_contact_bias`, predicted minus observed mean number of exposures per
-#' person (positive when the model overestimates exposures).
+#' \itemize{
+#'   \item `mean_total_variation`: half the sum over all exposure levels
+#'     (including zero) of the absolute difference between observed and
+#'     predicted probabilities;
+#'   \item `mean_cell_mae`: the mean absolute difference per exposure level;
+#'   \item `mean_reach_absolute_error`: \eqn{|R_i^{obs}-R_i^{pred}|};
+#'   \item `mean_contact_bias`: predicted minus observed mean number of
+#'     exposures per person (positive when the model overestimates exposures).
+#' }
 #'
 #' Exact support equality is required. Open-tail NBD output is rejected because
 #' a cell such as `10+` is not equivalent to an exact ten-exposure cell. To
@@ -279,33 +289,40 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' of the rounded tables, not exactly of two normalized distributions;
 #' `input_mass` reports the supplied totals. This keeps the replication of
 #' published tables, which carry rounding, unaltered. Counts are always
-#' normalized.
+#' normalized. A total within `sum_tolerance` of one does not show that a table
+#' is complete: a mass of 0.996 can be rounding or a small omitted tail, and
+#' having every level up to the declared maximum does not show that no
+#' posterior tail was omitted. The total only rejects larger deficits.
+#' Whether both tables cover the same complete support, or identically
+#' collapsed tails, is a property of how the data were prepared and is the
+#' responsibility of the analyst.
 #'
 #' @references Kim, H. G. (2005). A Canonical Sequential Aggregation Media
 #' Model. Doctoral dissertation, The University of Texas at Austin, pp. 117-118.
 #' Handle 2152/1590 (University of Texas at Austin repository).
 #'
 #' @examples
-#' # Observations must be supplied explicitly. These are percentages from
-#' # Kim's Table 4.2.2.10.
+#' # Observations must be supplied explicitly. These counts are invented for
+#' # the example (they are not real data); there is one row per exposure level,
+#' # from zero to the total number of insertions, and zero exposures included.
+#' data(csd_example)
+#' csd <- do.call(calc_csd, csd_example)
 #' observed <- data.frame(
-#'   contacts = 0:6,
-#'   observed = c(38.41, 17.89, 39.66, 2.67, 1.36, 0, 0)
+#'   contacts = 0:9,
+#'   observed = c(520, 150, 130, 80, 50, 40, 20, 5, 3, 2)
 #' )
 #' predicted <- data.frame(
-#'   contacts = 0:6,
-#'   predicted = c(38.20, 18.57, 39.18, 2.49, 1.51, 0.05, 0.01)
+#'   contacts = 0:9,
+#'   predicted = 100 * csd$distribution$probability
 #' )
 #' evaluation <- evaluate_exposure_model(
 #'   observed, predicted,
-#'   observed_scale = "percent", predicted_scale = "percent"
+#'   observed_scale = "count", predicted_scale = "percent"
 #' )
 #' evaluation$summary[c("kim_aer", "kim_ape")]
 #'
 #' # A fitted model object can be passed directly as the prediction.
-#' data(csd_kim2005)
-#' csd <- do.call(calc_csd, csd_kim2005)
-#' evaluate_exposure_model(observed, csd, observed_scale = "percent")
+#' evaluate_exposure_model(observed, csd, observed_scale = "count")
 #'
 #' @export
 evaluate_exposure_model <- function(

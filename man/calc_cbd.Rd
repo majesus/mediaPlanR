@@ -32,7 +32,7 @@ permutation of the row indices. CBD does not use it: in Kim's
 specification the vehicles are conditionally independent given the (0,1)
 grid, so neither the reach nor the distribution depends on the order. The
 argument is accepted, validated and reported only so that the same call,
-and the same example data (for instance \link{csd_kim2005}), work for
+and the same example data (for instance \link{csd_example}), work for
 \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}.}
 
 \item{population}{Number of people in the population (a count, not a
@@ -234,10 +234,10 @@ or 0.5, instead of altering an invalid target.
 }
 
 \examples{
-# Same three-vehicle inputs as the CSD example of Kim (2005), so that CBD
-# can be compared with CSD and CANEX on identical data
-data(csd_kim2005)
-result <- do.call(calc_cbd, csd_kim2005)
+# Same three-vehicle inputs as the CSD example, so that CBD can be compared
+# with CSD and CANEX on identical data
+data(csd_example)
+result <- do.call(calc_cbd, csd_example)
 result$reach
 result$distribution
 

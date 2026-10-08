@@ -17,7 +17,8 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 #'
 #' Implements the Sainsbury model, which Aldás Manzano (1998, Section 3.2.2.2)
 #' reports as developed at the London Press Exchange and formalized by Caffyn
-#' and Sagovsky (1963), to calculate reach and the exposure distribution (and its
+#' and Sagovsky (1963) (a secondary citation: the attribution is Aldás
+#' Manzano's, and the original work was not consulted), to calculate reach and the exposure distribution (and its
 #' cumulative counterpart) of a set of advertising vehicles, with one or more
 #' insertions in each of them (argument `insertions`). The model assumes
 #' random duplication *and* random accumulation, homogeneous individual
@@ -182,7 +183,10 @@ calc_sainsbury <- function(audiences, population,
 #' vehicle, both models have a mean of one contact per person, but
 #' [calc_sainsbury()], which keeps the probability of each vehicle, gives a
 #' reach of 91% and the Binomial 75%. The difference is the effect of unequal
-#' audiences, not a numerical error.
+#' audiences, not a numerical error. The Binomial reach can even be smaller than
+#' the audience of a single vehicle (here, 75 people against the 90 of the larger
+#' vehicle): it is the reach of the homogenized model, not of the plan, so it is
+#' not a figure that the original schedule can have (see [plan_metrics()]).
 #'
 #' @return A list of class `"reach_binomial"` with components:
 #' \itemize{
@@ -587,9 +591,12 @@ calc_metheringham <- function(audiences, insertions, duplication_matrix,
       if (!used[i, j]) next
       lower <- max(0, audiences[i] - (population - audiences[j]))
       upper <- min(audiences[i], audiences[j])
-      tolerance <- 1e-9 * upper
+      # Rounding error of each side: the upper bound is one of the audiences,
+      # the lower bound is computed from the population.
+      lower_slack <- exact_constraint_slack(population)
+      upper_slack <- exact_constraint_slack(upper)
       value <- duplication_matrix[i, j]
-      if (value < lower - tolerance || value > upper + tolerance) {
+      if (value < lower - lower_slack || value > upper + upper_slack) {
         stop(sprintf(paste0(
           "duplication_matrix[%d, %d] must lie between %.6g and %.6g, the ",
           "bounds implied by the audiences and the population."),

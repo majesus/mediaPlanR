@@ -65,7 +65,7 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #'   specification the vehicles are conditionally independent given the (0,1)
 #'   grid, so neither the reach nor the distribution depends on the order. The
 #'   argument is accepted, validated and reported only so that the same call,
-#'   and the same example data (for instance [csd_kim2005]), work for
+#'   and the same example data (for instance [csd_example]), work for
 #'   [calc_csd()], [calc_msad()], [calc_cbd()] and [calc_mbd()].
 #' @param population Number of people in the population (a count, not a
 #'   proportion). It only converts probabilities into people: the `people`
@@ -192,10 +192,10 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' 10(4), 401-407. \doi{10.1080/07350015.1992.10509915}
 #'
 #' @examples
-#' # Same three-vehicle inputs as the CSD example of Kim (2005), so that CBD
-#' # can be compared with CSD and CANEX on identical data
-#' data(csd_kim2005)
-#' result <- do.call(calc_cbd, csd_kim2005)
+#' # Same three-vehicle inputs as the CSD example, so that CBD can be compared
+#' # with CSD and CANEX on identical data
+#' data(csd_example)
+#' result <- do.call(calc_cbd, csd_example)
 #' result$reach
 #' result$distribution
 #'

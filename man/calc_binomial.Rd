@@ -64,7 +64,10 @@ audiences of 10 and 90 people in a universe of 100 and one insertion in each
 vehicle, both models have a mean of one contact per person, but
 \code{\link[=calc_sainsbury]{calc_sainsbury()}}, which keeps the probability of each vehicle, gives a
 reach of 91\% and the Binomial 75\%. The difference is the effect of unequal
-audiences, not a numerical error.
+audiences, not a numerical error. The Binomial reach can even be smaller than
+the audience of a single vehicle (here, 75 people against the 90 of the larger
+vehicle): it is the reach of the homogenized model, not of the plan, so it is
+not a figure that the original schedule can have (see \code{\link[=plan_metrics]{plan_metrics()}}).
 }
 \examples{
 audiences <- c(300000, 400000, 200000)

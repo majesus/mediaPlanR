@@ -170,9 +170,8 @@ or 0.5, instead of altering an invalid target.
 }
 
 \examples{
-# Kim (2005), Tables 4.2.2.1-4.2.2.10: the order of Kim's worked example
-data(csd_kim2005)
-result <- do.call(calc_csd, csd_kim2005)
+data(csd_example)
+result <- do.call(calc_csd, csd_example)
 result$reach
 result$distribution
 

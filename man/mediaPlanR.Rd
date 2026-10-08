@@ -162,10 +162,11 @@ accumulation of one vehicle, \code{\link[=calc_beta_binomial]{calc_beta_binomial
 \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}, and the section "Domain of
 validity" of \code{\link[=calc_canex]{calc_canex()}}; (6) the count approximation
 \code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}}; (7) evaluation, \code{\link[=evaluate_exposure_model]{evaluate_exposure_model()}};
-and (8) optimization, \code{\link[=optimize_media_plan]{optimize_media_plan()}}. \code{vignette("mediaPlanR-intro")}
-gives worked examples of the planning workflow and of the models; it is
-the place for a longer teaching development, which the reference pages do not
-attempt.
+and (8) optimization, \code{\link[=optimize_media_plan]{optimize_media_plan()}}.
+
+The vignette \code{vignette("mediaPlanR-intro")} gives worked examples of the
+planning workflow and of the models; it is the place for a longer teaching
+development, which the reference pages do not attempt.
 }
 
 \section{Reach and exposure-distribution models}{

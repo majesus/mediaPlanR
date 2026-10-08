@@ -15,8 +15,13 @@ When supplied, average frequency
 and cost per thousand people reached are added to the plan totals. It must
 be compatible with the plan: at least the largest audience among the
 channels with insertions and at most the smaller of the population and the
-plan's impressions; otherwise the function stops with an error. It must
-refer to the same universe, period and allocation as the plan.}
+plan's impressions; otherwise the function stops with an error. These
+bounds are exact: the only slack is the rounding error of double
+arithmetic, so a value that is one person outside them is rejected,
+whatever the size of the universe. It must refer to the same universe,
+period and allocation as the plan. The reach of the \code{"binomial"} model of
+\code{\link[=estimate_reach]{estimate_reach()}} belongs to a homogenized plan and can fall below the
+largest audience; it is then rejected here (see \code{\link[=calc_binomial]{calc_binomial()}}).}
 }
 \value{
 A \code{media_plan_metrics} object: a list with \code{by_channel} (a data frame

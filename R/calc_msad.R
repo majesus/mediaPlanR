@@ -118,10 +118,8 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' Section 3.3.2.2, equation 3.106, for the Morgensztern reach formula.
 #'
 #' @examples
-#' # MSAD calculation derived from the inputs of Kim's CSD example. The
-#' # resulting MSAD values are not presented by Kim as a published benchmark.
-#' data(msad_kim2005)
-#' result <- do.call(calc_msad, msad_kim2005)
+#' data(msad_example)
+#' result <- do.call(calc_msad, msad_example)
 #' result$reach
 #'
 #' @seealso [calc_csd()] for the canonical alternative and [calc_mbd()] and

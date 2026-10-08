@@ -20,8 +20,7 @@ csd_example
 \description{
 List of arguments ready for \code{do.call(calc_csd, csd_example)}: a small
 three-vehicle scenario. Original illustrative data, not derived from any
-published source. For a dataset that reproduces published inputs
-for literature validation, see \link{csd_kim2005}.
+published source.
 }
 \examples{
 data(csd_example)
@@ -29,6 +28,6 @@ result <- do.call(calc_csd, csd_example)
 result$distribution
 }
 \seealso{
-\code{\link[=calc_csd]{calc_csd()}}, \link{csd_kim2005}, \link{msad_example}
+\code{\link[=calc_csd]{calc_csd()}}, \link{msad_example}
 }
 \keyword{datasets}

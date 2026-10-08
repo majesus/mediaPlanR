@@ -18,11 +18,14 @@ Description: Reproducible tools for cross-media reach and exposure-frequency
     distribution models of Danaher (1991) <doi:10.1177/002224379102800311>
     (canonical expansion), Leckenby and Rice (1986)
     <doi:10.1080/00913367.1986.10673014> (Morgensztern sequential
-    aggregation), Hyo Gyoo Kim (2005) (canonical sequential aggregation),
-    Heejin Kim (1994)
-    (conditional Beta distribution), and Cheong (2007) and Cheong, Leckenby and
-    Eakin (2011) <doi:10.2753/JOA0091-3367400101> (multivariate
-    Beta-Binomial). Also includes target-audience metrics, an explicitly
+    aggregation), Hyo Gyoo Kim (2005, doctoral dissertation, University of
+    Texas at Austin) (canonical sequential aggregation), Heejin Kim (1994,
+    doctoral dissertation, University of Texas at Austin) (conditional Beta
+    distribution), and Cheong (2007, doctoral dissertation, University of Texas
+    at Austin) and Cheong, Leckenby and Eakin (2011)
+    <doi:10.2753/JOA0091-3367400101> (multivariate Beta-Binomial). The three
+    dissertations have no DOI; their complete references are in the help
+    pages. Also includes target-audience metrics, an explicitly
     scoped Negative-Binomial count approximation, and budget-constrained
     optimization of effective reach that reports whether a global optimum was
     verified.

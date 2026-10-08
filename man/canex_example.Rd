@@ -21,8 +21,7 @@ canex_example
 \description{
 List of arguments ready for \code{do.call()} with \code{\link[=calc_canex]{calc_canex()}}: two vehicles
 with three and two insertions. Original illustrative data, not derived from
-any published source. For inputs taken from a published worked example, see
-\link{csd_kim2005}.
+any published source.
 }
 \examples{
 data(canex_example)

@@ -148,10 +148,11 @@
 #' [calc_msad()], [calc_cbd()] and [calc_mbd()], and the section "Domain of
 #' validity" of [calc_canex()]; (6) the count approximation
 #' [nbd_exposure_distribution()]; (7) evaluation, [evaluate_exposure_model()];
-#' and (8) optimization, [optimize_media_plan()]. `vignette("mediaPlanR-intro")`
-#' gives worked examples of the planning workflow and of the models; it is
-#' the place for a longer teaching development, which the reference pages do not
-#' attempt.
+#' and (8) optimization, [optimize_media_plan()].
+#'
+#' The vignette `vignette("mediaPlanR-intro")` gives worked examples of the
+#' planning workflow and of the models; it is the place for a longer teaching
+#' development, which the reference pages do not attempt.
 #'
 #' @section Reach and exposure-distribution models:
 #' Plans with one or more insertions in each of several vehicles, with random

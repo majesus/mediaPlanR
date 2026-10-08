@@ -4,12 +4,16 @@
 # the sum of the vehicles' means, and reach equal to one minus the zero cell.
 
 invariant_schedules <- function() {
-  data(csd_kim2005, package = "mediaPlanR", envir = environment())
-  data(mbd_cheong2007, package = "mediaPlanR", envir = environment())
   data(csd_example, package = "mediaPlanR", envir = environment())
   list(
-    kim2005 = csd_kim2005,
-    cheong2007 = mbd_cheong2007,
+    three_vehicles = list(
+      vehicles_data = data.frame(insertions = c(3, 1, 2),
+                                 R1 = c(0.20, 0.08, 0.12),
+                                 R2 = c(0.28, NA, 0.18)),
+      duplications = matrix(c(NA, 0.02, 0.03,
+                              0.02, NA, 0.015,
+                              0.03, 0.015, NA), 3, byrow = TRUE)
+    ),
     illustrative = csd_example,
     two_vehicles = list(
       vehicles_data = data.frame(insertions = c(3, 2), R1 = c(0.30, 0.20),
@@ -40,7 +44,7 @@ test_that("CSD, MSAD and MBD return valid distributions that preserve the mean",
     models <- c("calc_csd", "calc_msad")
     # MBD rejects some admissible-looking schedules with an informative error
     # (see "Domain of validity" in ?calc_canex), so it is checked where it runs.
-    if (name %in% c("cheong2007", "two_vehicles")) models <- c(models, "calc_mbd")
+    if (name %in% c("three_vehicles", "two_vehicles")) models <- c(models, "calc_mbd")
     for (model in models) {
       fit <- suppressWarnings(do.call(model, list(vd, dup, "given")))
       check_invariants(fit, vd, paste(model, name), mean_tolerance = 1e-9)

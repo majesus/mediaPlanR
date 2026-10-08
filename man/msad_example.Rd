@@ -19,14 +19,13 @@ msad_example
 \description{
 List of arguments ready for \code{do.call(calc_msad, msad_example)}: a small
 two-vehicle scenario. Original illustrative data, not derived from any
-published source. For a dataset that reproduces published inputs
-for literature validation, see \link{msad_kim2005}.
+published source.
 }
 \examples{
 data(msad_example)
 do.call(calc_msad, msad_example)
 }
 \seealso{
-\code{\link[=calc_msad]{calc_msad()}}, \link{msad_kim2005}
+\code{\link[=calc_msad]{calc_msad()}}
 }
 \keyword{datasets}

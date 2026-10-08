@@ -3,6 +3,17 @@
 # NA, NaN, Inf, wrong types and wrong lengths never surface as cryptic
 # base-R errors ("missing value where TRUE/FALSE needed").
 
+# Floating-point slack for constraints that must hold exactly: a set cannot be
+# smaller than one of its subsets, nor larger than the universe that contains
+# it. It covers the rounding error of double arithmetic only (a few units in
+# the last place of the magnitude involved, `scale`), so it is far below one
+# person for any realistic universe. It is not a measurement tolerance: a
+# violation by one person must always be reported. The slack is vectorized over
+# `scale`.
+exact_constraint_slack <- function(scale) {
+  64 * .Machine$double.eps * abs(scale)
+}
+
 # Wording of an admissible interval as list(adjective, trailing phrase), so
 # that messages read "one finite non-negative number" or "one finite number
 # in [0, 1]".
@@ -144,9 +155,12 @@ validate_duplication_inputs <- function(audiences, population,
     for (j in (i + 1L):n) {
       lower <- max(0, audiences[i] - (population - audiences[j]))
       upper <- min(audiences[i], audiences[j])
-      tolerance <- 1e-9 * upper
+      # Rounding error of each side: the upper bound is one of the audiences,
+      # the lower bound is computed from the population.
+      lower_slack <- exact_constraint_slack(population)
+      upper_slack <- exact_constraint_slack(upper)
       value <- duplication_matrix[i, j]
-      if (value < lower - tolerance || value > upper + tolerance) {
+      if (value < lower - lower_slack || value > upper + upper_slack) {
         stop(sprintf(paste0(
           "duplication_matrix[%d, %d] must lie between %.6g and %.6g, the ",
           "bounds implied by audiences %d and %d and the population."),

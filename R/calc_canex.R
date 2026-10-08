@@ -177,8 +177,8 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' `average_frequency` of the result is the mean of the returned (corrected)
 #' distribution divided by its reach, so `average_frequency * reach` equals
 #' `mean_exposures_result`, not the gross contacts per person of the input,
-#' `mean_exposures_expected`, which is what a GRP figure computed from the
-#' audiences measures. In the example above, the contacts of the input per
+#' which is what a GRP figure computed from the audiences measures
+#' (`mean_exposures_expected`). In the example above, the contacts of the input per
 #' person are 1 and those of the corrected distribution 1.0227. When
 #' `mean_exposures_result` and `mean_exposures_expected` differ, do not divide
 #' the input GRP by the corrected reach to obtain a frequency; report both
@@ -286,14 +286,13 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' result
 #' result$diagnostics
 #'
-#' # Inputs of the first two vehicles of Kim's (2005) worked example
-#' # (Tables 4.2.2.1 and 4.2.2.2), with a population of 500,000 people
+#' # Two vehicles with two insertions each, with a population of 500,000 people
 #' vehicles <- data.frame(
 #'   insertions = c(2, 2),
-#'   R1 = c(0.4902, 0.0333),
-#'   R2 = c(0.5805, 0.0502)
+#'   R1 = c(0.40, 0.05),
+#'   R2 = c(0.50, 0.08)
 #' )
-#' duplications <- matrix(c(NA, 0.0157, 0.0157, NA), nrow = 2)
+#' duplications <- matrix(c(NA, 0.02, 0.02, NA), nrow = 2)
 #' calc_canex(vehicles, duplications, population = 500000)$reach
 #'
 #' @seealso

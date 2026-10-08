@@ -20,8 +20,7 @@ mbd_example
 List of arguments ready for \code{do.call(calc_mbd, mbd_example)}: a small
 two-vehicle scenario. Original illustrative data, not derived from any
 published source. Two vehicles avoid the Beta-Binomial imputation
-of co-exposure that three or more vehicles require. For a three-vehicle
-literature-validation benchmark, see \link{mbd_cheong2007}.
+of co-exposure that three or more vehicles require.
 }
 \examples{
 data(mbd_example)
@@ -29,6 +28,6 @@ result <- do.call(calc_mbd, mbd_example)
 result$distribution
 }
 \seealso{
-\code{\link[=calc_mbd]{calc_mbd()}}, \link{mbd_cheong2007}
+\code{\link[=calc_mbd]{calc_mbd()}}
 }
 \keyword{datasets}
