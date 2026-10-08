@@ -14,22 +14,31 @@ calc_cbd(
 }
 \arguments{
 \item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2},
-with the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R1} strictly between zero and
-one, \verb{R1 <= R2 <= 2 * R1 - R1^2}, and \code{R2} may be \code{NA} only when
-\code{insertions} is one). At most 12 vehicles are supported.}
+with the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R1} and \code{R2} are proportions
+between 0 and 1, not percentages, \code{R1} is strictly between zero and one,
+\verb{R1 <= R2 <= 2 * R1 - R1^2}, and \code{R2} may be \code{NA} only when \code{insertions}
+is one; the function stops with an explanatory error if \code{R2} is outside
+that range). At most 12 vehicles are supported.}
 
-\item{duplications}{Symmetric matrix of pairwise one-insertion audience
-duplications, as proportions of the population. The diagonal is ignored.}
+\item{duplications}{Symmetric matrix whose element \verb{[i, j]} is the
+proportion of the population that is exposed to both vehicle \code{i} and
+vehicle \code{j} (one insertion in each), a number between 0 and 1 (not a
+percentage). It is not the proportion exposed to each vehicle separately.
+The diagonal is ignored.}
 
 \item{aggregation_order}{Either \code{"audience_desc"} (vehicles in decreasing
-order of one-insertion reach), \code{"given"} (the row order), or a
-permutation of the row indices. It is validated and reported for
-consistency with the other sequential models, but it does not affect the
-result: in Kim's specification the vehicles are conditionally independent
-given the (0,1) grid, so the distribution does not depend on the order.}
+order of one-insertion reach \code{R1}), \code{"given"} (the row order), or a
+permutation of the row indices. CBD does not use it: in Kim's
+specification the vehicles are conditionally independent given the (0,1)
+grid, so neither the reach nor the distribution depends on the order. The
+argument is accepted, validated and reported only so that the same call,
+and the same example data (for instance \link{csd_kim2005}), work for
+\code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}.}
 
-\item{population}{Positive population used only to express probabilities
-as people. The default, 1, leaves \code{people} equal to \code{probability}.}
+\item{population}{Number of people in the population (a count, not a
+proportion). It only converts probabilities into people: the \code{people}
+columns of the result are the probability times \code{population}, and with the
+default, 1, they equal the probability.}
 
 \item{tolerance}{Positive numerical tolerance for probability constraints.
 The Fréchet and triple-feasibility checks apply it relative to the smaller
@@ -130,6 +139,32 @@ vehicles is limited to 12.
 
 \section{Domain of validity}{
 
+In plain words. These models take the overlaps between vehicles
+(the duplications) from your data and use them to build the whole
+distribution of exposures. For that to be possible the overlaps you supply
+must be possible, and plausible together:
+\itemize{
+\item Two vehicles cannot overlap more than the smaller of their
+audiences, nor less than their audiences force them to (two audiences of
+60\% of the population must overlap by at least 20\%). If a duplication
+breaks these limits, the function stops with an error naming the pair:
+the data cannot be right and should be reviewed.
+\item The overlaps of three vehicles must also fit together. If they
+cannot, the function stops with an error naming the three vehicles.
+\item The models were built for the usual situation in which vehicles
+overlap at least as much as chance alone would produce, that is, at
+least the product of their audiences (two vehicles with audiences of 30\%
+and 20\% overlap by 6\% if people chose vehicles independently). When a
+pair overlaps clearly less than that, the results can differ a lot from
+one model to another, and the function issues a warning that names the
+pair.
+}
+An error means that the inputs are impossible: correct them. A warning does
+not invalidate the calculation, but it asks for caution: check the
+duplication of the pair named, which is often a measurement problem (see
+below), and compare the result with another model. The rest of this section
+gives the technical detail.
+
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
 as given and check them against the Fréchet bounds implied by the audiences
@@ -147,9 +182,15 @@ published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
 canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
 \code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
 under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
-expansion itself admits negative correlations. \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
-and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
-duplications.
+expansion itself admits negative correlations. Hong (1998, pp. 238-239) treats
+a null duplication as a measurement error and replaces it by
+\eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
+and random duplication over the pairs with non-zero observed duplication.
+The package does not implement this imputation: \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
+and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} estimate reach from a duplication matrix and
+do not impute its elements. If duplications are imputed beforehand, the
+result must be checked against the bounds described below. A null duplication
+is not always a measurement error: it can also be a genuine observation.
 
 Second, pairwise duplications that satisfy the Fréchet bounds can still be
 impossible jointly for three or more vehicles. For every triple of vehicles

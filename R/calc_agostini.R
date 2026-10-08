@@ -22,10 +22,12 @@
 #'
 #' @param audiences Numeric vector with the audience of each vehicle for one
 #'   insertion, in people.
-#' @param population Population size, in people.
-#' @param duplication_matrix Symmetric numeric matrix with the audience
-#'   duplicated between every pair of vehicles, in people. Diagonal values are
-#'   ignored.
+#' @param population Population size, in people. No audience can exceed it;
+#'   otherwise the function stops with an error.
+#' @param duplication_matrix Symmetric numeric matrix whose element `[i, j]` is
+#'   the number of people who are in the audience of both vehicle `i` and
+#'   vehicle `j` (one insertion in each), in people (not a proportion). Diagonal
+#'   values are ignored.
 #' @param k Agostini's empirical duplication coefficient. The default, 1.125,
 #'   is the value Agostini fitted to a 1957 French print readership survey and
 #'   found to work for French and US magazines. Other authors fitted other
@@ -33,8 +35,14 @@
 #'   calibrated to the media type analyzed whenever data allow it.
 #'
 #' @details
-#' Let \eqn{A = \sum_i A_i} be the gross audience and \eqn{D = \sum_{i<j}
-#' A_{ij}} the sum of the pairwise duplicated audiences. Agostini observed that
+#' Let \eqn{A = \sum_{i=1}^{m} A_i} be the gross audience (with \eqn{m} the
+#' number of vehicles), also called duplicated
+#' audience: the simple sum of the vehicle audiences, in which a person who
+#' belongs to the audiences of several vehicles is counted once for each of
+#' them (Aldás Manzano, 1998, "audiencia bruta"; Kim, 2005, "gross audience").
+#' It is not the reach, which counts each person once. Let
+#' \eqn{D = \sum_{i=1}^{m-1} \sum_{j=i+1}^{m} A_{ij}} be the sum of the
+#' duplicated audiences of every pair of vehicles, each pair counted once. Agostini observed that
 #' the ratio of reach to gross audience is a function of the ratio of
 #' duplication to gross audience, \eqn{R_m / A = 1 / (1 + k D / A)}, which
 #' gives
@@ -45,14 +53,19 @@
 #'
 #' The formula is empirical and can return a reach outside its logical range
 #' (below the largest audience, or above the population or the gross
-#' audience) when the duplications or `k` are not consistent with it. The
-#' value is then returned unchanged, with a warning.
+#' audience). This can happen because the duplications or `k` are not
+#' consistent with the formula, but also because the formula is an
+#' approximation: five independent vehicles that each reach 50% of the
+#' population, with a duplication of 25% in every pair (a valid joint
+#' distribution, with a true reach of 96.875%), give 117.6% with the default
+#' `k`. The value is then returned unchanged, with a warning.
 #'
 #' @return A list of class `"reach_agostini_duplication"` with components:
 #' \itemize{
 #'   \item `reach`: list with `percent` and `people`.
 #'   \item `k`: the duplication coefficient used.
-#'   \item `gross_audience`: sum of the vehicle audiences, in people.
+#'   \item `gross_audience`: sum of the vehicle audiences (duplicated people
+#'     counted once per vehicle), in people.
 #'   \item `total_duplication`: sum of the pairwise duplicated audiences, in
 #'     people.
 #'   \item `n_vehicles`: number of vehicles.

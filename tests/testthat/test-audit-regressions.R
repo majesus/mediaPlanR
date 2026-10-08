@@ -5,7 +5,7 @@ test_that("audit F08: classical models preserve scale and reject impossible over
   for (p in c(1e-11, 1e-16)) {
     expect_lt(abs(calc_sainsbury(p, 1)$reach$percent / (100 * p) - 1), 1e-12)
     expect_lt(abs(calc_binomial(p, 1)$reach$percent / (100 * p) - 1), 1e-12)
-    expect_lt(abs(calc_beta_binomial(p, p, 1, 2)$reach$percent / (100 * p) - 1), 1e-12)
+    expect_lt(abs(calc_beta_binomial(p, p, 2)$reach$percent / (100 * p) - 1), 1e-12)
     h <- calc_hofmans_accumulation(p, 1.5 * p, 3)
     expect_lt(abs(h$results$RN[3] / p - 1.8), 1e-12)
     m <- matrix(c(p, 0, p, p), 2)
@@ -31,7 +31,7 @@ test_that("audit F09: large finite counts keep scale or fail explicitly", {
   plan <- media_plan(data.frame(channel = c("A", "B"), audience = 1e308,
                                 insertions = 2, cost_per_insertion = 1), 1e308)
   expect_error(plan_metrics(plan), "finite|representable")
-  expect_error(calc_beta_binomial(0.3, 0.45, 1, 1e308), "n.*integer|n.*supported")
+  expect_error(calc_beta_binomial(0.3, 0.45, 1e308), "insertions.*integer|insertions.*supported")
 })
 
 test_that("audit F01: asymmetric duplications are rejected at every scale", {

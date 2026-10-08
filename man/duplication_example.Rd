@@ -3,15 +3,16 @@
 \docType{data}
 \name{duplication_example}
 \alias{duplication_example}
-\title{Example inputs for the Agostini and Hofmans duplication models}
+\title{Illustrative inputs for the Agostini and Hofmans duplication models}
 \format{
 A list with the components:
 \describe{
 \item{audiences}{Numeric vector with the audience of each of three
 vehicles, in people per insertion.}
 \item{population}{Population size, in people.}
-\item{duplication_matrix}{Symmetric matrix with the audience duplicated
-between every pair of vehicles, in people. The diagonal is not used.}
+\item{duplication_matrix}{Symmetric matrix whose element \verb{[i, j]} is the
+number of people in the audience of both vehicle \code{i} and vehicle \code{j}, in
+people. The diagonal is not used.}
 }
 }
 \usage{

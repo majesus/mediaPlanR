@@ -3,23 +3,22 @@
 \docType{data}
 \name{beta_binomial_example}
 \alias{beta_binomial_example}
-\title{Example inputs for the Beta-Binomial model}
+\title{Illustrative inputs for the Beta-Binomial model}
 \format{
 A list with the components:
 \describe{
-\item{A1}{Vehicle audience after the first insertion, in people.}
-\item{A2}{Cumulative vehicle audience after the second insertion, in
-people.}
-\item{P}{Population size, in people.}
-\item{n}{Total number of planned insertions.}
+\item{R1}{Reach after the first insertion, as a proportion.}
+\item{R2}{Cumulative reach after the second insertion, as a proportion.}
+\item{insertions}{Total number of planned insertions.}
+\item{population}{Population size, in people.}
 }
 }
 \usage{
 beta_binomial_example
 }
 \description{
-List of arguments for \code{\link[=calc_beta_binomial]{calc_beta_binomial()}}, ready for \code{do.call()}.
-Original illustrative data, not derived from any published source.
+List of arguments ready for \code{do.call()} with \code{\link[=calc_beta_binomial]{calc_beta_binomial()}}. Original
+illustrative data, not derived from any published source.
 }
 \examples{
 data(beta_binomial_example)

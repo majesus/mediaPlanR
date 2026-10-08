@@ -79,7 +79,8 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #'   ordinary reach). `"min_cost"` minimizes spend, within the budget, subject to
 #'   effective reach being at least `target_reach`.
 #' @param target_reach Required effective reach, as a proportion of the
-#'   population between zero and one, for `objective = "min_cost"`.
+#'   population between zero and one (0.40 for 40%, not 40), for
+#'   `objective = "min_cost"`.
 #' @param effective_frequency Effective frequency: the minimum number of
 #'   exposures, \eqn{f}, that a person needs to count as effectively reached
 #'   (a positive integer, default 1). Effective reach is the proportion of the
@@ -87,15 +88,20 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #'   more times; it is not the proportion exposed exactly \eqn{f} times.
 #' @param max_insertions Integer vector with the maximum number of insertions
 #'   allowed in each channel, in the order of the rows of the plan.
-#' @param model `"sainsbury"` or `"binomial"`; see [estimate_reach()].
-#'   Candidate allocations routinely place several insertions in the same
+#' @param model `"sainsbury"` or `"binomial"`; see [estimate_reach()]. Only
+#'   these two models can be evaluated for every candidate allocation, because
+#'   they need only the audiences and the insertions that the plan contains;
+#'   the models that need observed duplications or the reach after two
+#'   insertions would require those data for every possible allocation.
+#'   Candidate allocations also routinely place several insertions in the same
 #'   vehicle, so the Negative-Binomial approximation, which is scoped to
 #'   continuous exposure processes and not to finite schedules, is not offered.
 #' @param method `"exact"`, `"greedy"` or `"auto"`, which uses exhaustive
 #'   search when the number of allocations does not exceed `max_combinations`
 #'   and the greedy heuristic otherwise.
-#' @param max_combinations Maximum number of allocations, `prod(max_insertions
-#'   + 1)`, allowed for exhaustive search.
+#' @param max_combinations Maximum number of allocations allowed for exhaustive
+#'   search. The number of allocations is the product, over the channels, of
+#'   one plus the maximum insertions of the channel (`prod(max_insertions + 1)`).
 #'
 #' @details
 #' Exhaustive search evaluates every allocation within `max_insertions` whose
@@ -176,7 +182,8 @@ optimize_media_plan <- function(plan, budget,
       stop("min_cost requires a target_reach between zero and one.",
            call. = FALSE)
     }
-    assert_number(target_reach, "target_reach", min = 0, max = 1)
+    assert_number(target_reach, "target_reach", min = 0, max = 1,
+                  proportion = TRUE)
   }
   assert_number(max_combinations, "max_combinations", min = 1)
 

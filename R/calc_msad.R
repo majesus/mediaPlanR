@@ -33,17 +33,27 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #'
 #' @param vehicles_data Data frame with one row per vehicle (at least two rows)
 #'   and columns `insertions` (planned insertions, a positive integer), `R1` and
-#'   `R2`. `R1` is the reach after one insertion, a proportion strictly between
-#'   zero and one, and `R2` the cumulative reach after two insertions, a
-#'   proportion with `R1 <= R2 <= 2 * R1 - R1^2`. `R2` may be `NA` only when
-#'   `insertions` is one.
-#' @param duplications Symmetric matrix of pairwise one-insertion audience
-#'   duplications, as proportions of the population. The diagonal is ignored.
+#'   `R2`. `R1` is the reach after one insertion, a proportion between 0 and 1
+#'   (not a percentage) and strictly between zero and one, and `R2` the
+#'   cumulative reach after two insertions (the proportion exposed at least
+#'   once in two insertions), a proportion with `R1 <= R2 <= 2 * R1 - R1^2`. If
+#'   `R2` is outside that range the function stops with an explanatory error.
+#'   `R2` may be `NA` only when `insertions` is one.
+#' @param duplications Symmetric matrix whose element `[i, j]` is the
+#'   proportion of the population that is exposed to both vehicle `i` and
+#'   vehicle `j` (one insertion in each), a number between 0 and 1 (not a
+#'   percentage). It is not the proportion exposed to each vehicle separately.
+#'   The diagonal is ignored.
 #' @param aggregation_order Either `"audience_desc"` (Kim's larger-audience-
-#'   first rule), `"given"` (the row order), or a permutation of the row
-#'   indices.
-#' @param population Positive population used only to express probabilities
-#'   as people. The default, 1, leaves `people` equal to `probability`.
+#'   first rule: vehicles in decreasing order of one-insertion reach `R1`),
+#'   `"given"` (the row order), or a permutation of the row indices. The
+#'   vehicles are combined one at a time in this order. The order does not
+#'   change the reach of the whole schedule but can change the exposure
+#'   distribution.
+#' @param population Number of people in the population (a count, not a
+#'   proportion). It only converts probabilities into people: the `people`
+#'   columns of the result are the probability times `population`, and with the
+#'   default, 1, they equal the probability.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'   The Fréchet and triple-feasibility checks apply it relative to the smaller
 #'   audience involved.
@@ -53,16 +63,19 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #'   (`contacts`, `probability`, `percent`, `people` and
 #'   `cumulative_probability`), the `vehicle_marginals`, the one-insertion
 #'   `vehicle_reach`, the `aggregation_order` and `aggregation_rule`, the
-#'   aggregation `steps` and numerical `diagnostics`.
+#'   aggregation `steps` and numerical `diagnostics` (see [calc_csd()] for
+#'   `gross_mean_contacts`, `distribution_mean_contacts` and `mean_error`).
 #'
 #' @details
-#' For a subset of vehicles, the Morgensztern reach is
-#' \deqn{R_m = \frac{(\sum_i R_{n_i})^2}{\sum_i R_{n_i} +
-#' \sum_{i<j} K_{ij} A_{ij} R_{n_i} R_{n_j} / (A_i A_j)},}
+#' For a subset of \eqn{m} vehicles, the Morgensztern reach is
+#' \deqn{R_m = \frac{(\sum_{i=1}^{m} R_{n_i})^2}{\sum_{i=1}^{m} R_{n_i} +
+#' \sum_{i=1}^{m-1} \sum_{j=i+1}^{m} K_{ij} A_{ij} R_{n_i} R_{n_j} /
+#' (A_i A_j)},}
 #' with \eqn{K_{ij}=(A_i+A_j)/(A_i+A_j-A_{ij})}, where \eqn{R_{n_i}} is the
 #' reach of vehicle \eqn{i} for its own \eqn{n_i} insertions, \eqn{A_i} its
 #' one-insertion audience and \eqn{A_{ij}} the one-insertion duplication of
-#' vehicles \eqn{i} and \eqn{j}, all as proportions of the population. At every aggregation step the joint table is
+#' vehicles \eqn{i} and \eqn{j}, all as proportions of the population. The
+#' double sum runs over every pair of vehicles. At every aggregation step the joint table is
 #' conformed to the two input marginal distributions and to the Morgensztern
 #' union reach. Consequently all probabilities remain non-negative, the
 #' margins are preserved, and the zero-exposure probability is exactly

@@ -11,14 +11,18 @@
 # distributions.
 print_reach_report <- function(title, description, reach_percent, reach_people,
                                distribution = NULL, cumulative = NULL,
-                               parameters = NULL, notes = character(0)) {
+                               parameters = NULL, notes = character(0),
+                               show_people = TRUE) {
+  people_text <- function(people) {
+    if (show_people) sprintf(" (%.0f people)", people) else ""
+  }
   cat(title, "\n", sep = "")
   cat(strrep("=", nchar(title)), "\n", sep = "")
   cat("Description: ", description, "\n\n", sep = "")
 
   cat("HEADLINE METRICS:\n")
   cat("-----------------\n")
-  cat(sprintf("Total reach: %.2f%% (%.0f people)\n", reach_percent, reach_people))
+  cat(sprintf("Total reach: %.2f%%%s\n", reach_percent, people_text(reach_people)))
 
   if (!is.null(parameters) && length(parameters)) {
     cat("\nMODEL PARAMETERS:\n")
@@ -37,9 +41,9 @@ print_reach_report <- function(title, description, reach_percent, reach_people,
     cat("----------------------\n")
     cat("(Percentage of the population receiving exactly N exposures)\n")
     for (i in seq_along(distribution$percent)) {
-      cat(sprintf("%d exposure%s: %.2f%% (%.0f people)\n",
+      cat(sprintf("%d exposure%s: %.2f%%%s\n",
                   contacts[i], if (contacts[i] == 1) "" else "s",
-                  distribution$percent[i], distribution$people[i]))
+                  distribution$percent[i], people_text(distribution$people[i])))
     }
   }
 
@@ -49,9 +53,9 @@ print_reach_report <- function(title, description, reach_percent, reach_people,
     cat("-------------------------\n")
     cat("(Percentage of the population receiving N or more exposures)\n")
     for (i in seq_along(cumulative$percent)) {
-      cat(sprintf(">= %d exposure%s: %.2f%% (%.0f people)\n",
+      cat(sprintf(">= %d exposure%s: %.2f%%%s\n",
                   contacts[i], if (contacts[i] == 1) "" else "s",
-                  cumulative$percent[i], cumulative$people[i]))
+                  cumulative$percent[i], people_text(cumulative$people[i])))
     }
   }
 

@@ -31,7 +31,7 @@ test_that("installed loading preserves process state and optional packages stay 
     "m <- matrix(c(NA, 0.08, 0.08, NA), 2)",
     "for (f in c(calc_csd, calc_cbd, calc_msad, calc_mbd)) stopifnot(abs(sum(f(d, m)$distribution$probability) - 1) < 1e-9)",
     "names(d)[1] <- 'k'; stopifnot(is.finite(calc_canex(d, m)$average_frequency))",
-    "stopifnot(is.finite(calc_beta_binomial(A1 = 5e5, A2 = 5.5e5, P = 1e6, n = 5)$reach$probability))",
+    "stopifnot(is.finite(calc_beta_binomial(R1 = 0.5, R2 = 0.55, insertions = 5, population = 1e6)$reach$probability))",
     "cat('OPTIONAL_LOADED:', any(c('extraDistr', 'ggplot2') %in% loadedNamespaces()), '\\n')",
     sprintf(".libPaths(c(%s, .Library))", deparse(dirname(installed))),
     "if (!requireNamespace('ggplot2', quietly = TRUE)) stopifnot(is.null(calc_hofmans_accumulation(0.06, 0.103, 5)$plot))"

@@ -3,13 +3,14 @@
 \docType{data}
 \name{msad_kim2005}
 \alias{msad_kim2005}
-\title{Kim's (2005) inputs for the MSAD model}
+\title{Published inputs for the MSAD model (Kim, 2005)}
 \format{
 A list with the components:
 \describe{
 \item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2}
 for three vehicles.}
-\item{duplications}{Symmetric matrix of one-insertion duplications.}
+\item{duplications}{Symmetric matrix of proportions of the population
+exposed to both vehicles of each pair (one insertion in each).}
 \item{aggregation_order}{The order of aggregation, \code{1:3}.}
 }
 }

@@ -3,22 +3,25 @@
 \docType{data}
 \name{bbd_reach_example}
 \alias{bbd_reach_example}
-\title{Example inputs for fitting a Beta-Binomial to an external reach}
+\title{Illustrative inputs for fitting a Beta-Binomial to an external reach}
 \format{
 A list with the components:
 \describe{
-\item{insertions}{Number of insertions in each of three vehicles.}
-\item{audiences}{Audience of each vehicle, in people per insertion.}
+\item{insertions}{Number of insertions in each vehicle (three vehicles in
+this example; \code{\link[=fit_bbd_to_reach]{fit_bbd_to_reach()}} accepts any number).}
+\item{audiences}{Audience of each vehicle, in people per insertion (one
+value per vehicle).}
 \item{reach}{External schedule reach, in people.}
-\item{universe}{Universe size, in people.}
+\item{population}{Population size, in people.}
 }
 }
 \usage{
 bbd_reach_example
 }
 \description{
-List of arguments for \code{\link[=fit_bbd_to_reach]{fit_bbd_to_reach()}}, ready for \code{do.call()}. Original
-illustrative data, not derived from any published source.
+List of arguments ready for \code{do.call()} with \code{\link[=fit_bbd_to_reach]{fit_bbd_to_reach()}}: three
+vehicles and an external reach. Original illustrative data, not derived from
+any published source.
 }
 \examples{
 data(bbd_reach_example)

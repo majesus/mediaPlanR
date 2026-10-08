@@ -3,13 +3,14 @@
 \docType{data}
 \name{csd_example}
 \alias{csd_example}
-\title{Illustrative example inputs for the CSD model}
+\title{Illustrative inputs for the CSD model}
 \format{
 A list with the components:
 \describe{
 \item{vehicles_data}{Three rows with columns \code{insertions}, \code{R1} and
 \code{R2}.}
-\item{duplications}{Symmetric matrix of one-insertion duplications.}
+\item{duplications}{Symmetric matrix of proportions of the population
+exposed to both vehicles of each pair (one insertion in each).}
 \item{aggregation_order}{The order of aggregation, \code{1:3}.}
 }
 }
@@ -17,9 +18,9 @@ A list with the components:
 csd_example
 }
 \description{
-A small, self-contained three-vehicle scenario ready for
-\code{do.call(calc_csd, csd_example)}. Original illustrative data, not derived
-from any published source. For a dataset that reproduces published inputs
+List of arguments ready for \code{do.call(calc_csd, csd_example)}: a small
+three-vehicle scenario. Original illustrative data, not derived from any
+published source. For a dataset that reproduces published inputs
 for literature validation, see \link{csd_kim2005}.
 }
 \examples{

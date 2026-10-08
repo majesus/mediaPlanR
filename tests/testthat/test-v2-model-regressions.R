@@ -28,14 +28,14 @@ test_that("Hofmans accumulation return value matches its documented contract", {
   expect_s3_class(result, "reach_hofmans_accumulation")
   expect_named(result, c("results", "parameters", "plot"))
   expect_named(result$parameters, c("k", "d", "alpha", "R3"))
-  expect_named(result$results, c("N", "RN"))
+  expect_named(result$results, c("insertions", "RN"))
 })
 
 test_that("one-dimensional BBD calibration preserves R1 and reaches its target", {
   skip_if_not_installed("extraDistr")
   truth <- extraDistr::dbbinom(0:6, size = 6, alpha = 0.8, beta = 1.2)
   target <- sum(truth[4:7])
-  fit <- calibrate_bbd(first_reach = 0.4, target_reach = target,
+  fit <- calibrate_bbd(R1 = 0.4, target_reach = target,
                        frequency = 3, max_insertions = 6,
                        type = "at_least", tolerance = 1e-5)
   expect_s3_class(fit, "bbd_calibration")
@@ -45,7 +45,7 @@ test_that("one-dimensional BBD calibration preserves R1 and reaches its target",
 })
 
 test_that("BBD calibration validates its arguments", {
-  expect_error(calibrate_bbd(NA, 0.5, 2, 6), "first_reach")
+  expect_error(calibrate_bbd(NA, 0.5, 2, 6), "R1")
   expect_error(calibrate_bbd(0.3, 1, 2, 6), "target_reach")
   expect_error(calibrate_bbd(0.3, 0.5, NA, 6), "frequency")
   expect_error(calibrate_bbd(0.3, 0.5, 3, NA), "max_insertions")

@@ -4,20 +4,24 @@
 \alias{calc_hofmans_accumulation}
 \title{Cumulative reach under Hofmans' accumulation model}
 \usage{
-calc_hofmans_accumulation(R1, R2, N, R3 = NULL, show_steps = FALSE)
+calc_hofmans_accumulation(R1, R2, insertions, R3 = NULL, show_steps = FALSE)
 }
 \arguments{
-\item{R1}{Reach after the first insertion, as a proportion in (0, 1].}
+\item{R1}{Reach after the first insertion, as a proportion between 0 and 1
+(not a percentage), in (0, 1].}
 
 \item{R2}{Cumulative reach after the second insertion, as a proportion
-with \verb{R1 < R2 < 2 * R1}.}
+(not a percentage) with \verb{R1 < R2 < 2 * R1} and \code{R2 <= 1}.}
 
-\item{N}{Number of insertions up to which the cumulative reach is computed,
-an integer of at least 2.}
+\item{insertions}{Number of insertions in the vehicle up to which the
+cumulative reach is computed (\eqn{N} in the formulas), an integer of at
+least 2 (at least 3 when \code{R3} is supplied).}
 
 \item{R3}{Optional cumulative reach after the third insertion, as a
-proportion with \verb{R2 < R3 < 3 * R1}. When supplied, it is used to estimate
-the exponent \code{alpha} of Hofmans' variable coefficient (see Details).}
+proportion (not a percentage) with \verb{R2 < R3 < 3 * R1} and \code{R3 <= 1}. It is
+observed data, like \code{R1} and \code{R2}, not something the function estimates:
+when supplied, the exponent \code{alpha} of Hofmans' variable coefficient is
+estimated from it, so that the curve reproduces \code{R3} (see Details).}
 
 \item{show_steps}{Logical. If \code{TRUE}, prints the parameters \code{k}, \code{d} and
 \code{alpha} and the table of cumulative reach.}
@@ -25,7 +29,7 @@ the exponent \code{alpha} of Hofmans' variable coefficient (see Details).}
 \value{
 A list of class \code{"reach_hofmans_accumulation"} with components:
 \itemize{
-\item \code{results}: data frame with \code{N} (number of insertions) and \code{RN}
+\item \code{results}: data frame with \code{insertions} (number of insertions) and \code{RN}
 (cumulative reach, as a proportion).
 \item \code{parameters}: list with \code{k}, \code{d}, \code{alpha} and \code{R3} (\code{NA} when not
 supplied).
@@ -62,15 +66,21 @@ reproduces \code{R3} exactly.
 
 The model assumes a constant reach per insertion (\code{R1}) and a constant
 duplication between every pair of insertions.
+
+Valid \code{R1} and \code{R2} do not guarantee a valid curve: the extrapolation can
+decrease, exceed 1 or exceed \eqn{N R_1}. For example, \code{R1 = 0.60}, \code{R2 = 0.84}
+and \code{N = 4} give a cumulative reach of 1.05 at \code{N = 4}. The curve is then
+returned unchanged, with a warning.
 }
 \examples{
 # Constant-coefficient model (equation 3.11)
-result <- calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, N = 5)
+result <- calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, insertions = 5)
 result$results
 result$parameters
 
 # With an observed third insertion, Hofmans' exponent is estimated
-calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, N = 5, R3 = 0.135)$parameters
+calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, insertions = 5,
+                         R3 = 0.135)$parameters
 
 }
 \references{

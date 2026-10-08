@@ -49,19 +49,28 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' insertions.
 #'
 #' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
-#'   with the same convention as [calc_csd()] (`R1` strictly between zero and
-#'   one, `R1 <= R2 <= 2 * R1 - R1^2`, and `R2` may be `NA` only when
-#'   `insertions` is one). At most 12 vehicles are supported.
-#' @param duplications Symmetric matrix of pairwise one-insertion audience
-#'   duplications, as proportions of the population. The diagonal is ignored.
+#'   with the same convention as [calc_csd()] (`R1` and `R2` are proportions
+#'   between 0 and 1, not percentages, `R1` is strictly between zero and one,
+#'   `R1 <= R2 <= 2 * R1 - R1^2`, and `R2` may be `NA` only when `insertions`
+#'   is one; the function stops with an explanatory error if `R2` is outside
+#'   that range). At most 12 vehicles are supported.
+#' @param duplications Symmetric matrix whose element `[i, j]` is the
+#'   proportion of the population that is exposed to both vehicle `i` and
+#'   vehicle `j` (one insertion in each), a number between 0 and 1 (not a
+#'   percentage). It is not the proportion exposed to each vehicle separately.
+#'   The diagonal is ignored.
 #' @param aggregation_order Either `"audience_desc"` (vehicles in decreasing
-#'   order of one-insertion reach), `"given"` (the row order), or a
-#'   permutation of the row indices. It is validated and reported for
-#'   consistency with the other sequential models, but it does not affect the
-#'   result: in Kim's specification the vehicles are conditionally independent
-#'   given the (0,1) grid, so the distribution does not depend on the order.
-#' @param population Positive population used only to express probabilities
-#'   as people. The default, 1, leaves `people` equal to `probability`.
+#'   order of one-insertion reach `R1`), `"given"` (the row order), or a
+#'   permutation of the row indices. CBD does not use it: in Kim's
+#'   specification the vehicles are conditionally independent given the (0,1)
+#'   grid, so neither the reach nor the distribution depends on the order. The
+#'   argument is accepted, validated and reported only so that the same call,
+#'   and the same example data (for instance [csd_kim2005]), work for
+#'   [calc_csd()], [calc_msad()], [calc_cbd()] and [calc_mbd()].
+#' @param population Number of people in the population (a count, not a
+#'   proportion). It only converts probabilities into people: the `people`
+#'   columns of the result are the probability times `population`, and with the
+#'   default, 1, they equal the probability.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'   The Fréchet and triple-feasibility checks apply it relative to the smaller
 #'   audience involved.
@@ -356,7 +365,8 @@ print.reach_cbd <- function(x, full = TRUE, max_rows = 30L, ...) {
       paste("between-vehicle duplication on the (0,1) grid of the first",
             "insertion, then each vehicle's Beta-Binomial conditioned on",
             "that state"),
-      parameters = list("Aggregation order" = x$aggregation_order,
+      parameters = list("Aggregation order (reported only; it does not affect CBD)" =
+                          x$aggregation_order,
                         "Aggregation rule" = x$aggregation_rule),
       tables = list("Vehicles" = x$vehicle_expansion),
       diagnostics = c(

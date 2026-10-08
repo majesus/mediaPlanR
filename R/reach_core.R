@@ -55,6 +55,19 @@ new_reach_result <- function(probability, population, model, parameters = list()
 #' reads `audience`, `insertions` and `population` from the plan and calls the
 #' requested model directly, so both share a single implementation.
 #'
+#' Why only these two models: a `media_plan` holds, for each channel, only an
+#' audience, a number of insertions and a cost. [calc_sainsbury()] and
+#' [calc_binomial()] are the models that need nothing else. The other models
+#' need data that a plan does not contain: the observed duplication between
+#' vehicles ([calc_agostini_duplication()], [calc_hofmans_duplication()],
+#' [calc_metheringham()], [calc_canex()], [calc_csd()], [calc_msad()],
+#' [calc_cbd()], [calc_mbd()]) or the reach after two insertions
+#' ([calc_beta_binomial()], [calc_hofmans_accumulation()]). Run those models
+#' directly with their own inputs. Comparing the two models here shows the
+#' effect of unequal vehicle audiences at constant random duplication (see
+#' [compare_reach_models()]); comparing either with observed data, or with
+#' another model, is done with [evaluate_exposure_model()].
+#'
 #' @param plan A `media_plan` object.
 #' @param model `"sainsbury"` (default) runs [calc_sainsbury()]: heterogeneous
 #'   vehicle probabilities combined by the exact Poisson-binomial convolution.
@@ -67,7 +80,7 @@ new_reach_result <- function(probability, population, model, parameters = list()
 #' @return A `media_reach` object: a list with the `model`, the `population`,
 #'   `reach` (a data frame with `probability`, `percent` and `people`),
 #'   `distribution` (`contacts`, `probability`, `percent` and `people` for zero
-#'   to `N` exposures), `cumulative` (`min_contacts`, `probability`, `percent`
+#'   up to the total number of insertions `N`), `cumulative` (`min_contacts`, `probability`, `percent`
 #'   and `people` for at least `min_contacts` exposures), `average_frequency`
 #'   (average exposures among the people reached) and model `parameters`.
 #'

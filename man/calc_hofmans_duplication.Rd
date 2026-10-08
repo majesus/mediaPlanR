@@ -10,18 +10,21 @@ calc_hofmans_duplication(audiences, population, duplication_matrix)
 \item{audiences}{Numeric vector with the audience of each vehicle for one
 insertion, in people.}
 
-\item{population}{Population size, in people.}
+\item{population}{Population size, in people. No audience can exceed it;
+otherwise the function stops with an error.}
 
-\item{duplication_matrix}{Symmetric numeric matrix with the audience
-duplicated between every pair of vehicles, in people. Diagonal values are
-ignored.}
+\item{duplication_matrix}{Symmetric numeric matrix whose element \verb{[i, j]} is
+the number of people who are in the audience of both vehicle \code{i} and
+vehicle \code{j} (one insertion in each), in people (not a proportion). Diagonal
+values are ignored.}
 }
 \value{
 A list of class \code{"reach_hofmans_duplication"} with components:
 \itemize{
 \item \code{reach}: list with \code{percent} and \code{people}.
-\item \code{gross_audience}: sum of the vehicle audiences, in people.
-\item \code{weighted_duplication}: the sum \eqn{\sum_{i<j} k_{ij} A_{ij}}, in
+\item \code{gross_audience}: sum of the vehicle audiences (duplicated people
+counted once per vehicle), in people.
+\item \code{weighted_duplication}: the sum \eqn{\sum_{i=1}^{m-1} \sum_{j=i+1}^{m} k_{ij} A_{ij}}, in
 people.
 \item \code{n_vehicles}: number of vehicles.
 }
@@ -42,12 +45,19 @@ For two vehicles, reach is exactly \eqn{A_1 + A_2 - A_{12}}. Equating that
 value to Agostini's formula gives the coefficient
 \eqn{k_{ij} = (A_i + A_j) / (A_i + A_j - A_{ij})}, which Hofmans applies to
 every pair of a plan with \eqn{m} vehicles:
-\deqn{R_m = \frac{(\sum_i A_i)^2}{\sum_i A_i + \sum_{i<j} k_{ij} A_{ij}}.}
+\deqn{R_m = \frac{(\sum_{i=1}^{m} A_i)^2}{\sum_{i=1}^{m} A_i +
+\sum_{i=1}^{m-1} \sum_{j=i+1}^{m} k_{ij} A_{ij}}.}
+The double sum runs over every pair of vehicles, each pair counted once.
 
 The formula is empirical and can return a reach outside its logical range
 (below the largest audience, or above the population or the gross
-audience) when the duplications are not mutually consistent. The value is
-then returned unchanged, with a warning.
+audience). This can happen because the duplications are not mutually
+consistent, but also because the formula is an approximation: five
+independent vehicles that each reach 50\% of the population, with a
+duplication of 25\% in every pair (data that come from a valid joint
+distribution, with a true reach of 96.875\%), give a reach of 107.14\%. The
+value is then returned unchanged, with a warning, so that an out-of-range
+result is not attributed automatically to the input data.
 }
 \examples{
 data(duplication_example)

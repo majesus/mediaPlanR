@@ -40,6 +40,14 @@ exposed N times or more, for each N), and numerical diagnostics.
 With \code{full = FALSE}, a compact summary: reach, average frequency,
 aggregation order and numerical diagnostics.
 }
+\details{
+Every result class has its own print method, because the objects are long
+lists and each model reports different intermediate results: CSD and MSAD
+list the vehicles and the aggregation steps (CSD also the canonical
+correlations between vehicles), CBD lists how each vehicle is modeled and
+the canonical zero probability, and MBD lists the peeling steps. The four
+methods are documented together on this page.
+}
 \examples{
 data(csd_kim2005)
 csd <- do.call(calc_csd, csd_kim2005)

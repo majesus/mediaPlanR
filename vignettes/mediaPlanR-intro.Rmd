@@ -75,7 +75,11 @@ Chandon, 1976, as reviewed in Aldás Manzano, 1998, Sections 3.3.1.1 and
 3.3.1.2, where it is cited as Chandon, 1985). It is also what allows them to
 run without any observed duplication data. With one insertion per vehicle,
 both reduce to their one-insertion-per-vehicle formulation (Aldás Manzano,
-1998, Sections 3.2.2.1 and 3.2.2.2).
+1998, Sections 3.2.2.1 and 3.2.2.2). A plan stores only an audience, a number of
+insertions and a cost for each channel, so only these two models, which need
+nothing else, can be run from it; the other models need observed duplications
+or the reach after two insertions, and are called directly with their own
+inputs.
 
 ### Optimization with an optimality diagnostic
 
@@ -112,13 +116,40 @@ is reached, and how many times, by a given media plan?* They differ in the
 **shape of plan** they were derived for, and in their assumptions about the
 **duplication** of audiences across vehicles and about the **heterogeneity** of
 individual exposure probabilities. Plan shape follows Aldás Manzano's (1998)
-three-way split, which the package keeps visible in its function names.
+three-way split. The two Hofmans models carry their domain in the function
+name (`calc_hofmans_accumulation()`, `calc_hofmans_duplication()`) because they
+are unrelated models; `calc_beta_binomial()` is also an accumulation model,
+although its name, which is the standard one in the literature, does not say so.
 Accumulation models (Beta-Binomial, Hofmans accumulation) are derived for one
 vehicle with several insertions. Duplication models (Agostini, Hofmans
 duplication) are derived for several vehicles with one insertion each. Net
 cumulative audience models cover several vehicles with several insertions.
 Sainsbury and Binomial cover both simple cases because each is one model at two
-levels of generality (see the `insertions` argument).
+levels of generality (see the `insertions` argument): they accept one or
+several insertions in each vehicle.
+
+### What the models assume
+
+Each model rests on assumptions about four things; the table below summarizes
+them for every model, and `?mediaPlanR` gives the same explanation.
+
+* **Individuals.** *Homogeneous*: every person has the same probability of being
+  exposed to an insertion of a vehicle. *Heterogeneous*: the probability differs
+  between people, as between a loyal reader and an occasional one. With
+  heterogeneity the same people tend to be exposed again and again, so reach
+  grows more slowly with the number of insertions than under homogeneity.
+* **Vehicles.** *Homogeneous*: all vehicles have the plan's average audience.
+  *Heterogeneous*: each vehicle keeps its own audience.
+* **Duplication between vehicles.** *Random*: people choose vehicles
+  independently, so the audience shared by two vehicles is the product of their
+  audiences (two vehicles with audiences of 30% and 20% would share 6%).
+  *Observed*: the shared audience is taken from data.
+* **Accumulation in the same vehicle.** *Random*: a repeat insertion in a vehicle
+  is as independent as an insertion in another vehicle. *Observed*: the reach
+  after two insertions (`R2`) shows how much a vehicle's audience renews.
+
+All the models also assume that exposure probabilities are stationary: they do
+not change over the period of the plan.
 
 | Model | Function | Plan shape | Duplication | Heterogeneity |
 |---|---|---|---|---|
@@ -204,16 +235,17 @@ with(metheringham_example, sum(audiences * insertions) / population)
 
 ### One vehicle, several insertions: Beta-Binomial and Hofmans
 
-The Beta-Binomial accumulation model needs the audience after one and two
+The Beta-Binomial accumulation model needs the reach after one and two
 insertions. Hofmans' accumulation model, with a constant coefficient, needs the
 same two figures; an observed third insertion (`R3`) lets the coefficient vary
 with the number of insertions.
 
 ```{r accumulation}
-beta_binomial <- calc_beta_binomial(A1 = 500000, A2 = 550000, P = 1000000, n = 5)
+beta_binomial <- calc_beta_binomial(R1 = 0.50, R2 = 0.55, insertions = 5,
+                                    population = 1000000)
 beta_binomial$reach$percent
 
-hofmans <- calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, N = 5)
+hofmans <- calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, insertions = 5)
 hofmans$results
 ```
 
@@ -462,6 +494,20 @@ domain: `calc_hofmans_accumulation()` (one vehicle, several insertions, with
 vehicles, one insertion each, with `duplication_example`).
 
 ## Domain of validity of the multivariate models
+
+In plain words: these models take the overlaps between vehicles from your data
+and build the whole distribution of exposures from them. For that the overlaps
+must be possible, and plausible together. The functions react in two ways, and
+each reaction asks for a different action:
+
+| The function | It means | What to do |
+|---|---|---|
+| **Stops with an error** naming a pair or a triple of vehicles | The overlaps are impossible: a pair overlaps more than its smaller audience, or less than the two audiences force; or the overlaps of three vehicles cannot hold together | Review the data of the vehicles named: units (proportions, not percentages), and whether every overlap is measured on the same population |
+| **Stops with an error** about `R2` | `R2` is outside the range allowed for its `R1` (between `R1` and `2 * R1 - R1^2`) | Check that `R2` is the cumulative reach after two insertions, as a proportion |
+| **Warns** about a low duplication | A pair overlaps clearly less than chance would (less than the product of their audiences); the models were built for overlaps at least as large as chance, so results can differ a lot from one model to another | Check the duplication of the pair named (a zero is often a measurement problem), and compare the result with another model before using it |
+| **Warns** about truncated probabilities (`calc_canex()`) | The approximation produced negative probabilities that were set to zero, and the mean number of exposures changed | Look at `diagnostics`; treat the distribution with caution |
+
+The technical detail follows.
 
 `calc_canex()`, `calc_csd()`, `calc_msad()`, `calc_cbd()` and `calc_mbd()` take
 the observed one-insertion duplications as given. They stop when a duplication

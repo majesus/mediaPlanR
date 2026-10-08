@@ -3,7 +3,7 @@
 \docType{data}
 \name{ratings_example}
 \alias{ratings_example}
-\title{Example inputs for the Sainsbury and Binomial models}
+\title{Illustrative inputs for the Sainsbury and Binomial models}
 \format{
 A list with the components:
 \describe{

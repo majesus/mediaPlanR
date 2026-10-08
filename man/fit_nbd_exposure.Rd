@@ -24,6 +24,15 @@ Estimates the mean and Gamma heterogeneity parameter from observed person-
 level exposure counts by maximum likelihood. When the data are not
 overdispersed relative to Poisson, the fit returns the Poisson boundary.
 }
+\details{
+It is meant for data in which each person has a count of exposures that is
+not limited by a number of insertions, such as page views or ad-server
+impressions per person in a period. From those counts it estimates the mean
+and the heterogeneity between people, and from them the reach and the
+frequency distribution, which can be extended to scenarios with
+\code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}}. It is not used for plans with a fixed number
+of insertions.
+}
 \examples{
 counts <- c(rep(0, 40), rep(1, 25), rep(2, 15), rep(3, 8), 5, 7)
 fit <- fit_nbd_exposure(counts)

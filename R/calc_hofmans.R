@@ -20,14 +20,18 @@
 #' combination of media. Journal of Marketing Research, 3(3), 269-278.
 #' \doi{10.1177/002224376600300307}
 #'
-#' @param R1 Reach after the first insertion, as a proportion in (0, 1].
+#' @param R1 Reach after the first insertion, as a proportion between 0 and 1
+#'   (not a percentage), in (0, 1].
 #' @param R2 Cumulative reach after the second insertion, as a proportion
-#'   with `R1 < R2 < 2 * R1`.
-#' @param N Number of insertions up to which the cumulative reach is computed,
-#'   an integer of at least 2.
+#'   (not a percentage) with `R1 < R2 < 2 * R1` and `R2 <= 1`.
+#' @param insertions Number of insertions in the vehicle up to which the
+#'   cumulative reach is computed (\eqn{N} in the formulas), an integer of at
+#'   least 2 (at least 3 when `R3` is supplied).
 #' @param R3 Optional cumulative reach after the third insertion, as a
-#'   proportion with `R2 < R3 < 3 * R1`. When supplied, it is used to estimate
-#'   the exponent `alpha` of Hofmans' variable coefficient (see Details).
+#'   proportion (not a percentage) with `R2 < R3 < 3 * R1` and `R3 <= 1`. It is
+#'   observed data, like `R1` and `R2`, not something the function estimates:
+#'   when supplied, the exponent `alpha` of Hofmans' variable coefficient is
+#'   estimated from it, so that the curve reproduces `R3` (see Details).
 #' @param show_steps Logical. If `TRUE`, prints the parameters `k`, `d` and
 #'   `alpha` and the table of cumulative reach.
 #'
@@ -51,9 +55,14 @@
 #' The model assumes a constant reach per insertion (`R1`) and a constant
 #' duplication between every pair of insertions.
 #'
+#' Valid `R1` and `R2` do not guarantee a valid curve: the extrapolation can
+#' decrease, exceed 1 or exceed \eqn{N R_1}. For example, `R1 = 0.60`, `R2 = 0.84`
+#' and `N = 4` give a cumulative reach of 1.05 at `N = 4`. The curve is then
+#' returned unchanged, with a warning.
+#'
 #' @return A list of class `"reach_hofmans_accumulation"` with components:
 #' \itemize{
-#'   \item `results`: data frame with `N` (number of insertions) and `RN`
+#'   \item `results`: data frame with `insertions` (number of insertions) and `RN`
 #'     (cumulative reach, as a proportion).
 #'   \item `parameters`: list with `k`, `d`, `alpha` and `R3` (`NA` when not
 #'     supplied).
@@ -63,22 +72,25 @@
 #'
 #' @examples
 #' # Constant-coefficient model (equation 3.11)
-#' result <- calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, N = 5)
+#' result <- calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, insertions = 5)
 #' result$results
 #' result$parameters
 #'
 #' # With an observed third insertion, Hofmans' exponent is estimated
-#' calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, N = 5, R3 = 0.135)$parameters
+#' calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, insertions = 5,
+#'                          R3 = 0.135)$parameters
 #'
 #' @seealso
 #' [calc_beta_binomial()] for a stochastic accumulation model that also
 #' returns the exposure distribution, and [calc_hofmans_duplication()] for the
 #' same author's model for several vehicles.
 #' @export
-calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) {
-  assert_number(R1, "R1", min = 0, max = 1, min_open = TRUE)
-  assert_number(R2, "R2", min = 0, max = 1, min_open = TRUE)
-  assert_number(N, "N", min = 2, integer = TRUE)
+calc_hofmans_accumulation <- function(R1, R2, insertions, R3 = NULL,
+                                      show_steps = FALSE) {
+  assert_number(R1, "R1", min = 0, max = 1, min_open = TRUE, proportion = TRUE)
+  assert_number(R2, "R2", min = 0, max = 1, min_open = TRUE, proportion = TRUE)
+  assert_number(insertions, "insertions", min = 2, integer = TRUE)
+  N <- insertions
   assert_flag(show_steps, "show_steps")
   if (R2 <= R1) {
     stop("R2 must be greater than R1: cumulative reach must increase.",
@@ -91,12 +103,13 @@ calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) 
          "undefined.", call. = FALSE)
   }
   if (!is.null(R3)) {
-    assert_number(R3, "R3", min = 0, max = 1, min_open = TRUE)
+    assert_number(R3, "R3", min = 0, max = 1, min_open = TRUE,
+                  proportion = TRUE)
     if (R3 <= R2 || R3 >= 3 * R1) {
       stop("R3 must lie between R2 and 3 * R1.", call. = FALSE)
     }
     if (N < 3) {
-      stop("N must be at least 3 when R3 is supplied.", call. = FALSE)
+      stop("insertions must be at least 3 when R3 is supplied.", call. = FALSE)
     }
   }
 
@@ -112,7 +125,7 @@ calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) 
     m <- 3:N
     RN[m] <- m * R1 / (1 + k * (m - 1)^alpha * d / (2 * R1))
   }
-  results <- data.frame(N = n, RN = RN)
+  results <- data.frame(insertions = n, RN = RN)
 
   if (any(diff(RN) < -1e-12) || any(RN > 1 + 1e-12) ||
       any(RN > n * R1 + 1e-12)) {
@@ -123,7 +136,7 @@ calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) 
 
   plot_hofmans <- NULL
   if (requireNamespace("ggplot2", quietly = TRUE)) {
-    plot_hofmans <- ggplot2::ggplot(results, ggplot2::aes(x = .data$N, y = .data$RN * 100)) +
+    plot_hofmans <- ggplot2::ggplot(results, ggplot2::aes(x = .data$insertions, y = .data$RN * 100)) +
       ggplot2::geom_line(color = "steelblue") +
       ggplot2::geom_point(size = 2, color = "steelblue") +
       ggplot2::geom_text(
@@ -132,7 +145,7 @@ calc_hofmans_accumulation <- function(R1, R2, N, R3 = NULL, show_steps = FALSE) 
       ) +
       ggplot2::scale_y_continuous(limits = c(0, max(results$RN * 100) * 1.15)) +
       ggplot2::labs(
-        x = "Number of insertions (N)",
+        x = "Number of insertions",
         y = "Reach (%)",
         title = "Evolution of cumulative audience",
         subtitle = "Hofmans accumulation model"
@@ -160,7 +173,7 @@ print.reach_hofmans_accumulation <- function(x, ...) {
                 " (estimated from R3)"))
   cat("\nCUMULATIVE REACH:\n")
   print(data.frame(
-    N = x$results$N,
+    Insertions = x$results$insertions,
     Reach = sprintf("%.2f%%", 100 * x$results$RN)
   ), row.names = FALSE)
   invisible(x)
@@ -196,28 +209,38 @@ print.reach_hofmans_accumulation <- function(x, ...) {
 #'
 #' @param audiences Numeric vector with the audience of each vehicle for one
 #'   insertion, in people.
-#' @param population Population size, in people.
-#' @param duplication_matrix Symmetric numeric matrix with the audience
-#'   duplicated between every pair of vehicles, in people. Diagonal values are
-#'   ignored.
+#' @param population Population size, in people. No audience can exceed it;
+#'   otherwise the function stops with an error.
+#' @param duplication_matrix Symmetric numeric matrix whose element `[i, j]` is
+#'   the number of people who are in the audience of both vehicle `i` and
+#'   vehicle `j` (one insertion in each), in people (not a proportion). Diagonal
+#'   values are ignored.
 #'
 #' @details
 #' For two vehicles, reach is exactly \eqn{A_1 + A_2 - A_{12}}. Equating that
 #' value to Agostini's formula gives the coefficient
 #' \eqn{k_{ij} = (A_i + A_j) / (A_i + A_j - A_{ij})}, which Hofmans applies to
 #' every pair of a plan with \eqn{m} vehicles:
-#' \deqn{R_m = \frac{(\sum_i A_i)^2}{\sum_i A_i + \sum_{i<j} k_{ij} A_{ij}}.}
+#' \deqn{R_m = \frac{(\sum_{i=1}^{m} A_i)^2}{\sum_{i=1}^{m} A_i +
+#' \sum_{i=1}^{m-1} \sum_{j=i+1}^{m} k_{ij} A_{ij}}.}
+#' The double sum runs over every pair of vehicles, each pair counted once.
 #'
 #' The formula is empirical and can return a reach outside its logical range
 #' (below the largest audience, or above the population or the gross
-#' audience) when the duplications are not mutually consistent. The value is
-#' then returned unchanged, with a warning.
+#' audience). This can happen because the duplications are not mutually
+#' consistent, but also because the formula is an approximation: five
+#' independent vehicles that each reach 50% of the population, with a
+#' duplication of 25% in every pair (data that come from a valid joint
+#' distribution, with a true reach of 96.875%), give a reach of 107.14%. The
+#' value is then returned unchanged, with a warning, so that an out-of-range
+#' result is not attributed automatically to the input data.
 #'
 #' @return A list of class `"reach_hofmans_duplication"` with components:
 #' \itemize{
 #'   \item `reach`: list with `percent` and `people`.
-#'   \item `gross_audience`: sum of the vehicle audiences, in people.
-#'   \item `weighted_duplication`: the sum \eqn{\sum_{i<j} k_{ij} A_{ij}}, in
+#'   \item `gross_audience`: sum of the vehicle audiences (duplicated people
+#'     counted once per vehicle), in people.
+#'   \item `weighted_duplication`: the sum \eqn{\sum_{i=1}^{m-1} \sum_{j=i+1}^{m} k_{ij} A_{ij}}, in
 #'     people.
 #'   \item `n_vehicles`: number of vehicles.
 #' }

@@ -15,25 +15,34 @@ calc_csd(
 \arguments{
 \item{vehicles_data}{Data frame with one row per vehicle (at least two rows)
 and columns \code{insertions} (planned insertions, a positive integer), \code{R1} and
-\code{R2}. \code{R1} is the reach after one insertion, a proportion strictly between
-zero and one, and \code{R2} the cumulative reach after two insertions, a
-proportion with \verb{R1 <= R2 <= 2 * R1 - R1^2} (the upper limit is the reach
-under independent insertions). \code{R2} may be \code{NA} only when \code{insertions} is
-one. Note that \code{\link[=calc_canex]{calc_canex()}} names the insertions column \code{k}.}
+\code{R2}. \code{R1} is the reach after one insertion, a proportion between 0 and 1
+(not a percentage) and strictly between zero and one, and \code{R2} the
+cumulative reach after two insertions (the proportion exposed at least
+once in two insertions), a proportion with \verb{R1 <= R2 <= 2 * R1 - R1^2}
+(the upper limit is the reach under independent insertions). If \code{R2} is
+outside that range the function stops with an explanatory error. \code{R2} may
+be \code{NA} only when \code{insertions} is one.}
 
-\item{duplications}{Symmetric matrix of pairwise one-insertion audience
-duplications, as proportions of the population. The diagonal is ignored.}
+\item{duplications}{Symmetric matrix whose element \verb{[i, j]} is the
+proportion of the population that is exposed to both vehicle \code{i} and
+vehicle \code{j} (one insertion in each), a number between 0 and 1 (not a
+percentage). It is not the proportion exposed to each vehicle separately.
+The diagonal is ignored.}
 
 \item{aggregation_order}{Either \code{"audience_desc"} (vehicles in decreasing
-order of one-insertion reach), \code{"given"} (the row order), or a
-permutation of the row indices. Use an explicit permutation to reproduce
-a published aggregation order, such as the one of Kim's worked example
-(labelled "TD forward" in the dissertation: aggregation guided by the
-total duplication of each pair, between- plus within-vehicle, in forward
-order).}
+order of one-insertion reach \code{R1}), \code{"given"} (the row order), or a
+permutation of the row indices. The vehicles are combined one at a time in
+this order. The order does not change the reach of the whole schedule
+but can change the exposure distribution. Use an explicit permutation to
+reproduce a published aggregation order, such as the one of Kim's worked
+example (labeled "TD forward" in the dissertation: aggregation guided by
+the total duplication of each pair, between- plus within-vehicle, in
+forward order).}
 
-\item{population}{Positive population used only to express probabilities
-as people. The default, 1, leaves \code{people} equal to \code{probability}.}
+\item{population}{Number of people in the population (a count, not a
+proportion). It only converts probabilities into people: the \code{people}
+columns of the result are the probability times \code{population}, and with the
+default, 1, they equal the probability.}
 
 \item{tolerance}{Positive numerical tolerance for probability constraints.
 The Fréchet and triple-feasibility checks apply it relative to the smaller
@@ -46,7 +55,11 @@ and \code{people}), \code{average_frequency}, the complete exposure \code{distri
 \code{cumulative_probability}), the \code{vehicle_marginals}, the one-insertion
 \code{vehicle_reach}, the canonical \code{correlation_matrix}, the
 \code{aggregation_order} and \code{aggregation_rule}, the aggregation \code{steps} and
-numerical \code{diagnostics}.
+numerical \code{diagnostics}. The diagnostics include
+\code{gross_mean_contacts}, the mean number of exposures per person that the
+inputs imply (the sum over vehicles of insertions times \code{R1}, averaged over
+the whole population), \code{distribution_mean_contacts}, the same mean computed
+from the returned distribution, and \code{mean_error}, their difference.
 }
 \description{
 Implements Kim's (2005) Canonical Sequential Aggregation Distribution
@@ -57,8 +70,9 @@ preserves both marginal distributions and sets the zero-exposure cell to one
 minus the canonical reach.
 }
 \details{
-For a subset of vehicles, CSD estimates the all-zero probability as
-\deqn{P(0,\ldots,0)=\prod_i f_i(0)\left[1+\sum_{i<j}\rho_{ij}
+For a subset of \eqn{m} vehicles, CSD estimates the all-zero probability as
+\deqn{P(0,\ldots,0)=\prod_{i=1}^{m} f_i(0)\left[1+\sum_{i=1}^{m-1}
+\sum_{j=i+1}^{m}\rho_{ij}
 \frac{(0-\mu_i)(0-\mu_j)}{\sigma_i\sigma_j}\right],}
 where \eqn{f_i}, \eqn{\mu_i} and \eqn{\sigma_i} are the Beta-Binomial
 probability function, mean and standard deviation of vehicle \eqn{i}, and
@@ -79,6 +93,32 @@ is returned.
 }
 \section{Domain of validity}{
 
+In plain words. These models take the overlaps between vehicles
+(the duplications) from your data and use them to build the whole
+distribution of exposures. For that to be possible the overlaps you supply
+must be possible, and plausible together:
+\itemize{
+\item Two vehicles cannot overlap more than the smaller of their
+audiences, nor less than their audiences force them to (two audiences of
+60\% of the population must overlap by at least 20\%). If a duplication
+breaks these limits, the function stops with an error naming the pair:
+the data cannot be right and should be reviewed.
+\item The overlaps of three vehicles must also fit together. If they
+cannot, the function stops with an error naming the three vehicles.
+\item The models were built for the usual situation in which vehicles
+overlap at least as much as chance alone would produce, that is, at
+least the product of their audiences (two vehicles with audiences of 30\%
+and 20\% overlap by 6\% if people chose vehicles independently). When a
+pair overlaps clearly less than that, the results can differ a lot from
+one model to another, and the function issues a warning that names the
+pair.
+}
+An error means that the inputs are impossible: correct them. A warning does
+not invalidate the calculation, but it asks for caution: check the
+duplication of the pair named, which is often a measurement problem (see
+below), and compare the result with another model. The rest of this section
+gives the technical detail.
+
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
 as given and check them against the Fréchet bounds implied by the audiences
@@ -96,9 +136,15 @@ published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
 canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
 \code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
 under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
-expansion itself admits negative correlations. \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
-and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
-duplications.
+expansion itself admits negative correlations. Hong (1998, pp. 238-239) treats
+a null duplication as a measurement error and replaces it by
+\eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
+and random duplication over the pairs with non-zero observed duplication.
+The package does not implement this imputation: \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
+and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} estimate reach from a duplication matrix and
+do not impute its elements. If duplications are imputed beforehand, the
+result must be checked against the bounds described below. A null duplication
+is not always a measurement error: it can also be a genuine observation.
 
 Second, pairwise duplications that satisfy the Fréchet bounds can still be
 impossible jointly for three or more vehicles. For every triple of vehicles

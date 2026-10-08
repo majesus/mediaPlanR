@@ -4,9 +4,14 @@
 #' common error of multiplying a gross audience by an affinity index and
 #' obtaining a target audience larger than the gross audience.
 #'
-#' @param gross_audience Gross audience of each channel, in people.
+#' @param gross_audience Total audience of each channel, in people, whatever
+#'   the demographic profile of its members (as opposed to `target_audience`,
+#'   the part that belongs to the target). This is not the "gross audience"
+#'   that [calc_agostini_duplication()] uses for the sum of several vehicles'
+#'   audiences.
 #' @param target_audience Audience belonging to the target, in people.
-#' @param gross_universe Total planning universe, in people.
+#' @param gross_universe Total planning universe (the whole population), in
+#'   people, as opposed to `target_universe`.
 #' @param target_universe Target population within the universe, in people.
 #'
 #' @details

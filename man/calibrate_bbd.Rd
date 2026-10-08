@@ -5,7 +5,7 @@
 \title{Calibrate a Beta-Binomial effective-reach model}
 \usage{
 calibrate_bbd(
-  first_reach,
+  R1,
   target_reach,
   frequency,
   max_insertions,
@@ -14,11 +14,11 @@ calibrate_bbd(
 )
 }
 \arguments{
-\item{first_reach}{Reach after one insertion, as a proportion strictly
-between zero and one.}
+\item{R1}{Reach after one insertion (the vehicle's audience), as a proportion
+(not a percentage) strictly between zero and one.}
 
-\item{target_reach}{Target proportion of the population, strictly between
-zero and one. With \code{type = "at_least"} it is the effective reach: the
+\item{target_reach}{Target proportion of the population (not a percentage),
+strictly between zero and one. With \code{type = "at_least"} it is the effective reach: the
 proportion exposed \code{frequency} times or more. With \code{type = "exact"} it is
 the proportion exposed exactly \code{frequency} times (which is then not a
 reach in the usual sense).}
@@ -30,14 +30,18 @@ target (\code{frequency} or more exposures if \code{type = "at_least"}, exactly
 \item{max_insertions}{Maximum number of insertions considered, an integer
 of at least \code{frequency}.}
 
-\item{type}{\code{"at_least"} (default) or \code{"exact"}.}
+\item{type}{What \code{target_reach} refers to. \code{"at_least"} (default): the
+probability of \code{frequency} or more exposures (for \code{frequency = 2}, being
+exposed twice, three times, and so on; this is the effective reach).
+\code{"exact"}: the probability of exactly \code{frequency} exposures (for
+\code{frequency = 2}, exactly twice).}
 
 \item{tolerance}{Desired absolute probability error; it only determines the
 \code{converged} flag.}
 }
 \value{
 A \code{bbd_calibration} object: a list with \code{alpha}, \code{beta},
-\code{concentration}, \code{insertions} (the selected \code{n}), \code{first_reach},
+\code{concentration}, \code{insertions} (the selected \code{n}), \code{R1},
 \code{frequency}, \code{type}, \code{target_reach}, \code{predicted_reach}, \code{error},
 \code{converged}, the full \code{distribution} (\code{contacts}, \code{probability} and
 \code{cumulative_probability}) and the \code{candidates} evaluated for each \code{n}.
@@ -52,14 +56,15 @@ parameters.
 \details{
 For every number of insertions \code{n} from \code{frequency} to \code{max_insertions}, the
 function searches for the concentration of the Beta-Binomial, with mean
-\code{first_reach}, whose probability equals \code{target_reach}, first on a grid of
+\code{R1}, whose probability equals \code{target_reach}, first on a grid of
 the log concentration and then by \code{\link[stats:optimize]{stats::optimize()}} around the best grid
 point. It returns the number of insertions with the smallest error, the
 smaller \code{n} in case of ties.
 }
 \examples{
 # A first insertion reaches 30\% and the share exposed two or more times
-calibrate_bbd(first_reach = 0.30, target_reach = 0.20, frequency = 2,
+# should be 20\%
+calibrate_bbd(R1 = 0.30, target_reach = 0.20, frequency = 2,
               max_insertions = 6)
 
 }

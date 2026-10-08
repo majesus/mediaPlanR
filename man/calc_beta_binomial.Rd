@@ -4,44 +4,57 @@
 \alias{calc_beta_binomial}
 \title{Reach and exposure distribution under the Beta-Binomial model}
 \usage{
-calc_beta_binomial(A1, A2, P, n)
+calc_beta_binomial(R1, R2, insertions, population = 1)
 }
 \arguments{
-\item{A1}{Vehicle audience after the first insertion, in people.}
+\item{R1}{Reach after the first insertion (the vehicle's audience), as a
+proportion of the population, a number in (0, 1] (not a percentage). If the
+audience is known in people, divide it by the population.}
 
-\item{A2}{Cumulative vehicle audience after the second insertion, in
-people.}
+\item{R2}{Cumulative reach after the second insertion (the proportion of
+the population exposed at least once in two insertions), as a proportion
+(not a percentage), with \verb{R1 <= R2 <= 2 * R1 - R1^2}. If \code{R2} is outside
+that range the function stops with an explanatory error.}
 
-\item{P}{Population size, in people.}
+\item{insertions}{Total number of planned insertions in the vehicle (a
+positive integer).}
 
-\item{n}{Total number of planned insertions (a positive integer).}
+\item{population}{Population size, in people. It only scales the number of
+people reported; the default, 1, leaves \code{people} equal to the proportion.}
 }
 \value{
 A list of class \code{"reach_beta_binomial"} with components:
 \itemize{
 \item \code{reach}: list with \code{percent} and \code{people}.
-\item \code{distribution}: list with \code{percent} and \code{people}, for one to \code{n}
-exposures.
+\item \code{distribution}: list with \code{percent} and \code{people}, for one to
+\code{insertions} exposures.
 \item \code{cumulative}: list with \code{percent} and \code{people}, for individuals
 exposed at least once, at least twice, and so on.
+\item \code{population}: the population size used (people).
+\item \code{population}: the population size used, in people.
 \item \code{parameters}: list with \code{alpha}, \code{beta}, \code{mean_probability} (the
-mean of the Beta distribution, \code{A1 / P}), \code{zero_contact_probability}
-(the percentage of the population with no exposure) and \code{type}
+mean of the Beta distribution, \code{R1}), \code{zero_contact_probability}
+(the percentage of the population with no exposure, on a 0-100 scale
+unlike the \code{probability} columns of other results) and \code{type}
 (\code{"beta_binomial"}, \code{"binomial_limit"} or \code{"polarized_limit"}).
 }
 }
 \description{
-Implements the Beta-Binomial accumulation model for one vehicle with
-several insertions. Individuals differ in their exposure probability, which
+Implements the Beta-Binomial model for one vehicle with several
+insertions. In Aldás Manzano's (1998) classification it is an
+\emph{accumulation} model, like \code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}: it describes how
+the audience of a single vehicle accumulates over its insertions (the
+function name omits the word, unlike the Hofmans one, because the
+Beta-Binomial name is the standard one in the literature and there is no
+second Beta-Binomial model that could be confused with it). Individuals differ in their exposure probability, which
 follows a Beta distribution with shape parameters alpha and beta; given
-that probability, the number of exposures in \code{n} insertions is Binomial.
-Mixing the two yields the Beta-Binomial exposure distribution. The model
-needs only two data points, the audience after one insertion (\code{A1}) and
-after two insertions (\code{A2}), to estimate both shape parameters.
+that probability, the number of exposures in \code{insertions} insertions is
+Binomial. Mixing the two yields the Beta-Binomial exposure distribution. The
+model needs only two data points, the reach after one insertion (\code{R1}) and
+after two insertions (\code{R2}), to estimate both shape parameters.
 }
 \details{
-With \eqn{R_1 = A_1 / P} and \eqn{R_2 = A_2 / P}, the method-of-moments
-estimators are
+The method-of-moments estimators are
 \deqn{\hat{\alpha} = \frac{R_1 (R_2 - R_1)}{2 R_1 - R_1^2 - R_2}, \qquad
 \hat{\beta} = \frac{\hat{\alpha} (1 - R_1)}{R_1}.}
 The estimators require \eqn{R_1 \le R_2 \le 2 R_1 - R_1^2}. The two bounds
@@ -51,7 +64,8 @@ always or never exposed (the \emph{polarized} limit, \code{alpha = beta = 0}), a
 \code{alpha = beta = Inf}). Both limits are handled explicitly.
 }
 \examples{
-result <- calc_beta_binomial(A1 = 500000, A2 = 550000, P = 1000000, n = 5)
+result <- calc_beta_binomial(R1 = 0.50, R2 = 0.55, insertions = 5,
+                              population = 1000000)
 result$reach$percent
 result$parameters$alpha
 result$parameters$beta

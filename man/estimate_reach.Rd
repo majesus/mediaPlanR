@@ -21,7 +21,7 @@ independent as an insertion in a different vehicle); see
 A \code{media_reach} object: a list with the \code{model}, the \code{population},
 \code{reach} (a data frame with \code{probability}, \code{percent} and \code{people}),
 \code{distribution} (\code{contacts}, \code{probability}, \code{percent} and \code{people} for zero
-to \code{N} exposures), \code{cumulative} (\code{min_contacts}, \code{probability}, \code{percent}
+up to the total number of insertions \code{N}), \code{cumulative} (\code{min_contacts}, \code{probability}, \code{percent}
 and \code{people} for at least \code{min_contacts} exposures), \code{average_frequency}
 (average exposures among the people reached) and model \code{parameters}.
 }
@@ -29,6 +29,20 @@ and \code{people} for at least \code{min_contacts} exposures), \code{average_fre
 A \code{media_plan} front end for \code{\link[=calc_sainsbury]{calc_sainsbury()}} and \code{\link[=calc_binomial]{calc_binomial()}}: it
 reads \code{audience}, \code{insertions} and \code{population} from the plan and calls the
 requested model directly, so both share a single implementation.
+}
+\details{
+Why only these two models: a \code{media_plan} holds, for each channel, only an
+audience, a number of insertions and a cost. \code{\link[=calc_sainsbury]{calc_sainsbury()}} and
+\code{\link[=calc_binomial]{calc_binomial()}} are the models that need nothing else. The other models
+need data that a plan does not contain: the observed duplication between
+vehicles (\code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}, \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}},
+\code{\link[=calc_metheringham]{calc_metheringham()}}, \code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
+\code{\link[=calc_cbd]{calc_cbd()}}, \code{\link[=calc_mbd]{calc_mbd()}}) or the reach after two insertions
+(\code{\link[=calc_beta_binomial]{calc_beta_binomial()}}, \code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}). Run those models
+directly with their own inputs. Comparing the two models here shows the
+effect of unequal vehicle audiences at constant random duplication (see
+\code{\link[=compare_reach_models]{compare_reach_models()}}); comparing either with observed data, or with
+another model, is done with \code{\link[=evaluate_exposure_model]{evaluate_exposure_model()}}.
 }
 \examples{
 plan <- media_plan(

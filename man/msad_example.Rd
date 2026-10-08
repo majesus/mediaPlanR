@@ -3,12 +3,13 @@
 \docType{data}
 \name{msad_example}
 \alias{msad_example}
-\title{Illustrative example inputs for the MSAD model}
+\title{Illustrative inputs for the MSAD model}
 \format{
 A list with the components:
 \describe{
 \item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2}.}
-\item{duplications}{Symmetric matrix of one-insertion duplications.}
+\item{duplications}{Symmetric matrix of proportions of the population
+exposed to both vehicles of each pair (one insertion in each).}
 \item{aggregation_order}{The order of aggregation, \code{1:2}.}
 }
 }
@@ -16,9 +17,9 @@ A list with the components:
 msad_example
 }
 \description{
-A small, self-contained two-vehicle scenario ready for
-\code{do.call(calc_msad, msad_example)}. Original illustrative data, not derived
-from any published source. For a dataset that reproduces published inputs
+List of arguments ready for \code{do.call(calc_msad, msad_example)}: a small
+two-vehicle scenario. Original illustrative data, not derived from any
+published source. For a dataset that reproduces published inputs
 for literature validation, see \link{msad_kim2005}.
 }
 \examples{

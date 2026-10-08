@@ -10,7 +10,8 @@ calc_sainsbury(audiences, population, insertions = rep(1L, length(audiences)))
 \item{audiences}{Numeric vector with the audience of each vehicle, in people
 per insertion.}
 
-\item{population}{Population size, in people.}
+\item{population}{Population size, in people. No audience can exceed it;
+otherwise the function stops with an error.}
 
 \item{insertions}{Non-negative integer vector with the number of insertions
 planned in each vehicle. It defaults to one insertion per vehicle, the
@@ -31,7 +32,8 @@ exposed at least once, at least twice, and so on.
 Implements the Sainsbury model, which Aldás Manzano (1998, Section 3.2.2.2)
 reports as developed at the London Press Exchange and formalized by Caffyn
 and Sagovsky (1963), to calculate reach and the exposure distribution (and its
-cumulative counterpart) of a set of advertising vehicles. The model assumes
+cumulative counterpart) of a set of advertising vehicles, with one or more
+insertions in each of them (argument \code{insertions}). The model assumes
 random duplication \emph{and} random accumulation, homogeneous individual
 exposure probabilities and heterogeneous vehicle exposure probabilities.
 The probability that an individual is exposed to one insertion in vehicle
@@ -40,14 +42,18 @@ population. Because duplication and accumulation are both random, every
 insertion -- whether in a different vehicle or a repeat insertion in the
 same one -- is an independent Bernoulli trial with that vehicle's own
 exposure probability, and the number of exposures follows a
-Poisson-binomial distribution.
+Poisson-binomial distribution (the distribution of the number of successes
+in independent trials whose success probabilities differ).
 }
 \details{
-The exposure distribution is computed exactly, by dynamic convolution of the
-per-insertion Bernoulli distributions, in \eqn{O(N^2)} operations for \eqn{N}
-insertions. Reach equals \eqn{1 - \prod_i (1 - A_i / P)^{n_i}}, where
-\eqn{A_i} is the audience of vehicle \eqn{i}, \eqn{n_i} its number of
-insertions and \eqn{P} the population.
+The exposure distribution is computed exactly, by combining one insertion at
+a time (a dynamic convolution of the per-insertion Bernoulli distributions).
+The number of calculations grows with the square of the number of insertions
+\eqn{N}, so doubling the insertions roughly quadruples the work, which is
+negligible for any realistic plan. Reach equals
+\eqn{1 - \prod_{i=1}^{m} (1 - A_i / P)^{n_i}}, where \eqn{m} is the number
+of vehicles, \eqn{A_i} is the audience of vehicle \eqn{i}, \eqn{n_i} its
+number of insertions and \eqn{P} the population.
 }
 \examples{
 audiences <- c(300000, 400000, 200000)

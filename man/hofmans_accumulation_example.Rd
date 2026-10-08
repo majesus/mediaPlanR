@@ -3,21 +3,21 @@
 \docType{data}
 \name{hofmans_accumulation_example}
 \alias{hofmans_accumulation_example}
-\title{Example inputs for the Hofmans accumulation model}
+\title{Illustrative inputs for the Hofmans accumulation model}
 \format{
 A list with the components:
 \describe{
 \item{R1}{Reach after the first insertion, as a proportion.}
 \item{R2}{Cumulative reach after the second insertion, as a proportion.}
-\item{N}{Number of insertions up to which the cumulative reach is
-calculated.}
+\item{insertions}{Number of insertions up to which the cumulative reach
+is calculated.}
 }
 }
 \usage{
 hofmans_accumulation_example
 }
 \description{
-List of arguments for \code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}, ready for \code{do.call()}.
+List of arguments ready for \code{do.call()} with \code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}.
 One vehicle with several insertions: the "accumulation" domain. For the
 other Hofmans model (several vehicles, one insertion each), see
 \link{duplication_example}. Original illustrative data, not derived from any

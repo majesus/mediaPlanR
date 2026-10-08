@@ -11,18 +11,22 @@ calc_metheringham(audiences, insertions, duplication_matrix, population)
 per insertion.}
 
 \item{insertions}{Non-negative integer vector with the number of insertions
-planned in each vehicle. At least two insertions are required in total.}
+planned in each vehicle. The plan as a whole (all vehicles together) must
+have at least two insertions, for example two vehicles with one insertion
+each, or one vehicle with two insertions, because the model works with
+duplication between pairs of insertions.}
 
 \item{duplication_matrix}{Symmetric numeric matrix, in people. Element
-\verb{[i, j]} with \code{i != j} is the audience duplicated between one insertion in
-vehicle \code{i} and one insertion in vehicle \code{j}. The diagonal element
+\verb{[i, j]} with \code{i != j} is the number of people who are exposed to both one
+insertion in vehicle \code{i} and one insertion in vehicle \code{j}. The diagonal element
 \verb{[i, i]} is the audience duplicated between two insertions in the same
 vehicle \code{i}, that is, \code{2 * audiences[i]} minus the audience accumulated
 by two insertions in vehicle \code{i}. Diagonal elements are needed only for
 vehicles with at least two insertions, and elements involving a vehicle
 with no insertions are ignored.}
 
-\item{population}{Population size, in people.}
+\item{population}{Population size, in people. No audience can exceed it;
+otherwise the function stops with an error.}
 }
 \value{
 A list of class \code{"reach_metheringham"} with components:
@@ -61,7 +65,8 @@ insertions: \code{insertions[i] * insertions[j]} pairs between vehicles \code{i}
 computes
 \enumerate{
 \item the insertion-weighted mean audience
-\eqn{\bar{A}_1 = \sum_i n_i A_i / N};
+\eqn{\bar{A}_1 = \sum_{i=1}^{m} n_i A_i / N}, with \eqn{m} the number
+of vehicles;
 \item the pair-weighted mean duplication \eqn{\bar{D}}, over all pairs of
 insertions;
 \item the mean audience accumulated by two insertions of the average
@@ -74,7 +79,7 @@ insertions.
 }
 The exposure distribution therefore ranges from zero to \code{N} exposures, and
 its mean equals the plan's gross number of exposures per person,
-\eqn{\sum_i n_i A_i / P}.
+\eqn{\sum_{i=1}^{m} n_i A_i / P}.
 }
 \examples{
 data(metheringham_example)

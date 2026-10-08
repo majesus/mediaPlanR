@@ -30,10 +30,24 @@ within_interval <- function(x, min, max, min_open, max_open) {
     all(if (max_open) x < max else x <= max)
 }
 
+# Extra sentence for arguments that must be proportions: values above 1 and up
+# to 100 are most likely percentages entered by mistake.
+proportion_hint <- function(x) {
+  if (is.numeric(x) && length(x) >= 1L && !anyNA(x) && all(is.finite(x)) &&
+      any(x > 1) && all(x <= 100)) {
+    " The values look like percentages: use proportions between 0 and 1, for example 0.30 instead of 30."
+  } else {
+    ""
+  }
+}
+
 # One finite number, optionally restricted to an interval and/or to integers.
+# `proportion = TRUE` marks arguments that must be proportions (see
+# proportion_hint()).
 assert_number <- function(x, name, min = -Inf, max = Inf,
                           min_open = FALSE, max_open = FALSE,
-                          integer = FALSE, allow_inf = FALSE) {
+                          integer = FALSE, allow_inf = FALSE,
+                          proportion = FALSE) {
   ok <- is.numeric(x) && length(x) == 1L && !is.na(x) &&
     (allow_inf || is.finite(x))
   if (ok) {
@@ -43,7 +57,8 @@ assert_number <- function(x, name, min = -Inf, max = Inf,
   if (!ok) {
     w <- interval_wording(min, max, min_open, max_open, integer)
     stop(name, " must be one ", if (!allow_inf) "finite " else "", w$adjective,
-         if (integer) "integer" else "number", w$trailing, ".", call. = FALSE)
+         if (integer) "integer" else "number", w$trailing, ".",
+         if (proportion) proportion_hint(x), call. = FALSE)
   }
   invisible(x)
 }
@@ -53,7 +68,7 @@ assert_number <- function(x, name, min = -Inf, max = Inf,
 assert_numeric_vector <- function(x, name, min = -Inf, max = Inf,
                                   min_open = FALSE, max_open = FALSE,
                                   integer = FALSE, min_length = 1L,
-                                  length = NULL) {
+                                  length = NULL, proportion = FALSE) {
   ok <- is.numeric(x) && base::length(x) >= min_length && !anyNA(x) &&
     all(is.finite(x))
   if (ok && !is.null(length)) ok <- base::length(x) == length
@@ -67,7 +82,8 @@ assert_numeric_vector <- function(x, name, min = -Inf, max = Inf,
     else if (min_length > 1L) paste0("of length at least ", min_length, " with ")
     else "of "
     stop(name, " must be a numeric vector ", size, "finite ", w$adjective,
-         if (integer) "integers" else "numbers", w$trailing, ".", call. = FALSE)
+         if (integer) "integers" else "numbers", w$trailing, ".",
+         if (proportion) proportion_hint(x), call. = FALSE)
   }
   invisible(x)
 }

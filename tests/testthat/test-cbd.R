@@ -192,3 +192,13 @@ test_that("calc_cbd does not error or return NaN when a vehicle's own R1/R2 sit 
   expect_false(anyNA(fit_polarized$distribution$probability))
   expect_equal(sum(fit_polarized$distribution$probability), 1, tolerance = 1e-9)
 })
+
+test_that("CBD does not depend on the aggregation order, and the report says so", {
+  data(csd_kim2005)
+  forward <- do.call(calc_cbd, csd_kim2005)
+  backward <- calc_cbd(csd_kim2005$vehicles_data, csd_kim2005$duplications,
+                       aggregation_order = c(3, 2, 1))
+  expect_equal(forward$distribution, backward$distribution)
+  expect_match(paste(capture.output(print(forward)), collapse = "\n"),
+               "does not affect CBD")
+})

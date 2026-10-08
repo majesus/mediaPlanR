@@ -24,9 +24,10 @@ save_dataset("ratings_example", list(
   population = 1e6
 ))
 
-# Beta-Binomial: audience after one and two insertions, population, insertions.
+# Beta-Binomial: reach after one and two insertions (proportions), insertions
+# and population.
 save_dataset("beta_binomial_example", list(
-  A1 = 5e5, A2 = 5.5e5, P = 1e6, n = 5
+  R1 = 0.50, R2 = 0.55, insertions = 5, population = 1e6
 ))
 
 # Metheringham: three vehicles with several insertions each. The diagonal of
@@ -43,7 +44,7 @@ save_dataset("metheringham_example", list(
 
 # Hofmans accumulation: reach after one and two insertions of one vehicle.
 save_dataset("hofmans_accumulation_example", list(
-  R1 = 0.06, R2 = 0.103, N = 5
+  R1 = 0.06, R2 = 0.103, insertions = 5
 ))
 
 # Agostini and Hofmans duplication: three vehicles with one insertion each and
@@ -58,7 +59,7 @@ save_dataset("duplication_example", list(
 
 # CANEX: two vehicles, three and two insertions.
 save_dataset("canex_example", list(
-  vehicles_data = data.frame(k = c(3, 2), R1 = c(0.30, 0.12),
+  vehicles_data = data.frame(insertions = c(3, 2), R1 = c(0.30, 0.12),
                              R2 = c(0.40, 0.18)),
   duplications = square(c(NA, 0.05, 0.05, NA), 2),
   population = 1e6
@@ -69,7 +70,7 @@ save_dataset("bbd_reach_example", list(
   insertions = c(5, 7, 4),
   audiences = c(5e5, 5.5e5, 6e5),
   reach = 8.5e5,
-  universe = 1e6
+  population = 1e6
 ))
 
 save_dataset("csd_example", list(

@@ -63,22 +63,31 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #'
 #' @param vehicles_data Data frame with one row per vehicle (at least two rows)
 #'   and columns `insertions` (planned insertions, a positive integer), `R1` and
-#'   `R2`. `R1` is the reach after one insertion, a proportion strictly between
-#'   zero and one, and `R2` the cumulative reach after two insertions, a
-#'   proportion with `R1 <= R2 <= 2 * R1 - R1^2` (the upper limit is the reach
-#'   under independent insertions). `R2` may be `NA` only when `insertions` is
-#'   one. Note that [calc_canex()] names the insertions column `k`.
-#' @param duplications Symmetric matrix of pairwise one-insertion audience
-#'   duplications, as proportions of the population. The diagonal is ignored.
+#'   `R2`. `R1` is the reach after one insertion, a proportion between 0 and 1
+#'   (not a percentage) and strictly between zero and one, and `R2` the
+#'   cumulative reach after two insertions (the proportion exposed at least
+#'   once in two insertions), a proportion with `R1 <= R2 <= 2 * R1 - R1^2`
+#'   (the upper limit is the reach under independent insertions). If `R2` is
+#'   outside that range the function stops with an explanatory error. `R2` may
+#'   be `NA` only when `insertions` is one.
+#' @param duplications Symmetric matrix whose element `[i, j]` is the
+#'   proportion of the population that is exposed to both vehicle `i` and
+#'   vehicle `j` (one insertion in each), a number between 0 and 1 (not a
+#'   percentage). It is not the proportion exposed to each vehicle separately.
+#'   The diagonal is ignored.
 #' @param aggregation_order Either `"audience_desc"` (vehicles in decreasing
-#'   order of one-insertion reach), `"given"` (the row order), or a
-#'   permutation of the row indices. Use an explicit permutation to reproduce
-#'   a published aggregation order, such as the one of Kim's worked example
-#'   (labelled "TD forward" in the dissertation: aggregation guided by the
-#'   total duplication of each pair, between- plus within-vehicle, in forward
-#'   order).
-#' @param population Positive population used only to express probabilities
-#'   as people. The default, 1, leaves `people` equal to `probability`.
+#'   order of one-insertion reach `R1`), `"given"` (the row order), or a
+#'   permutation of the row indices. The vehicles are combined one at a time in
+#'   this order. The order does not change the reach of the whole schedule
+#'   but can change the exposure distribution. Use an explicit permutation to
+#'   reproduce a published aggregation order, such as the one of Kim's worked
+#'   example (labeled "TD forward" in the dissertation: aggregation guided by
+#'   the total duplication of each pair, between- plus within-vehicle, in
+#'   forward order).
+#' @param population Number of people in the population (a count, not a
+#'   proportion). It only converts probabilities into people: the `people`
+#'   columns of the result are the probability times `population`, and with the
+#'   default, 1, they equal the probability.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'   The Fréchet and triple-feasibility checks apply it relative to the smaller
 #'   audience involved.
@@ -89,11 +98,16 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #'   `cumulative_probability`), the `vehicle_marginals`, the one-insertion
 #'   `vehicle_reach`, the canonical `correlation_matrix`, the
 #'   `aggregation_order` and `aggregation_rule`, the aggregation `steps` and
-#'   numerical `diagnostics`.
+#'   numerical `diagnostics`. The diagnostics include
+#'   `gross_mean_contacts`, the mean number of exposures per person that the
+#'   inputs imply (the sum over vehicles of insertions times `R1`, averaged over
+#'   the whole population), `distribution_mean_contacts`, the same mean computed
+#'   from the returned distribution, and `mean_error`, their difference.
 #'
 #' @details
-#' For a subset of vehicles, CSD estimates the all-zero probability as
-#' \deqn{P(0,\ldots,0)=\prod_i f_i(0)\left[1+\sum_{i<j}\rho_{ij}
+#' For a subset of \eqn{m} vehicles, CSD estimates the all-zero probability as
+#' \deqn{P(0,\ldots,0)=\prod_{i=1}^{m} f_i(0)\left[1+\sum_{i=1}^{m-1}
+#' \sum_{j=i+1}^{m}\rho_{ij}
 #' \frac{(0-\mu_i)(0-\mu_j)}{\sigma_i\sigma_j}\right],}
 #' where \eqn{f_i}, \eqn{\mu_i} and \eqn{\sigma_i} are the Beta-Binomial
 #' probability function, mean and standard deviation of vehicle \eqn{i}, and
@@ -244,6 +258,13 @@ calc_csd <- function(vehicles_data, duplications,
 #' exposed N times or more, for each N), and numerical diagnostics.
 #' With `full = FALSE`, a compact summary: reach, average frequency,
 #' aggregation order and numerical diagnostics.
+#'
+#' Every result class has its own print method, because the objects are long
+#' lists and each model reports different intermediate results: CSD and MSAD
+#' list the vehicles and the aggregation steps (CSD also the canonical
+#' correlations between vehicles), CBD lists how each vehicle is modeled and
+#' the canonical zero probability, and MBD lists the peeling steps. The four
+#' methods are documented together on this page.
 #'
 #' @param x A result of [calc_csd()], [calc_msad()], [calc_cbd()] or
 #'   [calc_mbd()].

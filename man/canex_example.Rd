@@ -3,14 +3,15 @@
 \docType{data}
 \name{canex_example}
 \alias{canex_example}
-\title{Example inputs for the CANEX model}
+\title{Illustrative inputs for the CANEX model}
 \format{
 A list with the components:
 \describe{
-\item{vehicles_data}{Data frame with columns \code{k} (insertions), \code{R1} and
-\code{R2} (reach after one and two insertions, as proportions).}
-\item{duplications}{Symmetric matrix of one-insertion duplications, as
-proportions of the population.}
+\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and
+\code{R2} (reach after one and two insertions, as proportions between 0
+and 1).}
+\item{duplications}{Symmetric matrix of proportions of the population
+exposed to both vehicles of each pair (one insertion in each).}
 \item{population}{Population size, in people.}
 }
 }
@@ -18,7 +19,7 @@ proportions of the population.}
 canex_example
 }
 \description{
-List of arguments for \code{\link[=calc_canex]{calc_canex()}}, ready for \code{do.call()}: two vehicles
+List of arguments ready for \code{do.call()} with \code{\link[=calc_canex]{calc_canex()}}: two vehicles
 with three and two insertions. Original illustrative data, not derived from
 any published source. For inputs taken from a published worked example, see
 \link{csd_kim2005}.

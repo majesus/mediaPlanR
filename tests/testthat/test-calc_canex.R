@@ -65,7 +65,7 @@ test_that("calc_canex validates its inputs", {
   expect_error(calc_canex(vehicles_ok, matrix(1, nrow = 3, ncol = 2)), "2 x 2 matrix")
   expect_error(calc_canex(vehicles_ok, dup_ok, population = -10), "population")
   expect_error(calc_canex(vehicles_ok, dup_ok, population = NA), "population")
-  expect_error(calc_canex(vehicles_ok[, c("k", "R1")], dup_ok), "columns k, R1 and R2")
+  expect_error(calc_canex(vehicles_ok[, c("k", "R1")], dup_ok), "R1 and R2")
   expect_error(calc_canex(transform(vehicles_ok, R1 = c(NA, 0.033)), dup_ok), "R1")
   asymmetric <- dup_ok
   asymmetric[1, 2] <- 0.02
@@ -103,4 +103,36 @@ test_that("the canonical correlation reproduces Table 1 of Danaher (1991)", {
   # Sum the two one-exposure cells in the observed bivariate Table 1.
   expect_lt(max(abs(fit$distribution$probability - c(0.4080, 0.4266, 0.1654))),
             1e-12)
+})
+
+test_that("calc_canex accepts the insertions column as an alias of k", {
+  duplications <- matrix(c(NA, 0.0157, 0.0157, NA), 2)
+  with_k <- data.frame(k = c(2, 2), R1 = c(0.4902, 0.033), R2 = c(0.5805, 0.0502))
+  with_insertions <- data.frame(insertions = c(2, 2), R1 = c(0.4902, 0.033),
+                                R2 = c(0.5805, 0.0502))
+  expect_equal(calc_canex(with_insertions, duplications)$distribution,
+               calc_canex(with_k, duplications)$distribution)
+  both <- cbind(with_k, insertions = c(2, 2))
+  expect_equal(calc_canex(both, duplications)$reach, calc_canex(with_k, duplications)$reach)
+  both$insertions <- c(3, 2)
+  expect_error(calc_canex(both, duplications), "both insertions and k")
+  expect_error(calc_canex(with_k[, c("R1", "R2")], duplications), "insertions [(]or k[)]")
+})
+
+test_that("the example data frame of the sequential models also runs CANEX", {
+  data(csd_kim2005)
+  duplications <- csd_kim2005$duplications
+  expect_s3_class(calc_canex(csd_kim2005$vehicles_data, duplications), "reach_canex")
+})
+
+test_that("calc_canex reports proportions unless a population is supplied", {
+  vehicles <- data.frame(insertions = c(2, 2), R1 = c(0.3, 0.2), R2 = c(0.4, 0.3))
+  duplications <- matrix(c(NA, 0.06, 0.06, NA), 2)
+  default <- calc_canex(vehicles, duplications)
+  expect_equal(default$population, 1)
+  expect_equal(default$reach$people, default$reach$probability)
+  expect_false(any(grepl("people", capture.output(print(default)))))
+  scaled <- calc_canex(vehicles, duplications, population = 5e5)
+  expect_equal(scaled$reach$people, 5e5 * scaled$reach$probability)
+  expect_true(any(grepl("people", capture.output(print(scaled)))))
 })

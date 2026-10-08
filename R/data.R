@@ -11,7 +11,7 @@
 # called "binomial": that name would mask stats::binomial once the package is
 # attached.
 
-#' Example inputs for the Sainsbury and Binomial models
+#' Illustrative inputs for the Sainsbury and Binomial models
 #'
 #' List of arguments ready for `do.call()` with [calc_sainsbury()] and
 #' [calc_binomial()], the two models that assume random duplication and random
@@ -30,27 +30,26 @@
 #' do.call(calc_binomial, ratings_example)
 "ratings_example"
 
-#' Example inputs for the Beta-Binomial model
+#' Illustrative inputs for the Beta-Binomial model
 #'
-#' List of arguments for [calc_beta_binomial()], ready for `do.call()`.
-#' Original illustrative data, not derived from any published source.
+#' List of arguments ready for `do.call()` with [calc_beta_binomial()]. Original
+#' illustrative data, not derived from any published source.
 #'
 #' @format A list with the components:
 #' \describe{
-#'   \item{A1}{Vehicle audience after the first insertion, in people.}
-#'   \item{A2}{Cumulative vehicle audience after the second insertion, in
-#'     people.}
-#'   \item{P}{Population size, in people.}
-#'   \item{n}{Total number of planned insertions.}
+#'   \item{R1}{Reach after the first insertion, as a proportion.}
+#'   \item{R2}{Cumulative reach after the second insertion, as a proportion.}
+#'   \item{insertions}{Total number of planned insertions.}
+#'   \item{population}{Population size, in people.}
 #' }
 #' @examples
 #' data(beta_binomial_example)
 #' do.call(calc_beta_binomial, beta_binomial_example)
 "beta_binomial_example"
 
-#' Example inputs for the Metheringham model
+#' Illustrative inputs for the Metheringham model
 #'
-#' List of arguments for [calc_metheringham()], ready for `do.call()`: three
+#' List of arguments ready for `do.call()` with [calc_metheringham()]: three
 #' vehicles with four, three and five insertions. Original illustrative data,
 #' not derived from any published source.
 #'
@@ -60,9 +59,10 @@
 #'     people per insertion.}
 #'   \item{insertions}{Numeric vector with the number of insertions in each
 #'     vehicle.}
-#'   \item{duplication_matrix}{Symmetric matrix, in people, with the audience
-#'     duplicated between vehicles (off-diagonal) and between two insertions
-#'     in the same vehicle (diagonal).}
+#'   \item{duplication_matrix}{Symmetric matrix, in people: the people exposed
+#'     to both one insertion in vehicle `i` and one in vehicle `j`
+#'     (off-diagonal), and the people exposed to two insertions of the same
+#'     vehicle (diagonal, as defined in [calc_metheringham()]).}
 #'   \item{population}{Population size, in people.}
 #' }
 #' @examples
@@ -70,9 +70,9 @@
 #' do.call(calc_metheringham, metheringham_example)
 "metheringham_example"
 
-#' Example inputs for the Hofmans accumulation model
+#' Illustrative inputs for the Hofmans accumulation model
 #'
-#' List of arguments for [calc_hofmans_accumulation()], ready for `do.call()`.
+#' List of arguments ready for `do.call()` with [calc_hofmans_accumulation()].
 #' One vehicle with several insertions: the "accumulation" domain. For the
 #' other Hofmans model (several vehicles, one insertion each), see
 #' [duplication_example]. Original illustrative data, not derived from any
@@ -82,8 +82,8 @@
 #' \describe{
 #'   \item{R1}{Reach after the first insertion, as a proportion.}
 #'   \item{R2}{Cumulative reach after the second insertion, as a proportion.}
-#'   \item{N}{Number of insertions up to which the cumulative reach is
-#'     calculated.}
+#'   \item{insertions}{Number of insertions up to which the cumulative reach
+#'     is calculated.}
 #' }
 #' @examples
 #' data(hofmans_accumulation_example)
@@ -91,7 +91,7 @@
 #' @seealso [calc_hofmans_accumulation()], [duplication_example]
 "hofmans_accumulation_example"
 
-#' Example inputs for the Agostini and Hofmans duplication models
+#' Illustrative inputs for the Agostini and Hofmans duplication models
 #'
 #' List of arguments ready for `do.call()` with [calc_agostini_duplication()]
 #' and [calc_hofmans_duplication()], the two ad hoc duplication models for
@@ -103,8 +103,9 @@
 #'   \item{audiences}{Numeric vector with the audience of each of three
 #'     vehicles, in people per insertion.}
 #'   \item{population}{Population size, in people.}
-#'   \item{duplication_matrix}{Symmetric matrix with the audience duplicated
-#'     between every pair of vehicles, in people. The diagonal is not used.}
+#'   \item{duplication_matrix}{Symmetric matrix whose element `[i, j]` is the
+#'     number of people in the audience of both vehicle `i` and vehicle `j`, in
+#'     people. The diagonal is not used.}
 #' }
 #' @examples
 #' data(duplication_example)
@@ -114,19 +115,20 @@
 #'   [hofmans_accumulation_example]
 "duplication_example"
 
-#' Example inputs for the CANEX model
+#' Illustrative inputs for the CANEX model
 #'
-#' List of arguments for [calc_canex()], ready for `do.call()`: two vehicles
+#' List of arguments ready for `do.call()` with [calc_canex()]: two vehicles
 #' with three and two insertions. Original illustrative data, not derived from
 #' any published source. For inputs taken from a published worked example, see
 #' [csd_kim2005].
 #'
 #' @format A list with the components:
 #' \describe{
-#'   \item{vehicles_data}{Data frame with columns `k` (insertions), `R1` and
-#'     `R2` (reach after one and two insertions, as proportions).}
-#'   \item{duplications}{Symmetric matrix of one-insertion duplications, as
-#'     proportions of the population.}
+#'   \item{vehicles_data}{Data frame with columns `insertions`, `R1` and
+#'     `R2` (reach after one and two insertions, as proportions between 0
+#'     and 1).}
+#'   \item{duplications}{Symmetric matrix of proportions of the population
+#'     exposed to both vehicles of each pair (one insertion in each).}
 #'   \item{population}{Population size, in people.}
 #' }
 #' @examples
@@ -134,34 +136,38 @@
 #' do.call(calc_canex, canex_example)
 "canex_example"
 
-#' Example inputs for fitting a Beta-Binomial to an external reach
+#' Illustrative inputs for fitting a Beta-Binomial to an external reach
 #'
-#' List of arguments for [fit_bbd_to_reach()], ready for `do.call()`. Original
-#' illustrative data, not derived from any published source.
+#' List of arguments ready for `do.call()` with [fit_bbd_to_reach()]: three
+#' vehicles and an external reach. Original illustrative data, not derived from
+#' any published source.
 #'
 #' @format A list with the components:
 #' \describe{
-#'   \item{insertions}{Number of insertions in each of three vehicles.}
-#'   \item{audiences}{Audience of each vehicle, in people per insertion.}
+#'   \item{insertions}{Number of insertions in each vehicle (three vehicles in
+#'     this example; [fit_bbd_to_reach()] accepts any number).}
+#'   \item{audiences}{Audience of each vehicle, in people per insertion (one
+#'     value per vehicle).}
 #'   \item{reach}{External schedule reach, in people.}
-#'   \item{universe}{Universe size, in people.}
+#'   \item{population}{Population size, in people.}
 #' }
 #' @examples
 #' data(bbd_reach_example)
 #' do.call(fit_bbd_to_reach, bbd_reach_example)
 "bbd_reach_example"
 
-#' Illustrative example inputs for the MSAD model
+#' Illustrative inputs for the MSAD model
 #'
-#' A small, self-contained two-vehicle scenario ready for
-#' `do.call(calc_msad, msad_example)`. Original illustrative data, not derived
-#' from any published source. For a dataset that reproduces published inputs
+#' List of arguments ready for `do.call(calc_msad, msad_example)`: a small
+#' two-vehicle scenario. Original illustrative data, not derived from any
+#' published source. For a dataset that reproduces published inputs
 #' for literature validation, see [msad_kim2005].
 #'
 #' @format A list with the components:
 #' \describe{
 #'   \item{vehicles_data}{Data frame with columns `insertions`, `R1` and `R2`.}
-#'   \item{duplications}{Symmetric matrix of one-insertion duplications.}
+#'   \item{duplications}{Symmetric matrix of proportions of the population
+#'     exposed to both vehicles of each pair (one insertion in each).}
 #'   \item{aggregation_order}{The order of aggregation, `1:2`.}
 #' }
 #' @examples
@@ -170,7 +176,7 @@
 #' @seealso [calc_msad()], [msad_kim2005]
 "msad_example"
 
-#' Kim's (2005) inputs for the MSAD model
+#' Published inputs for the MSAD model (Kim, 2005)
 #'
 #' Minimal factual inputs (insertion counts, reach and pairwise duplication
 #' figures) reproduced from Kim (2005), included solely so that users can
@@ -187,7 +193,8 @@
 #' \describe{
 #'   \item{vehicles_data}{Data frame with columns `insertions`, `R1` and `R2`
 #'     for three vehicles.}
-#'   \item{duplications}{Symmetric matrix of one-insertion duplications.}
+#'   \item{duplications}{Symmetric matrix of proportions of the population
+#'     exposed to both vehicles of each pair (one insertion in each).}
 #'   \item{aggregation_order}{The order of aggregation, `1:3`.}
 #' }
 #' @references
@@ -200,18 +207,19 @@
 #' @seealso [calc_msad()], [msad_example], [csd_kim2005]
 "msad_kim2005"
 
-#' Illustrative example inputs for the CSD model
+#' Illustrative inputs for the CSD model
 #'
-#' A small, self-contained three-vehicle scenario ready for
-#' `do.call(calc_csd, csd_example)`. Original illustrative data, not derived
-#' from any published source. For a dataset that reproduces published inputs
+#' List of arguments ready for `do.call(calc_csd, csd_example)`: a small
+#' three-vehicle scenario. Original illustrative data, not derived from any
+#' published source. For a dataset that reproduces published inputs
 #' for literature validation, see [csd_kim2005].
 #'
 #' @format A list with the components:
 #' \describe{
 #'   \item{vehicles_data}{Three rows with columns `insertions`, `R1` and
 #'     `R2`.}
-#'   \item{duplications}{Symmetric matrix of one-insertion duplications.}
+#'   \item{duplications}{Symmetric matrix of proportions of the population
+#'     exposed to both vehicles of each pair (one insertion in each).}
 #'   \item{aggregation_order}{The order of aggregation, `1:3`.}
 #' }
 #' @examples
@@ -221,12 +229,12 @@
 #' @seealso [calc_csd()], [csd_kim2005], [msad_example]
 "csd_example"
 
-#' Kim's (2005) worked example for the CSD model
+#' Published inputs for the CSD model (Kim, 2005)
 #'
 #' Minimal factual inputs (insertion counts, reach and pairwise duplication
 #' figures) reproduced from Kim (2005), Tables 4.2.2.1-4.2.2.10, for the
 #' three-vehicle Canonical Sequential Aggregation example with the aggregation
-#' order of the worked example (labelled "TD forward" by Kim). They are included solely so that users can verify
+#' order of the worked example (labeled "TD forward" by Kim). They are included solely so that users can verify
 #' that [calc_csd()] reproduces the published result; exact calculations keep
 #' more precision than the intermediate values rounded in the dissertation.
 #' They are bare numeric values reused for validation, not a reproduction of
@@ -239,7 +247,8 @@
 #' \describe{
 #'   \item{vehicles_data}{Three rows with columns `insertions`, `R1` and
 #'     `R2`.}
-#'   \item{duplications}{Symmetric matrix of one-insertion duplications.}
+#'   \item{duplications}{Symmetric matrix of proportions of the population
+#'     exposed to both vehicles of each pair (one insertion in each).}
 #'   \item{aggregation_order}{The published forward order, `1:3`.}
 #' }
 #' @references
@@ -252,18 +261,19 @@
 #' @seealso [calc_csd()], [csd_example], [msad_kim2005]
 "csd_kim2005"
 
-#' Illustrative example inputs for the MBD model
+#' Illustrative inputs for the MBD model
 #'
-#' A small, self-contained two-vehicle scenario ready for
-#' `do.call(calc_mbd, mbd_example)`. Original illustrative data, not derived
-#' from any published source. Two vehicles avoid the Beta-Binomial imputation
+#' List of arguments ready for `do.call(calc_mbd, mbd_example)`: a small
+#' two-vehicle scenario. Original illustrative data, not derived from any
+#' published source. Two vehicles avoid the Beta-Binomial imputation
 #' of co-exposure that three or more vehicles require. For a three-vehicle
 #' literature-validation benchmark, see [mbd_cheong2007].
 #'
 #' @format A list with the components:
 #' \describe{
 #'   \item{vehicles_data}{Two rows with columns `insertions`, `R1` and `R2`.}
-#'   \item{duplications}{Symmetric matrix of one-insertion duplications.}
+#'   \item{duplications}{Symmetric matrix of proportions of the population
+#'     exposed to both vehicles of each pair (one insertion in each).}
 #'   \item{aggregation_order}{The order of aggregation, `1:2`.}
 #' }
 #' @examples
@@ -273,15 +283,18 @@
 #' @seealso [calc_mbd()], [mbd_cheong2007]
 "mbd_example"
 
-#' Cheong's (2007) worked example for the MBD model
+#' Published inputs for the MBD model (Cheong, 2007)
 #'
 #' Minimal factual inputs (insertion counts, reach and pairwise duplication
 #' figures) reproduced from Cheong (2007), Chapter 4.2, for the three-vehicle
 #' conceptual example: vehicle A (2 insertions), vehicle B (1 insertion) and
 #' vehicle C (3 insertions). They are included solely so that users can verify
-#' that [calc_mbd()] reproduces the published result. This is the example of
-#' Cheong's dissertation that is fully specified and internally consistent
-#' without the negative-probability safety net. They are bare numeric values
+#' that [calc_mbd()] reproduces the published result up to the differences
+#' described in [calc_mbd()] (the printed intermediate tables contain
+#' arithmetic inconsistencies, so the published distribution is matched only
+#' within 0.002 per cell). This is the example of Cheong's dissertation that is
+#' fully specified and that the implementation computes without the
+#' negative-probability safety net. They are bare numeric values
 #' reused for validation, not a reproduction of the dissertation. The figures
 #' originate from Simmons Market Research Bureau (SMRB) magazine audience data
 #' of 1979; the same example appears in Kim (1994, pp. 125-139) and in Cheong,
@@ -292,7 +305,8 @@
 #' \describe{
 #'   \item{vehicles_data}{Three rows with columns `insertions`, `R1` and `R2`
 #'     (`R2` is `NA` for the single-insertion vehicle).}
-#'   \item{duplications}{Symmetric matrix of one-insertion duplications.}
+#'   \item{duplications}{Symmetric matrix of proportions of the population
+#'     exposed to both vehicles of each pair (one insertion in each).}
 #'   \item{aggregation_order}{`1:3`, Cheong's own worked order.}
 #' }
 #' @references
@@ -303,7 +317,7 @@
 #' Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
 #' multivariate beta binomial distribution for estimating magazine and
 #' Internet exposure frequency distributions. Journal of Advertising, 40(1),
-#' 7-23. \doi{10.2753/JOA0091-3367400101}
+#' 7-23. <https://doi.org/10.2753/JOA0091-3367400101>
 #' @examples
 #' data(mbd_cheong2007)
 #' result <- do.call(calc_mbd, mbd_cheong2007)

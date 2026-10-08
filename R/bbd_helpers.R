@@ -17,11 +17,14 @@ calculate_bbd_params <- function(R1, R2) {
   if (!is.numeric(R1) || !is.numeric(R2) || length(R1) != 1L ||
       length(R2) != 1L || !is.finite(R1) || !is.finite(R2) ||
       R1 <= 0 || R1 > 1 || R2 <= 0 || R2 > 1) {
-    stop("R1 and R2 must be numeric and lie in the interval (0, 1].",
+    stop("R1 and R2 must be numeric and lie in the interval (0, 1]. They are ",
+         "reach proportions, for example 0.30 for 30%, not percentages.",
          call. = FALSE)
   }
   if (R2 < R1) {
-    stop("R2 cannot be smaller than R1 (reach must be non-decreasing).",
+    stop("R2 cannot be smaller than R1 (reach must be non-decreasing). R2 is ",
+         "the cumulative reach after two insertions of the same vehicle, so it ",
+         "must be at least R1 (here R1 = ", format(R1, digits = 6), ").",
          call. = FALSE)
   }
 
@@ -36,7 +39,11 @@ calculate_bbd_params <- function(R1, R2) {
   if (theta < -relative_tolerance) {
     stop("R2 is incompatible with a Beta-Binomial exposure model: it exceeds ",
          "the independence limit, 2 * R1 - R1^2 (the implied duplication is ",
-         "lower than random duplication would produce).", call. = FALSE)
+         "lower than random duplication would produce). For R1 = ",
+         format(R1, digits = 6), ", R2 must lie between ", format(R1, digits = 6),
+         " and ", format(2 * R1 - R1^2, digits = 6), ". Check that R2 is the ",
+         "cumulative reach after two insertions of the vehicle, expressed as a ",
+         "proportion.", call. = FALSE)
   }
   if (theta < relative_tolerance) {
     return(list(alpha = Inf, beta = Inf, p = R1, type = "binomial_limit"))

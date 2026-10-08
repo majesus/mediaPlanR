@@ -13,7 +13,7 @@ names(d)[1] <- "k"
 stopifnot(abs(sum(calc_canex(d, m)$distribution$probability) - 1) < 1e-12)
 stopifnot(abs(calc_sainsbury(c(0.3, 0.4), 1)$reach$percent - 58) < 1e-10)
 stopifnot(abs(calc_binomial(c(0.3, 0.4), 1)$reach$percent - 57.75) < 1e-10)
-stopifnot(abs(calc_beta_binomial(0.3, 0.45, 1, 2)$reach$percent - 45) < 1e-10)
+stopifnot(abs(calc_beta_binomial(0.3, 0.45, 2)$reach$percent - 45) < 1e-10)
 for (dataset in list(metheringham_example, duplication_example)) {
   f <- if ("insertions" %in% names(dataset)) calc_metheringham else calc_hofmans_duplication
   stopifnot(is.finite(do.call(f, dataset)$reach$percent))

@@ -10,7 +10,8 @@ calc_binomial(audiences, population, insertions = rep(1L, length(audiences)))
 \item{audiences}{Numeric vector with the audience of each vehicle, in people
 per insertion.}
 
-\item{population}{Population size, in people.}
+\item{population}{Population size, in people. No audience can exceed it;
+otherwise the function stops with an error.}
 
 \item{insertions}{Non-negative integer vector with the number of insertions
 planned in each vehicle. It defaults to one insertion per vehicle, the
@@ -30,7 +31,8 @@ exposed at least once, at least twice, and so on.
 \description{
 Implements the Binomial model of Lee and Burkhart (1960), reviewed by
 Chandon, to calculate reach and the exposure distribution (and its
-cumulative counterpart) of a media plan with several vehicles. The model
+cumulative counterpart) of a media plan with several vehicles and one or
+more insertions in each of them (argument \code{insertions}). The model
 assumes random duplication \emph{and} random accumulation (repeat insertions in
 the same vehicle are also independent), homogeneous individuals and
 homogeneous vehicles. Under these assumptions every insertion is an
@@ -45,7 +47,7 @@ Aldás Manzano (1998, Section 3.3.1.1) defines the exposure probability as
 vehicle audiences and every vehicle receives the same number of insertions
 \eqn{n}, so a plan with \eqn{m} vehicles has \eqn{N = n m} insertions. With unequal insertion
 counts, this function uses the insertion-weighted mean audience,
-\eqn{\sum_i n_i A_i / \sum_i n_i}. The two definitions coincide when all
+\eqn{\sum_{i=1}^{m} n_i A_i / \sum_{i=1}^{m} n_i}. The two definitions coincide when all
 vehicles receive the same number of insertions, and the weighted mean
 preserves the plan's expected number of exposures in general.
 

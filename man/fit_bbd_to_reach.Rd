@@ -8,7 +8,7 @@ fit_bbd_to_reach(
   insertions,
   audiences,
   reach,
-  universe,
+  population,
   precision = 100,
   max_iter = 100
 )
@@ -22,7 +22,8 @@ per insertion.}
 
 \item{reach}{External schedule reach, in people.}
 
-\item{universe}{Universe size, in people.}
+\item{population}{Population size, in people. No audience can exceed it;
+otherwise the function stops with an error.}
 
 \item{precision}{Convergence criterion, in people. The default is 100.}
 
@@ -32,7 +33,7 @@ per insertion.}
 A list of class \code{"bbd_reach_fit"} with components:
 \itemize{
 \item \code{parameters}: list with \code{alpha}, \code{beta}, \code{N} (total insertions), \code{m}
-(number of vehicles), \code{universe}, \code{iterations}, \code{converged}, \code{fit_type}
+(number of vehicles), \code{population}, \code{iterations}, \code{converged}, \code{fit_type}
 (\code{"beta_binomial"}, \code{"polarized_limit"} or \code{"binomial_limit"}),
 \code{mean_probability} and \code{feasible_reach} (the admissible interval, in
 people).
@@ -54,18 +55,32 @@ by mean and zeros" step of the Hofmans Beta-Binomial procedure; it is not
 the Morgensztern Sequential Aggregation Distribution (\code{\link[=calc_msad]{calc_msad()}}).
 }
 \details{
+When it is useful: several models (\code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}},
+\code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}}, the Morgensztern formula) and many real
+sources (a panel, a syndicated survey, planning software) give only the
+reach of a schedule, not how many times people are exposed. This function
+completes the picture: it finds the Beta-Binomial exposure distribution
+with that reach and the mean number of exposures implied by the audiences, so
+that the frequency distribution, the average frequency and the effective
+reach can be read from it. It is a bridge from a reach-only figure to a
+distribution, not a model of duplication: the result is only as good as the
+reach supplied and as the assumption that the Beta-Binomial shape suits the
+schedule.
+
 With \eqn{n_i} insertions of audience \eqn{A_i} in vehicle \eqn{i}, the
 insertion-weighted mean exposure probability is
-\eqn{\bar{p} = \sum_i n_i A_i / (U \sum_i n_i)}, where \eqn{U} is the
-universe. The Beta-Binomial has \eqn{N = \sum_i n_i} trials and shape
+\eqn{\bar{p} = \sum_{i=1}^{m} n_i A_i / (P \sum_{i=1}^{m} n_i)}, where
+\eqn{m} is the number of vehicles and \eqn{P} is the
+population (with the audiences \eqn{A_i} in people). The Beta-Binomial has
+\eqn{N = \sum_{i=1}^{m} n_i} trials and shape
 parameters \eqn{\alpha = c \bar{p}} and \eqn{\beta = c (1 - \bar{p})}, so
 its mean is preserved for every concentration \eqn{c > 0}. The function
 solves, with \code{\link[stats:uniroot]{stats::uniroot()}} on the log scale of \eqn{c}, for the
-concentration whose reach, \eqn{1 - P(K = 0)}, equals the external reach.
+concentration whose reach, \eqn{1 - \Pr(K = 0)}, equals the external reach.
 
 The reach a Beta-Binomial with this mean can take lies between the
-polarized limit (\eqn{c \to 0}), \eqn{\bar{p} U}, and the binomial limit
-(\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) U}. An external reach
+polarized limit (\eqn{c \to 0}), \eqn{\bar{p} P}, and the binomial limit
+(\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) P}. An external reach
 outside that interval, beyond \code{precision}, is rejected. At either limit the
 distribution is computed directly and \code{alpha} and \code{beta} are \code{0} or \code{Inf}.
 
@@ -77,6 +92,15 @@ data(bbd_reach_example)
 fit <- do.call(fit_bbd_to_reach, bbd_reach_example)
 fit
 
+# From a reach-only formula to an exposure distribution: the reach of
+# Hofmans' duplication model, completed with a Beta-Binomial distribution
+data(duplication_example)
+hofmans <- do.call(calc_hofmans_duplication, duplication_example)
+fit_bbd_to_reach(
+  insertions = c(1, 1, 1), audiences = duplication_example$audiences,
+  reach = hofmans$reach$people, population = duplication_example$population
+)
+
 }
 \references{
 Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
@@ -87,7 +111,10 @@ Section 3.3.1.10 (the Hofmans Beta-Binomial method of Leckenby and Boyd,
 pages 208-209) and Section 3.3.2.2 (the Morgensztern reach formula).
 }
 \seealso{
-\code{\link[=calc_beta_binomial]{calc_beta_binomial()}}, \code{\link[=calc_sainsbury]{calc_sainsbury()}}, \code{\link[=calc_binomial]{calc_binomial()}} and
-\code{\link[=calc_metheringham]{calc_metheringham()}}, which estimate the Beta-Binomial or the exposure
-distribution from audiences alone.
+\code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} and \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}, whose reach
+this function can complete with a distribution. For models that estimate the
+exposure distribution without an external reach, see \code{\link[=calc_sainsbury]{calc_sainsbury()}} and
+\code{\link[=calc_binomial]{calc_binomial()}} (they need only audiences, population and insertions),
+\code{\link[=calc_beta_binomial]{calc_beta_binomial()}} (also needs the reach after two insertions) and
+\code{\link[=calc_metheringham]{calc_metheringham()}} (also needs the observed duplications).
 }

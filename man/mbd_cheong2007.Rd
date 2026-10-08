@@ -3,14 +3,15 @@
 \docType{data}
 \name{mbd_cheong2007}
 \alias{mbd_cheong2007}
-\title{Cheong's (2007) worked example for the MBD model}
+\title{Published inputs for the MBD model (Cheong, 2007)}
 \format{
 A list ready for \code{do.call(calc_mbd, mbd_cheong2007)} with the
 components:
 \describe{
 \item{vehicles_data}{Three rows with columns \code{insertions}, \code{R1} and \code{R2}
 (\code{R2} is \code{NA} for the single-insertion vehicle).}
-\item{duplications}{Symmetric matrix of one-insertion duplications.}
+\item{duplications}{Symmetric matrix of proportions of the population
+exposed to both vehicles of each pair (one insertion in each).}
 \item{aggregation_order}{\code{1:3}, Cheong's own worked order.}
 }
 }
@@ -22,9 +23,12 @@ Minimal factual inputs (insertion counts, reach and pairwise duplication
 figures) reproduced from Cheong (2007), Chapter 4.2, for the three-vehicle
 conceptual example: vehicle A (2 insertions), vehicle B (1 insertion) and
 vehicle C (3 insertions). They are included solely so that users can verify
-that \code{\link[=calc_mbd]{calc_mbd()}} reproduces the published result. This is the example of
-Cheong's dissertation that is fully specified and internally consistent
-without the negative-probability safety net. They are bare numeric values
+that \code{\link[=calc_mbd]{calc_mbd()}} reproduces the published result up to the differences
+described in \code{\link[=calc_mbd]{calc_mbd()}} (the printed intermediate tables contain
+arithmetic inconsistencies, so the published distribution is matched only
+within 0.002 per cell). This is the example of Cheong's dissertation that is
+fully specified and that the implementation computes without the
+negative-probability safety net. They are bare numeric values
 reused for validation, not a reproduction of the dissertation. The figures
 originate from Simmons Market Research Bureau (SMRB) magazine audience data
 of 1979; the same example appears in Kim (1994, pp. 125-139) and in Cheong,
@@ -43,7 +47,7 @@ Austin, Ch. 4.2.
 Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
 multivariate beta binomial distribution for estimating magazine and
 Internet exposure frequency distributions. Journal of Advertising, 40(1),
-7-23. \doi{10.2753/JOA0091-3367400101}
+7-23. \url{https://doi.org/10.2753/JOA0091-3367400101}
 }
 \seealso{
 \code{\link[=calc_mbd]{calc_mbd()}}, \link{mbd_example}

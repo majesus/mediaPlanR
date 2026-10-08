@@ -8,6 +8,18 @@
 #' by mean and zeros" step of the Hofmans Beta-Binomial procedure; it is not
 #' the Morgensztern Sequential Aggregation Distribution ([calc_msad()]).
 #'
+#' When it is useful: several models ([calc_agostini_duplication()],
+#' [calc_hofmans_duplication()], the Morgensztern formula) and many real
+#' sources (a panel, a syndicated survey, planning software) give only the
+#' reach of a schedule, not how many times people are exposed. This function
+#' completes the picture: it finds the Beta-Binomial exposure distribution
+#' with that reach and the mean number of exposures implied by the audiences, so
+#' that the frequency distribution, the average frequency and the effective
+#' reach can be read from it. It is a bridge from a reach-only figure to a
+#' distribution, not a model of duplication: the result is only as good as the
+#' reach supplied and as the assumption that the Beta-Binomial shape suits the
+#' schedule.
+#'
 #' @references
 #' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
 #' distribución de contactos en la planificación de medios publicitarios
@@ -21,23 +33,26 @@
 #' @param audiences Numeric vector with the audience of each vehicle, in people
 #'   per insertion.
 #' @param reach External schedule reach, in people.
-#' @param universe Universe size, in people.
+#' @param population Population size, in people. No audience can exceed it;
+#'   otherwise the function stops with an error.
 #' @param precision Convergence criterion, in people. The default is 100.
 #' @param max_iter Maximum number of iterations of the root finder.
 #'
 #' @details
 #' With \eqn{n_i} insertions of audience \eqn{A_i} in vehicle \eqn{i}, the
 #' insertion-weighted mean exposure probability is
-#' \eqn{\bar{p} = \sum_i n_i A_i / (U \sum_i n_i)}, where \eqn{U} is the
-#' universe. The Beta-Binomial has \eqn{N = \sum_i n_i} trials and shape
+#' \eqn{\bar{p} = \sum_{i=1}^{m} n_i A_i / (P \sum_{i=1}^{m} n_i)}, where
+#' \eqn{m} is the number of vehicles and \eqn{P} is the
+#' population (with the audiences \eqn{A_i} in people). The Beta-Binomial has
+#' \eqn{N = \sum_{i=1}^{m} n_i} trials and shape
 #' parameters \eqn{\alpha = c \bar{p}} and \eqn{\beta = c (1 - \bar{p})}, so
 #' its mean is preserved for every concentration \eqn{c > 0}. The function
 #' solves, with [stats::uniroot()] on the log scale of \eqn{c}, for the
-#' concentration whose reach, \eqn{1 - P(K = 0)}, equals the external reach.
+#' concentration whose reach, \eqn{1 - \Pr(K = 0)}, equals the external reach.
 #'
 #' The reach a Beta-Binomial with this mean can take lies between the
-#' polarized limit (\eqn{c \to 0}), \eqn{\bar{p} U}, and the binomial limit
-#' (\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) U}. An external reach
+#' polarized limit (\eqn{c \to 0}), \eqn{\bar{p} P}, and the binomial limit
+#' (\eqn{c \to \infty}), \eqn{(1 - (1 - \bar{p})^N) P}. An external reach
 #' outside that interval, beyond `precision`, is rejected. At either limit the
 #' distribution is computed directly and `alpha` and `beta` are `0` or `Inf`.
 #'
@@ -47,7 +62,7 @@
 #' @return A list of class `"bbd_reach_fit"` with components:
 #' \itemize{
 #'   \item `parameters`: list with `alpha`, `beta`, `N` (total insertions), `m`
-#'     (number of vehicles), `universe`, `iterations`, `converged`, `fit_type`
+#'     (number of vehicles), `population`, `iterations`, `converged`, `fit_type`
 #'     (`"beta_binomial"`, `"polarized_limit"` or `"binomial_limit"`),
 #'     `mean_probability` and `feasible_reach` (the admissible interval, in
 #'     people).
@@ -64,26 +79,38 @@
 #' fit <- do.call(fit_bbd_to_reach, bbd_reach_example)
 #' fit
 #'
+#' # From a reach-only formula to an exposure distribution: the reach of
+#' # Hofmans' duplication model, completed with a Beta-Binomial distribution
+#' data(duplication_example)
+#' hofmans <- do.call(calc_hofmans_duplication, duplication_example)
+#' fit_bbd_to_reach(
+#'   insertions = c(1, 1, 1), audiences = duplication_example$audiences,
+#'   reach = hofmans$reach$people, population = duplication_example$population
+#' )
+#'
 #' @seealso
-#' [calc_beta_binomial()], [calc_sainsbury()], [calc_binomial()] and
-#' [calc_metheringham()], which estimate the Beta-Binomial or the exposure
-#' distribution from audiences alone.
+#' [calc_hofmans_duplication()] and [calc_agostini_duplication()], whose reach
+#' this function can complete with a distribution. For models that estimate the
+#' exposure distribution without an external reach, see [calc_sainsbury()] and
+#' [calc_binomial()] (they need only audiences, population and insertions),
+#' [calc_beta_binomial()] (also needs the reach after two insertions) and
+#' [calc_metheringham()] (also needs the observed duplications).
 #' @export
-fit_bbd_to_reach <- function(insertions, audiences, reach, universe,
+fit_bbd_to_reach <- function(insertions, audiences, reach, population,
                              precision = 100, max_iter = 100) {
   assert_numeric_vector(insertions, "insertions", min = 1, integer = TRUE)
   m <- length(insertions)
   assert_numeric_vector(audiences, "audiences", min = 0, min_open = TRUE,
                         length = m)
-  assert_number(universe, "universe", min = 0, min_open = TRUE)
-  if (any(audiences > universe)) {
-    stop("audiences cannot exceed universe.", call. = FALSE)
+  assert_number(population, "population", min = 0, min_open = TRUE)
+  if (any(audiences > population)) {
+    stop("audiences cannot exceed population.", call. = FALSE)
   }
-  assert_number(reach, "reach", min = 0, max = universe, min_open = TRUE)
+  assert_number(reach, "reach", min = 0, max = population, min_open = TRUE)
   assert_number(precision, "precision", min = 0, min_open = TRUE)
   assert_number(max_iter, "max_iter", min = 1, integer = TRUE)
 
-  audience_props <- audiences / universe
+  audience_props <- audiences / population
   N <- sum(insertions)
   mean_probability <- sum(insertions * audience_props) / N
 
@@ -91,11 +118,11 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, universe,
     concentration <- exp(log_concentration)
     alpha <- concentration * mean_probability
     beta <- concentration * (1 - mean_probability)
-    (1 - dbetabinom(0, size = N, alpha = alpha, beta = beta)) * universe
+    (1 - dbetabinom(0, size = N, alpha = alpha, beta = beta)) * population
   }
 
-  feasible_min <- mean_probability * universe
-  feasible_max <- (1 - (1 - mean_probability)^N) * universe
+  feasible_min <- mean_probability * population
+  feasible_max <- (1 - (1 - mean_probability)^N) * population
   if (reach < feasible_min - precision || reach > feasible_max + precision) {
     stop(sprintf("reach is outside the feasible Beta-Binomial interval [%.0f, %.0f].",
                  feasible_min, feasible_max), call. = FALSE)
@@ -136,7 +163,7 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, universe,
     fit_type <- "binomial_limit"
   } else {
     root <- stats::uniroot(objective, c(-30, 30),
-                           tol = max(.Machine$double.eps^0.5, precision / universe),
+                           tol = max(.Machine$double.eps^0.5, precision / population),
                            maxiter = max_iter)$root
     concentration <- exp(root)
     alpha <- concentration * mean_probability
@@ -154,7 +181,7 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, universe,
       beta = beta,
       N = N,
       m = m,
-      universe = universe,
+      population = population,
       iterations = iterations,
       converged = abs(difference) <= precision,
       fit_type = fit_type,
@@ -178,15 +205,15 @@ print.bbd_reach_fit <- function(x, ...) {
   cat("Beta-Binomial fit to an external reach\n")
   cat("======================================\n")
   cat(sprintf("Universe: %s people | Vehicles: %d | Total insertions: %d\n",
-              format_number(p$universe), p$m, as.integer(p$N)))
+              format_number(p$population), p$m, as.integer(p$N)))
   cat(sprintf("Fit: %s | alpha = %s | beta = %s\n", p$fit_type,
               format(p$alpha, digits = 5), format(p$beta, digits = 5)))
   cat(sprintf("External reach: %s people (%.2f%%)\n",
               format_number(x$reach$external),
-              100 * x$reach$external / p$universe))
+              100 * x$reach$external / p$population))
   cat(sprintf("Fitted reach:   %s people (%.2f%%) | difference: %s people\n",
               format_number(round(x$reach$fitted)),
-              100 * x$reach$fitted / p$universe,
+              100 * x$reach$fitted / p$population,
               format_number(round(abs(x$reach$difference)))))
   cat(sprintf("Iterations: %d | converged: %s\n", p$iterations,
               if (p$converged) "yes" else "no"))

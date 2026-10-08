@@ -3,14 +3,15 @@
 \docType{data}
 \name{csd_kim2005}
 \alias{csd_kim2005}
-\title{Kim's (2005) worked example for the CSD model}
+\title{Published inputs for the CSD model (Kim, 2005)}
 \format{
 A list ready for \code{do.call(calc_csd, csd_kim2005)} with the
 components:
 \describe{
 \item{vehicles_data}{Three rows with columns \code{insertions}, \code{R1} and
 \code{R2}.}
-\item{duplications}{Symmetric matrix of one-insertion duplications.}
+\item{duplications}{Symmetric matrix of proportions of the population
+exposed to both vehicles of each pair (one insertion in each).}
 \item{aggregation_order}{The published forward order, \code{1:3}.}
 }
 }
@@ -21,7 +22,7 @@ csd_kim2005
 Minimal factual inputs (insertion counts, reach and pairwise duplication
 figures) reproduced from Kim (2005), Tables 4.2.2.1-4.2.2.10, for the
 three-vehicle Canonical Sequential Aggregation example with the aggregation
-order of the worked example (labelled "TD forward" by Kim). They are included solely so that users can verify
+order of the worked example (labeled "TD forward" by Kim). They are included solely so that users can verify
 that \code{\link[=calc_csd]{calc_csd()}} reproduces the published result; exact calculations keep
 more precision than the intermediate values rounded in the dissertation.
 They are bare numeric values reused for validation, not a reproduction of

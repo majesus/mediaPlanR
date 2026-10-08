@@ -29,7 +29,8 @@ ordinary reach). \code{"min_cost"} minimizes spend, within the budget, subject t
 effective reach being at least \code{target_reach}.}
 
 \item{target_reach}{Required effective reach, as a proportion of the
-population between zero and one, for \code{objective = "min_cost"}.}
+population between zero and one (0.40 for 40\%, not 40), for
+\code{objective = "min_cost"}.}
 
 \item{effective_frequency}{Effective frequency: the minimum number of
 exposures, \eqn{f}, that a person needs to count as effectively reached
@@ -40,8 +41,12 @@ more times; it is not the proportion exposed exactly \eqn{f} times.}
 \item{max_insertions}{Integer vector with the maximum number of insertions
 allowed in each channel, in the order of the rows of the plan.}
 
-\item{model}{\code{"sainsbury"} or \code{"binomial"}; see \code{\link[=estimate_reach]{estimate_reach()}}.
-Candidate allocations routinely place several insertions in the same
+\item{model}{\code{"sainsbury"} or \code{"binomial"}; see \code{\link[=estimate_reach]{estimate_reach()}}. Only
+these two models can be evaluated for every candidate allocation, because
+they need only the audiences and the insertions that the plan contains;
+the models that need observed duplications or the reach after two
+insertions would require those data for every possible allocation.
+Candidate allocations also routinely place several insertions in the same
 vehicle, so the Negative-Binomial approximation, which is scoped to
 continuous exposure processes and not to finite schedules, is not offered.}
 
@@ -49,10 +54,9 @@ continuous exposure processes and not to finite schedules, is not offered.}
 search when the number of allocations does not exceed \code{max_combinations}
 and the greedy heuristic otherwise.}
 
-\item{max_combinations}{Maximum number of allocations, `prod(max_insertions
-\itemize{
-\item 1)`, allowed for exhaustive search.
-}}
+\item{max_combinations}{Maximum number of allocations allowed for exhaustive
+search. The number of allocations is the product, over the channels, of
+one plus the maximum insertions of the channel (\code{prod(max_insertions + 1)}).}
 }
 \value{
 A \code{media_optimization} object: a list with the optimized \code{plan}, the

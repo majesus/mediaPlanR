@@ -224,18 +224,26 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' distributions are convolved into a growing pseudo-vehicle.
 #'
 #' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
-#'   with the same convention as [calc_csd()] (`R1` strictly between zero and
-#'   one, `R1 <= R2 <= 2 * R1 - R1^2`, and `R2` may be `NA` only when
-#'   `insertions` is one). At most 12 vehicles are supported.
-#' @param duplications Symmetric matrix of pairwise one-insertion audience
-#'   duplications, as proportions of the population. The diagonal is ignored.
-#' @param aggregation_order Either `"audience_desc"` (Cheong's rule: vehicles
-#'   are aggregated in decreasing order of audience and duplication
-#'   magnitude), `"given"` (the row order), or a permutation of the row
+#'   with the same convention as [calc_csd()] (`R1` and `R2` are proportions
+#'   between 0 and 1, not percentages, `R1` is strictly between zero and one,
+#'   `R1 <= R2 <= 2 * R1 - R1^2`, and `R2` may be `NA` only when `insertions`
+#'   is one; the function stops with an explanatory error if `R2` is outside
+#'   that range). At most 12 vehicles are supported.
+#' @param duplications Symmetric matrix whose element `[i, j]` is the
+#'   proportion of the population that is exposed to both vehicle `i` and
+#'   vehicle `j` (one insertion in each), a number between 0 and 1 (not a
+#'   percentage). It is not the proportion exposed to each vehicle separately.
+#'   The diagonal is ignored.
+#' @param aggregation_order Either `"audience_desc"` (vehicles in decreasing
+#'   order of one-insertion reach `R1`, ties in the row order; duplications are
+#'   not used to sort), `"given"` (the row order), or a permutation of the row
 #'   indices. Vehicles are peeled off starting from the *last* position of this
-#'   order, as in Cheong's worked examples.
-#' @param population Positive population used only to express probabilities
-#'   as people. The default, 1, leaves `people` equal to `probability`.
+#'   order, as in Cheong's worked examples. In MBD the order can change both the
+#'   reach and the exposure distribution (see Details).
+#' @param population Number of people in the population (a count, not a
+#'   proportion). It only converts probabilities into people: the `people`
+#'   columns of the result are the probability times `population`, and with the
+#'   default, 1, they equal the probability.
 #' @param tolerance Positive numerical tolerance for probability constraints.
 #'   The Fréchet and triple-feasibility checks apply it relative to the smaller
 #'   audience involved.
@@ -314,7 +322,7 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
 #' multivariate beta binomial distribution for estimating magazine and
 #' Internet exposure frequency distributions. Journal of Advertising, 40(1),
-#' 7-23. \doi{10.2753/JOA0091-3367400101}
+#' 7-23. <https://doi.org/10.2753/JOA0091-3367400101>
 #'
 #' Waring, E. (1792). On the principles of translating algebraic quantities into
 #' probable relations and annuities. Cambridge. (The work Cheong, 2007, and

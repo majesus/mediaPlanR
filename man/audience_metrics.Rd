@@ -12,11 +12,16 @@ audience_metrics(
 )
 }
 \arguments{
-\item{gross_audience}{Gross audience of each channel, in people.}
+\item{gross_audience}{Total audience of each channel, in people, whatever
+the demographic profile of its members (as opposed to \code{target_audience},
+the part that belongs to the target). This is not the "gross audience"
+that \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}} uses for the sum of several vehicles'
+audiences.}
 
 \item{target_audience}{Audience belonging to the target, in people.}
 
-\item{gross_universe}{Total planning universe, in people.}
+\item{gross_universe}{Total planning universe (the whole population), in
+people, as opposed to \code{target_universe}.}
 
 \item{target_universe}{Target population within the universe, in people.}
 }

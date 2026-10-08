@@ -351,15 +351,18 @@ calc_binomial(audiences = 500000, population = 1000000, insertions = 5)$reach$pe
 ```
 
 Now suppose that audience research shows that the cumulative audience after two
-insertions is only 550,000: the second insertion adds just 50,000 new people.
+insertions is only 550,000 (a reach of 55% against 50% after one insertion): the
+second insertion adds just 50,000 new people.
 That is evidence of a loyal audience, and `calc_beta_binomial()` uses it. The
 **Beta-Binomial** model lets every person have a different, personal probability
 of exposure and estimates how those probabilities are spread from the two
-audience figures:
+audience figures, written as reach proportions of the population (`R1` after one
+insertion and `R2` after two):
 
 
 ``` r
-beta_binomial <- calc_beta_binomial(A1 = 500000, A2 = 550000, P = 1000000, n = 5)
+beta_binomial <- calc_beta_binomial(R1 = 0.50, R2 = 0.55, insertions = 5,
+                                    population = 1000000)
 beta_binomial$reach$percent
 #> [1] 60.33654
 beta_binomial$distribution$percent
@@ -383,7 +386,7 @@ Manzano, 1998) and by the data they need.
 | Plan | Data you need | Models |
 |---|---|---|
 | Several vehicles, any number of insertions, no duplication data | Audience of each vehicle, population | `calc_sainsbury()`, `calc_binomial()` |
-| One vehicle, several insertions | Audience after one and after two insertions | `calc_beta_binomial()`, `calc_hofmans_accumulation()` |
+| One vehicle, several insertions | Reach after one and after two insertions | `calc_beta_binomial()`, `calc_hofmans_accumulation()` |
 | Several vehicles, one insertion each, with observed duplication | Audiences and the duplication of each pair | `calc_agostini_duplication()`, `calc_hofmans_duplication()` (reach only) |
 | Several vehicles and insertions, with observed duplication | Reach after one and two insertions of each vehicle, and the duplication of each pair | `calc_metheringham()`, `calc_canex()`, `calc_cbd()`, `calc_csd()`, `calc_msad()`, `calc_mbd()` |
 | One Beta-Binomial for a whole schedule, matched to a reach figure you already have | Insertions, audiences and that reach | `fit_bbd_to_reach()`; `calibrate_bbd()` matches a target effective reach instead |
@@ -702,11 +705,11 @@ Units differ between families, and the functions check them:
 | Model | Function | Main inputs | Units |
 |---|---|---|---|
 | Sainsbury, Binomial | `calc_sainsbury()`, `calc_binomial()` | `audiences`, `population`, `insertions` | people |
-| Beta-Binomial | `calc_beta_binomial()` | `A1`, `A2`, `P`, `n` | people |
-| Hofmans (accumulation) | `calc_hofmans_accumulation()` | `R1`, `R2`, `N` | proportions |
+| Beta-Binomial | `calc_beta_binomial()` | `R1`, `R2`, `insertions`, `population` | proportions (`population` in people) |
+| Hofmans (accumulation) | `calc_hofmans_accumulation()` | `R1`, `R2`, `insertions` | proportions |
 | Agostini, Hofmans (duplication) | `calc_agostini_duplication()`, `calc_hofmans_duplication()` | `audiences`, `population`, `duplication_matrix` | people |
 | Metheringham | `calc_metheringham()` | `audiences`, `insertions`, `duplication_matrix`, `population` | people |
-| CANEX | `calc_canex()` | `vehicles_data` (`k`, `R1`, `R2`), `duplications`, `population` | proportions |
+| CANEX | `calc_canex()` | `vehicles_data` (`insertions`, `R1`, `R2`), `duplications`, `population` | proportions |
 | CSD, MSAD, CBD, MBD | `calc_csd()`, `calc_msad()`, `calc_cbd()`, `calc_mbd()` | `vehicles_data` (`insertions`, `R1`, `R2`), `duplications`, `population` | proportions |
 
 Each function's help page (`?calc_canex`, `?calc_cbd`, ...) documents its
@@ -782,6 +785,12 @@ never infers them from model inputs.
 
 ## Limits to keep in mind
 
+- **Applying a model is not validating it.** The models can be applied to any
+  mix of media, but the evidence on their accuracy comes mainly from magazine
+  and Internet data (the sources cited in each help page). Their accuracy for a
+  particular combination of media, such as television, radio and digital, and
+  for a particular population has to be checked against observed data for that
+  combination (see `evaluate_exposure_model()`).
 - **Audience is an opportunity to see, not attention.** The models estimate how
   many people are exposed to a vehicle, not how many notice, remember or are
   persuaded by the message.

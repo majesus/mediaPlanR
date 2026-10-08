@@ -3,7 +3,7 @@
 \docType{data}
 \name{metheringham_example}
 \alias{metheringham_example}
-\title{Example inputs for the Metheringham model}
+\title{Illustrative inputs for the Metheringham model}
 \format{
 A list with the components:
 \describe{
@@ -11,9 +11,10 @@ A list with the components:
 people per insertion.}
 \item{insertions}{Numeric vector with the number of insertions in each
 vehicle.}
-\item{duplication_matrix}{Symmetric matrix, in people, with the audience
-duplicated between vehicles (off-diagonal) and between two insertions
-in the same vehicle (diagonal).}
+\item{duplication_matrix}{Symmetric matrix, in people: the people exposed
+to both one insertion in vehicle \code{i} and one in vehicle \code{j}
+(off-diagonal), and the people exposed to two insertions of the same
+vehicle (diagonal, as defined in \code{\link[=calc_metheringham]{calc_metheringham()}}).}
 \item{population}{Population size, in people.}
 }
 }
@@ -21,7 +22,7 @@ in the same vehicle (diagonal).}
 metheringham_example
 }
 \description{
-List of arguments for \code{\link[=calc_metheringham]{calc_metheringham()}}, ready for \code{do.call()}: three
+List of arguments ready for \code{do.call()} with \code{\link[=calc_metheringham]{calc_metheringham()}}: three
 vehicles with four, three and five insertions. Original illustrative data,
 not derived from any published source.
 }

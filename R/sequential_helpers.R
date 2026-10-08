@@ -38,7 +38,7 @@ validate_sequential_inputs <- function(vehicles_data, duplications,
   if (!is.numeric(R1) || anyNA(R1) || any(!is.finite(R1)) ||
       any(R1 <= 0 | R1 >= 1)) {
     stop("R1 must contain finite proportions strictly between zero and one.",
-         call. = FALSE)
+         proportion_hint(R1), call. = FALSE)
   }
   needs_R2 <- insertions >= 2L
   # An all-NA logical column (NA written without a numeric type) is a missing

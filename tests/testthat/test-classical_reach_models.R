@@ -58,7 +58,7 @@ test_that("plan-level classical models validate every argument", {
 })
 
 test_that("calc_beta_binomial reproduces R1 and R2 through its own distribution", {
-  fit <- calc_beta_binomial(A1 = 4e5, A2 = 5.2e5, P = 1e6, n = 6)
+  fit <- calc_beta_binomial(R1 = 0.4, R2 = 0.52, insertions = 6, population = 1e6)
   a <- fit$parameters$alpha
   b <- fit$parameters$beta
   # Independent first and second Beta moments, without an optional package.
@@ -77,7 +77,7 @@ test_that("calc_beta_binomial handles the binomial and polarized limits instead 
   # distribution unless the limit is routed through the binomial branch.
   R1 <- 0.3
   R2 <- 2 * R1 - R1^2
-  limit <- calc_beta_binomial(A1 = R1 * 1e6, A2 = R2 * 1e6, P = 1e6, n = 5)
+  limit <- calc_beta_binomial(R1 = R1, R2 = R2, insertions = 5, population = 1e6)
   expect_false(anyNA(limit$distribution$percent))
   expect_equal(limit$parameters$alpha, Inf)
   expect_equal(limit$parameters$beta, Inf)
@@ -86,7 +86,7 @@ test_that("calc_beta_binomial handles the binomial and polarized limits instead 
                stats::dbinom(1:5, size = 5, prob = R1) * 100, tolerance = 1e-9)
 
   # R2 == R1: alpha == beta == 0, the polarized (all-or-nothing) limit.
-  polarized <- calc_beta_binomial(A1 = 3e5, A2 = 3e5, P = 1e6, n = 5)
+  polarized <- calc_beta_binomial(R1 = 0.3, R2 = 0.3, insertions = 5, population = 1e6)
   expect_false(anyNA(polarized$distribution$percent))
   expect_equal(polarized$parameters$alpha, 0)
   expect_equal(polarized$parameters$type, "polarized_limit")
@@ -96,21 +96,21 @@ test_that("calc_beta_binomial handles the binomial and polarized limits instead 
 })
 
 test_that("the Beta-Binomial print method reports the mean of the Beta at the limits", {
-  limit <- calc_beta_binomial(A1 = 3e5, A2 = 3e5, P = 1e6, n = 5)
+  limit <- calc_beta_binomial(R1 = 0.3, R2 = 0.3, insertions = 5, population = 1e6)
   printed <- paste(capture.output(print(limit)), collapse = "\n")
   expect_match(printed, "Mean of the Beta distribution: 0.300")
   expect_false(grepl("NaN", printed))
 })
 
 test_that("calc_beta_binomial validates its arguments", {
-  expect_error(calc_beta_binomial(NA, 5e5, 1e6, 5), "A1")
-  expect_error(calc_beta_binomial(c(1, 2), 5e5, 1e6, 5), "A1")
-  expect_error(calc_beta_binomial(5e5, 5e5, NA, 5), "P")
-  expect_error(calc_beta_binomial(5e5, 5e5, 1e6, 2.5), "n must be one finite positive integer")
-  expect_error(calc_beta_binomial(5e5, 5e5, 1e6, Inf), "n")
-  expect_error(calc_beta_binomial(2e6, 2e6, 1e6, 3), "cannot exceed")
-  expect_error(calc_beta_binomial(5e5, 4e5, 1e6, 3), "non-decreasing")
-  expect_error(calc_beta_binomial(3e5, 6e5, 1e6, 3), "independence limit")
+  expect_error(calc_beta_binomial(NA, 0.5, 5), "R1")
+  expect_error(calc_beta_binomial(c(0.1, 0.2), 0.5, 5), "R1")
+  expect_error(calc_beta_binomial(0.5, 0.5, 5, population = NA), "population")
+  expect_error(calc_beta_binomial(0.5, 0.5, 2.5), "insertions must be one finite positive integer")
+  expect_error(calc_beta_binomial(0.5, 0.5, Inf), "insertions")
+  expect_error(calc_beta_binomial(2, 2, 3), "R1 must be")
+  expect_error(calc_beta_binomial(0.5, 0.4, 3), "non-decreasing")
+  expect_error(calc_beta_binomial(0.3, 0.6, 3), "independence limit")
 })
 
 # Independent implementation of Aldas Manzano (1998, 3.3.1.5): enumerate
@@ -127,7 +127,7 @@ metheringham_reference <- function(audiences, insertions, duplication, populatio
   A1 <- mean(audiences[vehicle])
   A2 <- mean(reach_of_pair)
   list(N = N, A1 = A1, A2 = A2,
-       fit = calc_beta_binomial(A1, A2, population, N))
+       fit = calc_beta_binomial(A1 / population, A2 / population, N, population))
 }
 
 test_that("calc_metheringham follows Aldas Manzano's model for several insertions per vehicle", {
@@ -162,7 +162,7 @@ test_that("calc_metheringham with one insertion per vehicle reduces to Aldas Man
   expect_equal(result$mean_duplication, mean(c(150000, 90000, 110000)))
   expect_equal(result$second_audience, 2 * mean(audiences) - mean(c(150000, 90000, 110000)))
   expect_length(result$distribution$percent, 3)
-  reference <- calc_beta_binomial(result$mean_audience, result$second_audience, 1e6, 3)
+  reference <- calc_beta_binomial(result$mean_audience / 1e6, result$second_audience / 1e6, 3, 1e6)
   expect_equal(result$reach$percent, reference$reach$percent, tolerance = 1e-12)
 })
 
@@ -202,7 +202,7 @@ test_that("calc_hofmans_accumulation follows Aldas Manzano equations 3.11 and 3.
   d <- 2 * R1 - R2
   k <- 2 * R1 / R2
 
-  constant <- calc_hofmans_accumulation(R1, R2, N = 6)
+  constant <- calc_hofmans_accumulation(R1, R2, insertions = 6)
   expect_s3_class(constant, "reach_hofmans_accumulation")
   expect_equal(constant$parameters$alpha, 1)
   expect_equal(constant$parameters$k, k)
@@ -223,7 +223,7 @@ test_that("calc_hofmans_accumulation follows Aldas Manzano equations 3.11 and 3.
   # Equation 3.12: with an observed R3 the exponent is estimated and the
   # curve reproduces R3 exactly.
   R3 <- 0.135
-  varying <- calc_hofmans_accumulation(R1, R2, N = 6, R3 = R3)
+  varying <- calc_hofmans_accumulation(R1, R2, insertions = 6, R3 = R3)
   expected_alpha <- log((3 * R1 - R3) * R2 / ((2 * R1 - R2) * R3)) / log(2)
   expect_equal(varying$parameters$alpha, expected_alpha, tolerance = 1e-12)
   expect_equal(varying$results$RN[3], R3, tolerance = 1e-12)
@@ -233,17 +233,17 @@ test_that("calc_hofmans_accumulation follows Aldas Manzano equations 3.11 and 3.
 })
 
 test_that("calc_hofmans_accumulation validates its inputs and prints on request", {
-  expect_error(calc_hofmans_accumulation(0.1, 0.2, N = 5), "must be smaller than 2 \\* R1")
-  expect_error(calc_hofmans_accumulation(0.06, 0.13, N = 5), "must be smaller than 2 \\* R1")
-  expect_error(calc_hofmans_accumulation(0.1, 0.1, N = 5), "greater than R1")
-  expect_error(calc_hofmans_accumulation(NA, 0.1, N = 5), "R1")
-  expect_error(calc_hofmans_accumulation(0.06, 0.103, N = 1.5), "N")
-  expect_error(calc_hofmans_accumulation(0.06, 0.103, N = c(3, 4)), "N")
-  expect_error(calc_hofmans_accumulation(0.06, 0.103, N = 5, R3 = 0.2), "R3 must lie between")
-  expect_error(calc_hofmans_accumulation(0.06, 0.103, N = 2, R3 = 0.13), "at least 3")
-  expect_output(calc_hofmans_accumulation(0.06, 0.103, N = 4, show_steps = TRUE),
+  expect_error(calc_hofmans_accumulation(0.1, 0.2, insertions = 5), "must be smaller than 2 \\* R1")
+  expect_error(calc_hofmans_accumulation(0.06, 0.13, insertions = 5), "must be smaller than 2 \\* R1")
+  expect_error(calc_hofmans_accumulation(0.1, 0.1, insertions = 5), "greater than R1")
+  expect_error(calc_hofmans_accumulation(NA, 0.1, insertions = 5), "R1")
+  expect_error(calc_hofmans_accumulation(0.06, 0.103, insertions = 1.5), "insertions")
+  expect_error(calc_hofmans_accumulation(0.06, 0.103, insertions = c(3, 4)), "insertions")
+  expect_error(calc_hofmans_accumulation(0.06, 0.103, insertions = 5, R3 = 0.2), "R3 must lie between")
+  expect_error(calc_hofmans_accumulation(0.06, 0.103, insertions = 2, R3 = 0.13), "at least 3")
+  expect_output(calc_hofmans_accumulation(0.06, 0.103, insertions = 4, show_steps = TRUE),
                 "HOFMANS MODEL")
-  expect_silent(calc_hofmans_accumulation(0.06, 0.103, N = 4))
+  expect_silent(calc_hofmans_accumulation(0.06, 0.103, insertions = 4))
 })
 
 test_that("calc_agostini_duplication follows Aldas Manzano equation 3.57", {
@@ -322,4 +322,23 @@ test_that("calc_hofmans_duplication enforces the Frechet bounds of every duplica
   expect_error(calc_hofmans_duplication(c(3e5, 4e5), 1e6, matrix(c(0, 1, 2, 0), 2)),
                "symmetric")
   expect_error(calc_hofmans_duplication(c(3e5, NA), 1e6, matrix(0, 2, 2)), "audiences")
+})
+
+test_that("the Beta-Binomial result keeps the population and prints people only when it is informative", {
+  default <- calc_beta_binomial(R1 = 0.5, R2 = 0.55, insertions = 5)
+  expect_equal(default$population, 1)
+  expect_equal(default$reach$people, default$reach$percent / 100)
+  expect_false(any(grepl("people", capture.output(print(default)))))
+
+  scaled <- calc_beta_binomial(R1 = 0.5, R2 = 0.55, insertions = 5, population = 1e6)
+  expect_equal(scaled$population, 1e6)
+  expect_equal(scaled$reach$people, 1e6 * scaled$reach$percent / 100)
+  expect_true(any(grepl("people", capture.output(print(scaled)))))
+})
+
+test_that("an out-of-range R2 is rejected with the admissible range", {
+  expect_error(calc_beta_binomial(0.3, 0.6, 5),
+               "R2 must lie between 0.3 and 0.51")
+  expect_error(calc_beta_binomial(0.3, 0.25, 5), "at least R1")
+  expect_error(calc_beta_binomial(30, 45, 5), "look like percentages")
 })

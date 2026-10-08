@@ -6,6 +6,35 @@ backward compatible with them: function names, arguments, example datasets and
 returned objects changed. The Shiny explorers and the budget/KPI helpers of the
 earlier snapshots are not part of this package.
 
+## Harmonized argument names (2026-10-08)
+
+* `calc_beta_binomial()` now takes the reach proportions `R1` and `R2`, the
+  number of `insertions` and the `population` (default 1), instead of the
+  audiences `A1`, `A2` in people, `n` and `P`. This matches
+  `calc_hofmans_accumulation()`, `calc_canex()` and the sequential models.
+* `calc_hofmans_accumulation()` takes `insertions` instead of `N`, and its
+  results table names that column `insertions`.
+* `fit_bbd_to_reach()` takes `population` instead of `universe` (and reports it
+  as `parameters$population`); `calibrate_bbd()` takes `R1` instead of
+  `first_reach`.
+* The `vehicles_data` of `calc_canex()` accepts a column named `insertions`,
+  as the sequential models do, besides the original `k`.
+* New "Notation and units" section in `?mediaPlanR`.
+* `calc_canex()` now uses `population = 1` by default, like the sequential
+  models and `calc_beta_binomial()`, so that the `people` columns equal the
+  probabilities unless a population is supplied. The printed reports leave out
+  the number of people when the population is 1.
+* Invalid reach arguments are reported with the admissible range of `R2`, and a
+  hint when values look like percentages instead of proportions. The Metheringham
+  error about the minimum number of insertions is more explicit.
+* `?mediaPlanR` has new "Assumptions of the models" and "Notation and units"
+  sections; `?calc_canex` opens its "Domain of validity" section in plain
+  words, and the vignette adds a table of what to do when a function stops or
+  warns. The help pages state the unit of every argument (people, proportion
+  between 0 and 1) and that `aggregation_order` does not affect `calc_cbd()`.
+* The titles of the example datasets follow one pattern ("Illustrative inputs
+  for ..." or "Published inputs for ... (Author, year)").
+
 ## Full report for the sequential models (2026-10-07)
 
 * The print methods of `calc_csd()`, `calc_msad()`, `calc_cbd()` and `calc_mbd()`

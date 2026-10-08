@@ -3,12 +3,13 @@
 \docType{data}
 \name{mbd_example}
 \alias{mbd_example}
-\title{Illustrative example inputs for the MBD model}
+\title{Illustrative inputs for the MBD model}
 \format{
 A list with the components:
 \describe{
 \item{vehicles_data}{Two rows with columns \code{insertions}, \code{R1} and \code{R2}.}
-\item{duplications}{Symmetric matrix of one-insertion duplications.}
+\item{duplications}{Symmetric matrix of proportions of the population
+exposed to both vehicles of each pair (one insertion in each).}
 \item{aggregation_order}{The order of aggregation, \code{1:2}.}
 }
 }
@@ -16,9 +17,9 @@ A list with the components:
 mbd_example
 }
 \description{
-A small, self-contained two-vehicle scenario ready for
-\code{do.call(calc_mbd, mbd_example)}. Original illustrative data, not derived
-from any published source. Two vehicles avoid the Beta-Binomial imputation
+List of arguments ready for \code{do.call(calc_mbd, mbd_example)}: a small
+two-vehicle scenario. Original illustrative data, not derived from any
+published source. Two vehicles avoid the Beta-Binomial imputation
 of co-exposure that three or more vehicles require. For a three-vehicle
 literature-validation benchmark, see \link{mbd_cheong2007}.
 }

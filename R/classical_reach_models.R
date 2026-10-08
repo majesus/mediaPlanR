@@ -18,7 +18,8 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 #' Implements the Sainsbury model, which Aldás Manzano (1998, Section 3.2.2.2)
 #' reports as developed at the London Press Exchange and formalized by Caffyn
 #' and Sagovsky (1963), to calculate reach and the exposure distribution (and its
-#' cumulative counterpart) of a set of advertising vehicles. The model assumes
+#' cumulative counterpart) of a set of advertising vehicles, with one or more
+#' insertions in each of them (argument `insertions`). The model assumes
 #' random duplication *and* random accumulation, homogeneous individual
 #' exposure probabilities and heterogeneous vehicle exposure probabilities.
 #' The probability that an individual is exposed to one insertion in vehicle
@@ -27,7 +28,8 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 #' insertion -- whether in a different vehicle or a repeat insertion in the
 #' same one -- is an independent Bernoulli trial with that vehicle's own
 #' exposure probability, and the number of exposures follows a
-#' Poisson-binomial distribution.
+#' Poisson-binomial distribution (the distribution of the number of successes
+#' in independent trials whose success probabilities differ).
 #'
 #' @references
 #' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
@@ -44,18 +46,22 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 #'
 #' @param audiences Numeric vector with the audience of each vehicle, in people
 #'   per insertion.
-#' @param population Population size, in people.
+#' @param population Population size, in people. No audience can exceed it;
+#'   otherwise the function stops with an error.
 #' @param insertions Non-negative integer vector with the number of insertions
 #'   planned in each vehicle. It defaults to one insertion per vehicle, the
 #'   model's original scope; values above one apply the same independence
 #'   hypothesis to repeat insertions in the same vehicle.
 #'
 #' @details
-#' The exposure distribution is computed exactly, by dynamic convolution of the
-#' per-insertion Bernoulli distributions, in \eqn{O(N^2)} operations for \eqn{N}
-#' insertions. Reach equals \eqn{1 - \prod_i (1 - A_i / P)^{n_i}}, where
-#' \eqn{A_i} is the audience of vehicle \eqn{i}, \eqn{n_i} its number of
-#' insertions and \eqn{P} the population.
+#' The exposure distribution is computed exactly, by combining one insertion at
+#' a time (a dynamic convolution of the per-insertion Bernoulli distributions).
+#' The number of calculations grows with the square of the number of insertions
+#' \eqn{N}, so doubling the insertions roughly quadruples the work, which is
+#' negligible for any realistic plan. Reach equals
+#' \eqn{1 - \prod_{i=1}^{m} (1 - A_i / P)^{n_i}}, where \eqn{m} is the number
+#' of vehicles, \eqn{A_i} is the audience of vehicle \eqn{i}, \eqn{n_i} its
+#' number of insertions and \eqn{P} the population.
 #'
 #' @return A list of class `"reach_sainsbury"` with components:
 #' \itemize{
@@ -115,7 +121,8 @@ calc_sainsbury <- function(audiences, population,
 #'
 #' Implements the Binomial model of Lee and Burkhart (1960), reviewed by
 #' Chandon, to calculate reach and the exposure distribution (and its
-#' cumulative counterpart) of a media plan with several vehicles. The model
+#' cumulative counterpart) of a media plan with several vehicles and one or
+#' more insertions in each of them (argument `insertions`). The model
 #' assumes random duplication *and* random accumulation (repeat insertions in
 #' the same vehicle are also independent), homogeneous individuals and
 #' homogeneous vehicles. Under these assumptions every insertion is an
@@ -141,7 +148,8 @@ calc_sainsbury <- function(audiences, population,
 #'
 #' @param audiences Numeric vector with the audience of each vehicle, in people
 #'   per insertion.
-#' @param population Population size, in people.
+#' @param population Population size, in people. No audience can exceed it;
+#'   otherwise the function stops with an error.
 #' @param insertions Non-negative integer vector with the number of insertions
 #'   planned in each vehicle. It defaults to one insertion per vehicle, the
 #'   model's original scope.
@@ -152,7 +160,7 @@ calc_sainsbury <- function(audiences, population,
 #' vehicle audiences and every vehicle receives the same number of insertions
 #' \eqn{n}, so a plan with \eqn{m} vehicles has \eqn{N = n m} insertions. With unequal insertion
 #' counts, this function uses the insertion-weighted mean audience,
-#' \eqn{\sum_i n_i A_i / \sum_i n_i}. The two definitions coincide when all
+#' \eqn{\sum_{i=1}^{m} n_i A_i / \sum_{i=1}^{m} n_i}. The two definitions coincide when all
 #' vehicles receive the same number of insertions, and the weighted mean
 #' preserves the plan's expected number of exposures in general.
 #'
@@ -220,13 +228,18 @@ calc_binomial <- function(audiences, population,
 
 #' Reach and exposure distribution under the Beta-Binomial model
 #'
-#' Implements the Beta-Binomial accumulation model for one vehicle with
-#' several insertions. Individuals differ in their exposure probability, which
+#' Implements the Beta-Binomial model for one vehicle with several
+#' insertions. In Aldás Manzano's (1998) classification it is an
+#' *accumulation* model, like [calc_hofmans_accumulation()]: it describes how
+#' the audience of a single vehicle accumulates over its insertions (the
+#' function name omits the word, unlike the Hofmans one, because the
+#' Beta-Binomial name is the standard one in the literature and there is no
+#' second Beta-Binomial model that could be confused with it). Individuals differ in their exposure probability, which
 #' follows a Beta distribution with shape parameters alpha and beta; given
-#' that probability, the number of exposures in `n` insertions is Binomial.
-#' Mixing the two yields the Beta-Binomial exposure distribution. The model
-#' needs only two data points, the audience after one insertion (`A1`) and
-#' after two insertions (`A2`), to estimate both shape parameters.
+#' that probability, the number of exposures in `insertions` insertions is
+#' Binomial. Mixing the two yields the Beta-Binomial exposure distribution. The
+#' model needs only two data points, the reach after one insertion (`R1`) and
+#' after two insertions (`R2`), to estimate both shape parameters.
 #'
 #' @references
 #' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
@@ -236,15 +249,20 @@ calc_binomial <- function(audiences, population,
 #' Section 3.1.2.5, equations 3.22-3.28, with the parameter estimators on
 #' page 134.
 #'
-#' @param A1 Vehicle audience after the first insertion, in people.
-#' @param A2 Cumulative vehicle audience after the second insertion, in
-#'   people.
-#' @param P Population size, in people.
-#' @param n Total number of planned insertions (a positive integer).
+#' @param R1 Reach after the first insertion (the vehicle's audience), as a
+#'   proportion of the population, a number in (0, 1] (not a percentage). If the
+#'   audience is known in people, divide it by the population.
+#' @param R2 Cumulative reach after the second insertion (the proportion of
+#'   the population exposed at least once in two insertions), as a proportion
+#'   (not a percentage), with `R1 <= R2 <= 2 * R1 - R1^2`. If `R2` is outside
+#'   that range the function stops with an explanatory error.
+#' @param insertions Total number of planned insertions in the vehicle (a
+#'   positive integer).
+#' @param population Population size, in people. It only scales the number of
+#'   people reported; the default, 1, leaves `people` equal to the proportion.
 #'
 #' @details
-#' With \eqn{R_1 = A_1 / P} and \eqn{R_2 = A_2 / P}, the method-of-moments
-#' estimators are
+#' The method-of-moments estimators are
 #' \deqn{\hat{\alpha} = \frac{R_1 (R_2 - R_1)}{2 R_1 - R_1^2 - R_2}, \qquad
 #' \hat{\beta} = \frac{\hat{\alpha} (1 - R_1)}{R_1}.}
 #' The estimators require \eqn{R_1 \le R_2 \le 2 R_1 - R_1^2}. The two bounds
@@ -256,18 +274,22 @@ calc_binomial <- function(audiences, population,
 #' @return A list of class `"reach_beta_binomial"` with components:
 #' \itemize{
 #'   \item `reach`: list with `percent` and `people`.
-#'   \item `distribution`: list with `percent` and `people`, for one to `n`
-#'     exposures.
+#'   \item `distribution`: list with `percent` and `people`, for one to
+#'     `insertions` exposures.
 #'   \item `cumulative`: list with `percent` and `people`, for individuals
 #'     exposed at least once, at least twice, and so on.
+#'   \item `population`: the population size used (people).
+#'   \item `population`: the population size used, in people.
 #'   \item `parameters`: list with `alpha`, `beta`, `mean_probability` (the
-#'     mean of the Beta distribution, `A1 / P`), `zero_contact_probability`
-#'     (the percentage of the population with no exposure) and `type`
+#'     mean of the Beta distribution, `R1`), `zero_contact_probability`
+#'     (the percentage of the population with no exposure, on a 0-100 scale
+#'     unlike the `probability` columns of other results) and `type`
 #'     (`"beta_binomial"`, `"binomial_limit"` or `"polarized_limit"`).
 #' }
 #'
 #' @examples
-#' result <- calc_beta_binomial(A1 = 500000, A2 = 550000, P = 1000000, n = 5)
+#' result <- calc_beta_binomial(R1 = 0.50, R2 = 0.55, insertions = 5,
+#'                               population = 1000000)
 #' result$reach$percent
 #' result$parameters$alpha
 #' result$parameters$beta
@@ -279,21 +301,16 @@ calc_binomial <- function(audiences, population,
 #' Negative-Binomial count approximation, which applies to unbounded count
 #' processes rather than to a finite number of insertions.
 #' @export
-calc_beta_binomial <- function(A1, A2, P, n) {
-  assert_number(P, "P", min = 0, min_open = TRUE)
-  assert_number(A1, "A1", min = 0, min_open = TRUE)
-  assert_number(A2, "A2", min = 0, min_open = TRUE)
-  if (A1 > P || A2 > P) {
-    stop("A1 and A2 cannot exceed the total population P.", call. = FALSE)
+calc_beta_binomial <- function(R1, R2, insertions, population = 1) {
+  assert_number(population, "population", min = 0, min_open = TRUE)
+  assert_number(R1, "R1", min = 0, max = 1, min_open = TRUE, proportion = TRUE)
+  assert_number(R2, "R2", min = 0, max = 1, min_open = TRUE, proportion = TRUE)
+  assert_number(insertions, "insertions", min = 1, integer = TRUE)
+  if (insertions > .Machine$integer.max - 1) {
+    stop("insertions exceeds the supported integer range.", call. = FALSE)
   }
-  assert_number(n, "n", min = 1, integer = TRUE)
-  if (n > .Machine$integer.max - 1) {
-    stop("n exceeds the supported integer range.", call. = FALSE)
-  }
-  n <- as.integer(n)
-
-  R1 <- A1 / P
-  R2 <- A2 / P
+  n <- as.integer(insertions)
+  P <- population
   # Shared method-of-moments helper: it covers the binomial limit (R2 at the
   # independence bound, alpha = beta = Inf) and the polarized limit
   # (R2 = R1, alpha = beta = 0) explicitly instead of passing a non-finite
@@ -323,7 +340,8 @@ calc_beta_binomial <- function(A1, A2, P, n) {
       mean_probability = R1,
       zero_contact_probability = P_dist[1L] * 100,
       type = params$type
-    )
+    ),
+    population = population
   ), class = "reach_beta_binomial")
 }
 
@@ -365,7 +383,8 @@ print.reach_beta_binomial <- function(x, ...) {
       "Probability of 0 exposures (%)" = x$parameters$zero_contact_probability
     ),
     notes = sprintf("Mean of the Beta distribution: %.3f",
-                    x$parameters$mean_probability)
+                    x$parameters$mean_probability),
+    show_people = !isTRUE(all.equal(x$population, 1))
   )
   invisible(x)
 }
@@ -419,16 +438,20 @@ create_opportunity_matrix <- function(insertions) {
 #' @param audiences Numeric vector with the audience of each vehicle, in people
 #'   per insertion.
 #' @param insertions Non-negative integer vector with the number of insertions
-#'   planned in each vehicle. At least two insertions are required in total.
+#'   planned in each vehicle. The plan as a whole (all vehicles together) must
+#'   have at least two insertions, for example two vehicles with one insertion
+#'   each, or one vehicle with two insertions, because the model works with
+#'   duplication between pairs of insertions.
 #' @param duplication_matrix Symmetric numeric matrix, in people. Element
-#'   `[i, j]` with `i != j` is the audience duplicated between one insertion in
-#'   vehicle `i` and one insertion in vehicle `j`. The diagonal element
+#'   `[i, j]` with `i != j` is the number of people who are exposed to both one
+#'   insertion in vehicle `i` and one insertion in vehicle `j`. The diagonal element
 #'   `[i, i]` is the audience duplicated between two insertions in the same
 #'   vehicle `i`, that is, `2 * audiences[i]` minus the audience accumulated
 #'   by two insertions in vehicle `i`. Diagonal elements are needed only for
 #'   vehicles with at least two insertions, and elements involving a vehicle
 #'   with no insertions are ignored.
-#' @param population Population size, in people.
+#' @param population Population size, in people. No audience can exceed it;
+#'   otherwise the function stops with an error.
 #'
 #' @details
 #' There are `N = sum(insertions)` insertions and `choose(N, 2)` pairs of
@@ -437,7 +460,8 @@ create_opportunity_matrix <- function(insertions) {
 #' computes
 #' \enumerate{
 #'   \item the insertion-weighted mean audience
-#'     \eqn{\bar{A}_1 = \sum_i n_i A_i / N};
+#'     \eqn{\bar{A}_1 = \sum_{i=1}^{m} n_i A_i / N}, with \eqn{m} the number
+#'     of vehicles;
 #'   \item the pair-weighted mean duplication \eqn{\bar{D}}, over all pairs of
 #'     insertions;
 #'   \item the mean audience accumulated by two insertions of the average
@@ -450,7 +474,7 @@ create_opportunity_matrix <- function(insertions) {
 #' }
 #' The exposure distribution therefore ranges from zero to `N` exposures, and
 #' its mean equals the plan's gross number of exposures per person,
-#' \eqn{\sum_i n_i A_i / P}.
+#' \eqn{\sum_{i=1}^{m} n_i A_i / P}.
 #'
 #' @return A list of class `"reach_metheringham"` with components:
 #' \itemize{
@@ -502,7 +526,9 @@ calc_metheringham <- function(audiences, insertions, duplication_matrix,
   }
   total_insertions <- sum(insertions)
   if (total_insertions < 2) {
-    stop("At least two insertions in total are required to observe duplication.",
+    stop("At least two insertions in total are required to observe duplication: ",
+         "the plan as a whole (all vehicles together) needs two or more ",
+         "insertions, for example two vehicles with one insertion each.",
          call. = FALSE)
   }
   if (!is.matrix(duplication_matrix) || !is.numeric(duplication_matrix) ||
@@ -557,7 +583,8 @@ calc_metheringham <- function(audiences, insertions, duplication_matrix,
   }
 
   fitted <- tryCatch(
-    calc_beta_binomial(A1 = A1, A2 = A2, P = population, n = total_insertions),
+    calc_beta_binomial(R1 = A1 / population, R2 = A2 / population,
+                       insertions = total_insertions, population = population),
     error = function(e) {
       stop("The mean audience (", format(A1, digits = 6), ") and mean ",
            "duplication (", format(D, digits = 6), ") are incompatible with a ",
