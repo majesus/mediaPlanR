@@ -8,10 +8,14 @@
 #'
 #' @param first_reach Reach after one insertion, as a proportion strictly
 #'   between zero and one.
-#' @param target_reach Target probability, strictly between zero and one, of
-#'   exactly `frequency` exposures (`type = "exact"`) or of at least
-#'   `frequency` exposures (`type = "at_least"`).
-#' @param frequency Positive integer exposure threshold.
+#' @param target_reach Target proportion of the population, strictly between
+#'   zero and one. With `type = "at_least"` it is the effective reach: the
+#'   proportion exposed `frequency` times or more. With `type = "exact"` it is
+#'   the proportion exposed exactly `frequency` times (which is then not a
+#'   reach in the usual sense).
+#' @param frequency Positive integer: the number of exposures that defines the
+#'   target (`frequency` or more exposures if `type = "at_least"`, exactly
+#'   `frequency` exposures if `type = "exact"`).
 #' @param max_insertions Maximum number of insertions considered, an integer
 #'   of at least `frequency`.
 #' @param type `"at_least"` (default) or `"exact"`.
@@ -33,7 +37,8 @@
 #'   `cumulative_probability`) and the `candidates` evaluated for each `n`.
 #'
 #' @examples
-#' # A first insertion reaches 30% and 2+ exposures should reach 20%
+#' # A first insertion reaches 30% and the share exposed two or more times
+# should be 20%
 #' calibrate_bbd(first_reach = 0.30, target_reach = 0.20, frequency = 2,
 #'               max_insertions = 6)
 #'

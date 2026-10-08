@@ -14,7 +14,8 @@ calc_mbd(
 }
 \arguments{
 \item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2},
-with the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R2} may be \code{NA} only when
+with the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R1} strictly between zero and
+one, \verb{R1 <= R2 <= 2 * R1 - R1^2}, and \code{R2} may be \code{NA} only when
 \code{insertions} is one). At most 12 vehicles are supported.}
 
 \item{duplications}{Symmetric matrix of pairwise one-insertion audience
@@ -30,7 +31,7 @@ order, as in Cheong's worked examples.}
 as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
 \item{tolerance}{Positive numerical tolerance for probability constraints.
-The Frechet and triple-feasibility checks apply it relative to the smaller
+The Fréchet and triple-feasibility checks apply it relative to the smaller
 audience involved.}
 }
 \value{
@@ -83,9 +84,9 @@ range where Cheong's own checks are known to be insufficient by themselves.
 
 Cheong also reports that the aggregation order can change the collapsed
 distribution, that this was not investigated systematically, and that the
-model was tested computationally only up to 12-13 vehicles because of the
-exponential cost of the exposure grid. \code{calc_mbd()} stops above 12 vehicles
-for this reason.
+model was evaluated on schedules of 12 vehicles because the computing time
+of the exposure grid becomes prohibitive above 13 vehicles. \code{calc_mbd()}
+stops above 12 vehicles for this reason.
 }
 
 \section{Validation against the published example}{
@@ -104,17 +105,19 @@ reach under independence), the conditional distributions of the peeling step
 coincide, so the result of this model does not depend on the duplication
 between vehicles in that limit; this follows from Cheong's construction.
 
-Cheong reports MBD as the most accurate of the eleven models tested for
-reach alone (comScore 2003 data, 440 schedules) but not for the complete
-exposure distribution, where \code{\link[=calc_canex]{calc_canex()}} and the Conditional Beta
-Distribution model (\code{\link[=calc_cbd]{calc_cbd()}}) were more accurate.
+Of the eleven models Cheong evaluated (comScore 2003 data, 440 schedules),
+the three versions of MBD were the most accurate for reach alone (average
+percentage error in reach of 1.18\% for the best version), but not for the
+complete exposure distribution, where \code{\link[=calc_canex]{calc_canex()}} (6.91\% average
+percentage error) and the Conditional Beta Distribution model (\code{\link[=calc_cbd]{calc_cbd()}},
+8.80\%) were more accurate than the MBD versions (10.19\% to 12.10\%).
 }
 
 \section{Domain of validity}{
 
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
-as given and check them against the Frechet bounds implied by the audiences
+as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
@@ -133,7 +136,7 @@ expansion itself admits negative correlations. \code{\link[=calc_agostini_duplic
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
 duplications.
 
-Second, pairwise duplications that satisfy the Frechet bounds can still be
+Second, pairwise duplications that satisfy the Fréchet bounds can still be
 impossible jointly for three or more vehicles. For every triple of vehicles
 the functions check that the exposure to all three can have a non-negative
 probability, given the audiences and the three pairwise duplications, and
@@ -168,7 +171,10 @@ multivariate beta binomial distribution for estimating magazine and
 Internet exposure frequency distributions. Journal of Advertising, 40(1),
 7-23. \doi{10.2753/JOA0091-3367400101}
 
-Waring, E. (1792). Meditationes Algebraicae. Cambridge.
+Waring, E. (1792). On the principles of translating algebraic quantities into
+probable relations and annuities. Cambridge. (The work Cheong, 2007, and
+Aldás Manzano, 1998, cite for the theorem; not to be confused with Waring's
+\emph{Meditationes Algebraicae}, 1770.)
 }
 \seealso{
 \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_msad]{calc_msad()}} for sequential aggregation models,

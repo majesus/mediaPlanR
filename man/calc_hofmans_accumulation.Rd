@@ -2,7 +2,7 @@
 % Please edit documentation in R/calc_hofmans.R
 \name{calc_hofmans_accumulation}
 \alias{calc_hofmans_accumulation}
-\title{Cumulative audience under Hofmans' accumulation model}
+\title{Cumulative reach under Hofmans' accumulation model}
 \usage{
 calc_hofmans_accumulation(R1, R2, N, R3 = NULL, show_steps = FALSE)
 }
@@ -19,8 +19,8 @@ an integer of at least 2.}
 proportion with \verb{R2 < R3 < 3 * R1}. When supplied, it is used to estimate
 the exponent \code{alpha} of Hofmans' variable coefficient (see Details).}
 
-\item{show_steps}{Logical. If \code{TRUE}, prints the intermediate calculation
-steps and the resulting table.}
+\item{show_steps}{Logical. If \code{TRUE}, prints the parameters \code{k}, \code{d} and
+\code{alpha} and the table of cumulative reach.}
 }
 \value{
 A list of class \code{"reach_hofmans_accumulation"} with components:
@@ -34,8 +34,9 @@ or \code{NULL} when the suggested package ggplot2 is not installed.
 }
 }
 \description{
-Implements Hofmans' (1966) accumulation model for the cumulative audience
-of several insertions in one vehicle -- the "accumulation" domain in Aldás
+Implements Hofmans' (1966) accumulation model for the cumulative reach (the
+proportion of the population exposed at least once) of several insertions in
+one vehicle -- the "accumulation" domain in Aldás
 Manzano's (1998) three-way split. It adapts Agostini's duplication formula
 by replacing the number of vehicles with the number of insertions, and it
 needs only the audience after one and two insertions. It is unrelated to
@@ -43,8 +44,9 @@ needs only the audience after one and two insertions. It is unrelated to
 vehicles with one insertion each.
 }
 \details{
-Let \eqn{d = 2 R_1 - R_2} be the audience duplicated between two
-insertions, assumed constant for every pair of insertions, and
+Let \eqn{d = 2 R_1 - R_2} be the duplicated reach of two insertions (the
+proportion of the population exposed to both), assumed constant for every
+pair of insertions, and
 \eqn{k = 2 R_1 / R_2} the coefficient that makes the formula reproduce
 \eqn{R_2} exactly. Cumulative reach after \eqn{N} insertions is
 \deqn{R_N = \frac{(N R_1)^2}{N R_1 + k_N \, d \binom{N}{2}}.}
@@ -58,8 +60,8 @@ estimated from a third observation,
 coefficient formula applies; with it, \code{alpha} is estimated and the curve
 reproduces \code{R3} exactly.
 
-The model assumes a constant audience and a constant duplication between
-every pair of insertions.
+The model assumes a constant reach per insertion (\code{R1}) and a constant
+duplication between every pair of insertions.
 }
 \examples{
 # Constant-coefficient model (equation 3.11)

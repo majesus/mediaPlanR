@@ -17,11 +17,15 @@ calibrate_bbd(
 \item{first_reach}{Reach after one insertion, as a proportion strictly
 between zero and one.}
 
-\item{target_reach}{Target probability, strictly between zero and one, of
-exactly \code{frequency} exposures (\code{type = "exact"}) or of at least
-\code{frequency} exposures (\code{type = "at_least"}).}
+\item{target_reach}{Target proportion of the population, strictly between
+zero and one. With \code{type = "at_least"} it is the effective reach: the
+proportion exposed \code{frequency} times or more. With \code{type = "exact"} it is
+the proportion exposed exactly \code{frequency} times (which is then not a
+reach in the usual sense).}
 
-\item{frequency}{Positive integer exposure threshold.}
+\item{frequency}{Positive integer: the number of exposures that defines the
+target (\code{frequency} or more exposures if \code{type = "at_least"}, exactly
+\code{frequency} exposures if \code{type = "exact"}).}
 
 \item{max_insertions}{Maximum number of insertions considered, an integer
 of at least \code{frequency}.}
@@ -54,7 +58,7 @@ point. It returns the number of insertions with the smallest error, the
 smaller \code{n} in case of ties.
 }
 \examples{
-# A first insertion reaches 30\% and 2+ exposures should reach 20\%
+# A first insertion reaches 30\% and the share exposed two or more times
 calibrate_bbd(first_reach = 0.30, target_reach = 0.20, frequency = 2,
               max_insertions = 6)
 

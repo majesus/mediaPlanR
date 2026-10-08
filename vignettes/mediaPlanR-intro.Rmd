@@ -124,13 +124,13 @@ levels of generality (see the `insertions` argument).
 |---|---|---|---|---|
 | Sainsbury | `calc_sainsbury()` / `estimate_reach(model = "sainsbury")` | 1 or more insertions, m vehicles | Random (independence and accumulation) | Vehicles only |
 | Binomial | `calc_binomial()` / `estimate_reach(model = "binomial")` | 1 or more insertions, m vehicles | Random (independence and accumulation) | None (average vehicle) |
-| Agostini (duplication) | `calc_agostini_duplication()` | 1 insertion, m vehicles | Observed pairwise, one coefficient `k` | Reach only |
-| Hofmans (duplication) | `calc_hofmans_duplication()` | 1 insertion, m vehicles | Observed pairwise, pairwise coefficient | Reach only |
+| Agostini (duplication) | `calc_agostini_duplication()` | 1 insertion, m vehicles | Observed pairwise, one coefficient `k` | Not modeled (reach only) |
+| Hofmans (duplication) | `calc_hofmans_duplication()` | 1 insertion, m vehicles | Observed pairwise, pairwise coefficient | Not modeled (reach only) |
 | Beta-Binomial | `calc_beta_binomial()` | 1 vehicle, n insertions | Implicit (fitted to `R1`, `R2`) | Individuals (Beta-Binomial) |
-| Hofmans (accumulation) | `calc_hofmans_accumulation()` | 1 vehicle, n insertions | Implicit (fitted to `R1`, `R2`, optionally `R3`) | Reach only |
+| Hofmans (accumulation) | `calc_hofmans_accumulation()` | 1 vehicle, n insertions | Implicit (fitted to `R1`, `R2`, optionally `R3`) | Not modeled (cumulative reach only) |
 | Metheringham | `calc_metheringham()` | n insertions, m vehicles | Observed, averaged over insertion pairs | Individuals (Beta-Binomial) |
 | CANEX | `calc_canex()` | n insertions, m vehicles | Observed, canonical correlations | Per vehicle (Beta-Binomial) |
-| CBD (conditional Beta) | `calc_cbd()` | n insertions, m vehicles | Observed; canonical expansion at the (0,1) level | Per vehicle (Beta-Binomial) |
+| CBD (conditional Beta) | `calc_cbd()` | n insertions, m vehicles | Observed; canonical expansion on the zero/one grid of first-insertion exposure | Per vehicle (Beta-Binomial) |
 | Beta-Binomial fitted to a reach | `fit_bbd_to_reach()` | n insertions, m vehicles | Reach supplied as a constraint | Individuals (Beta-Binomial) |
 | CSD (canonical sequential aggregation) | `calc_csd()` | n insertions, m vehicles | Observed; canonical reach per sub-schedule | Per vehicle (Beta-Binomial) |
 | MSAD (Morgensztern) | `calc_msad()` | n insertions, m vehicles | Observed; Morgensztern reach per sub-schedule | Per vehicle (Beta-Binomial) |
@@ -348,7 +348,7 @@ schedules at once, add an identifier column to both tables and name it in
 The evaluator requires identical supports. It does not interpret an open tail
 of the Negative-Binomial approximation as an exact frequency: observed and
 predicted tails must first be collapsed at the same threshold. Besides Kim's
-average error in reach and in the exposure distribution, it returns absolute
+average percentage error in reach (AER) and in the exposure distribution (APE), it returns absolute
 reach error, total variation, cell mean absolute error and mean-exposure bias.
 
 ## MBD: the multivariate Beta-Binomial model
@@ -407,7 +407,7 @@ is second only to CANEX for the complete exposure distribution.
 
 The model has three steps. Danaher's (1991) second-order canonical expansion,
 the mechanism used by `calc_canex()` and `calc_csd()`, gives the joint
-distribution of exposure to one insertion of each vehicle (the (0,1) grid).
+distribution of exposure to one insertion of each vehicle (the "(0,1) grid": every combination of exposed, 1, or not exposed, 0, to the first insertion of each vehicle).
 Conditionally on that state, the remaining insertions of each vehicle follow a
 Beta-Binomial distribution whose Beta parameters are updated by the first
 insertion, and the vehicles are independent given the grid (Danaher, 1992a).
@@ -424,11 +424,11 @@ cbd_result$distribution
 The implementation reproduces the CBD columns of the two-vehicle comparisons of
 Kim (2005, Appendix B) and Hong (1998, Appendix E) within the rounding of those
 sources (0.01 percentage points), taking the duplication that each source
-implies, and the three-vehicle worked example of Kim (1994, p. 139) except for
+implies, and the three-vehicle worked example of Kim (1994, pp. 125-139) except for
 its zero cell. In that example the zero of the canonical expansion is printed as
 0.5066, whereas the formula applied to the printed inputs gives about 0.510;
 `calc_cbd()` evaluates the formula, so its zero and one-contact probabilities
-differ from the printed ones by about 0.4 percentage points there. The tests
+differ from the printed ones by 0.36 and 0.29 percentage points there. The tests
 check all these cases, and also that the (0,1) grid recovers each vehicle's own
 `R1` as its marginal and that, with zero correlation, the model reduces to the
 exact convolution of the vehicles' own Beta-Binomial marginals.
@@ -549,7 +549,10 @@ reference that allows an independent regression test are available.
 - Metheringham, R. A. (1964). Measuring the net cumulative coverage of a print
   campaign. *Journal of Advertising Research*, 4(4), 23-28.
   <https://doi.org/10.1080/00218499.1964.12519751>
-- Waring, E. (1792). *Meditationes Algebraicae*. Cambridge.
+- Waring, E. (1792). *On the principles of translating algebraic quantities into
+  probable relations and annuities*. Cambridge. (The work cited for the theorem
+  by Cheong, 2007, and Aldás Manzano, 1998; not Waring's *Meditationes
+  Algebraicae*, 1770.)
 
 Morgensztern (1970), whose reach formula underlies MSAD, is known to this
 package through Aldás Manzano (1998) and Kim (2005). Lee and Burkhart (1960) and

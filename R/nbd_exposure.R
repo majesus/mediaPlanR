@@ -149,8 +149,8 @@ nbd_exposure_distribution <- function(mean_contacts, size, report_max = NULL,
 #' @param counts Vector of observed non-negative integer exposure counts.
 #' @param report_max Optional open-tail threshold passed to
 #'   [nbd_exposure_distribution()].
-#' @param conf_level Confidence level for the profile-scale Wald interval for
-#'   `size` when an interior Negative-Binomial solution exists.
+#' @param conf_level Confidence level of the Wald interval for `size`, computed
+#'   on the log scale of `size`, when an interior Negative-Binomial solution exists.
 #'
 #' @return An `nbd_exposure_fit` object containing estimates, likelihood
 #' diagnostics, observed frequencies, and the fitted distribution.

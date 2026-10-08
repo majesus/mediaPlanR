@@ -68,6 +68,7 @@ page 134.
 \seealso{
 \code{\link[=calc_sainsbury]{calc_sainsbury()}}, \code{\link[=calc_binomial]{calc_binomial()}} and \code{\link[=calc_metheringham]{calc_metheringham()}} for plans
 with several vehicles, \code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}} for an ad hoc
-accumulation model, and \code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}} for the experimental
-Negative-Binomial count approximation.
+accumulation model, and \code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}} for a
+Negative-Binomial count approximation, which applies to unbounded count
+processes rather than to a finite number of insertions.
 }

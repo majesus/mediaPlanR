@@ -199,8 +199,21 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' \deqn{e_{R,i}=|R_i^{obs}-R_i^{pred}|/R_i^{obs}}
 #' and
 #' \deqn{e_{P,i}=\sum_{j\geq 1}|p_{ij}^{obs}-p_{ij}^{pred}|/R_i^{obs}.}
-#' `kim_aer` and `kim_ape` are the means of these quantities across schedules.
-#' They are descriptive predictive-error measures, not inferential tests.
+#' where \eqn{R_i} is the reach (one minus the share with zero exposures) and
+#' \eqn{p_{ij}} the share exposed exactly \eqn{j} times. `kim_aer` (Kim's
+#' average percentage error in reach, AER) and `kim_ape` (Kim's average
+#' percentage error in the exposure distribution, APE) are the means of
+#' \eqn{e_{R,i}} and \eqn{e_{P,i}} across schedules, reported here as
+#' proportions (multiply by 100 for percentages). They are descriptive
+#' predictive-error measures, not inferential tests.
+#'
+#' The other elements of `summary` are, averaged over schedules:
+#' `mean_total_variation`, half the sum over all exposure levels (including
+#' zero) of the absolute difference between observed and predicted
+#' probabilities; `mean_cell_mae`, the mean absolute difference per exposure
+#' level; `mean_reach_absolute_error`, \eqn{|R_i^{obs}-R_i^{pred}|}; and
+#' `mean_contact_bias`, predicted minus observed mean number of exposures per
+#' person (positive when the model overestimates exposures).
 #'
 #' Exact support equality is required. Open-tail NBD output is rejected because
 #' a cell such as `10+` is not equivalent to an exact ten-exposure cell. To
@@ -208,7 +221,7 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' and predicted tails identically and provide explicit data frames.
 #'
 #' @references Kim, H. G. (2005). A Canonical Sequential Aggregation Media
-#' Model. Doctoral dissertation, The University of Texas at Austin, pp. 97-98.
+#' Model. Doctoral dissertation, The University of Texas at Austin, pp. 117-118.
 #'
 #' @examples
 #' # Observations must be supplied explicitly. These are percentages from

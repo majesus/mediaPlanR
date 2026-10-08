@@ -20,8 +20,8 @@ csd_kim2005
 \description{
 Minimal factual inputs (insertion counts, reach and pairwise duplication
 figures) reproduced from Kim (2005), Tables 4.2.2.1-4.2.2.10, for the
-three-vehicle Canonical Sequential Aggregation example with the published TD
-forward aggregation order. They are included solely so that users can verify
+three-vehicle Canonical Sequential Aggregation example with the aggregation
+order of the worked example (labelled "TD forward" by Kim). They are included solely so that users can verify
 that \code{\link[=calc_csd]{calc_csd()}} reproduces the published result; exact calculations keep
 more precision than the intermediate values rounded in the dissertation.
 They are bare numeric values reused for validation, not a reproduction of

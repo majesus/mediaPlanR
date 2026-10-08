@@ -20,7 +20,8 @@ validate_sequential_inputs <- function(vehicles_data, duplications,
     stop(sprintf(paste0(
       "%s() supports at most %d vehicles because its exposure grid grows ",
       "exponentially with the number of vehicles (Cheong, 2007, tested the ",
-      "MBD model computationally up to 12-13 vehicles)."),
+      "MBD model on schedules of 12 vehicles, and reports prohibitive computing ",
+      "time above 13)."),
       caller, as.integer(max_vehicles)), call. = FALSE)
   }
   assert_number(population, "population", min = 0, min_open = TRUE)

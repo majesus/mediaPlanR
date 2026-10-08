@@ -28,8 +28,9 @@ exposed at least once, at least twice, and so on.
 }
 }
 \description{
-Implements the Sainsbury model, developed by E. J. Sainsbury at the London
-Press Exchange, to calculate reach and the exposure distribution (and its
+Implements the Sainsbury model, which Aldás Manzano (1998, Section 3.2.2.2)
+reports as developed at the London Press Exchange and formalized by Caffyn
+and Sagovsky (1963), to calculate reach and the exposure distribution (and its
 cumulative counterpart) of a set of advertising vehicles. The model assumes
 random duplication \emph{and} random accumulation, homogeneous individual
 exposure probabilities and heterogeneous vehicle exposure probabilities.

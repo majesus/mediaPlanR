@@ -14,8 +14,9 @@ calc_cbd(
 }
 \arguments{
 \item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2},
-with the same convention as \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_mbd]{calc_mbd()}} (\code{R2} may be
-\code{NA} only when \code{insertions} is one). At most 12 vehicles are supported.}
+with the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R1} strictly between zero and
+one, \verb{R1 <= R2 <= 2 * R1 - R1^2}, and \code{R2} may be \code{NA} only when
+\code{insertions} is one). At most 12 vehicles are supported.}
 
 \item{duplications}{Symmetric matrix of pairwise one-insertion audience
 duplications, as proportions of the population. The diagonal is ignored.}
@@ -31,7 +32,7 @@ given the (0,1) grid, so the distribution does not depend on the order.}
 as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
 \item{tolerance}{Positive numerical tolerance for probability constraints.
-The Frechet and triple-feasibility checks apply it relative to the smaller
+The Fréchet and triple-feasibility checks apply it relative to the smaller
 audience involved.}
 }
 \value{
@@ -47,7 +48,10 @@ negative-probability safety net of \code{\link[=calc_mbd]{calc_mbd()}} had to be
 }
 \description{
 Implements the Conditional Beta Distribution (CBD) of Kim (1994), reviewed
-in Kim (2005), for several vehicles with several insertions each.
+in Kim (2005), for several vehicles with several insertions each. The
+"(0,1) grid" is the set of the \eqn{2^m} combinations of being exposed (1) or
+not exposed (0) to the first insertion of each of the \eqn{m} vehicles; the
+notation "(0,1)" refers to those two states, not to an interval.
 Between-vehicle duplication is modeled first, at the one-insertion (0,1)
 level, by Danaher's (1991) second-order canonical expansion -- the mechanism
 \code{\link[=calc_canex]{calc_canex()}} and \code{\link[=calc_csd]{calc_csd()}} use. Conditionally on the (0,1) exposure
@@ -102,14 +106,14 @@ The implementation reproduces the CBD columns of the two-vehicle
 comparisons of Kim (2005, Appendix B) and of Hong (1998, Appendix E) within
 the rounding of those sources (0.01 percentage points), taking the
 duplication that each source implies, and the worked example of Kim (1994,
-p. 139; three vehicles with 2, 1 and 3 insertions, SMRB 1979 data) except
+pp. 125-139; three vehicles with 2, 1 and 3 insertions, SMRB 1979 data) except
 for its zero cell. In that example the zero of the canonical expansion is
 printed as 0.5066,
 whereas the formula applied to the printed inputs gives about 0.510 (and no
 choice of the inputs within their rounding goes below 0.507), so the printed
 value is an arithmetic error of the source; this
 function evaluates the formula, so its zero and one-contact probabilities
-differ from the printed ones by about 0.4 percentage points in that
+differ from the printed ones by 0.36 and 0.29 percentage points in that
 example. See the package tests for the exact cases.
 
 Because the canonical expansion can assign small negative probabilities to
@@ -128,7 +132,7 @@ vehicles is limited to 12.
 
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
-as given and check them against the Frechet bounds implied by the audiences
+as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
@@ -147,7 +151,7 @@ expansion itself admits negative correlations. \code{\link[=calc_agostini_duplic
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
 duplications.
 
-Second, pairwise duplications that satisfy the Frechet bounds can still be
+Second, pairwise duplications that satisfy the Fréchet bounds can still be
 impossible jointly for three or more vehicles. For every triple of vehicles
 the functions check that the exposure to all three can have a non-negative
 probability, given the audiences and the three pairwise duplications, and

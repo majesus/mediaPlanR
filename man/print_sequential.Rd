@@ -35,7 +35,8 @@ longer distributions are cut with a note. Use \code{Inf} to list all of them.}
 \description{
 By default, the full report used by the classical models: headline metrics,
 model parameters, the vehicles and aggregation steps, the exposure
-distribution and the cumulative N+ distribution, and numerical diagnostics.
+distribution, the cumulative distribution (the share of the population
+exposed N times or more, for each N), and numerical diagnostics.
 With \code{full = FALSE}, a compact summary: reach, average frequency,
 aggregation order and numerical diagnostics.
 }

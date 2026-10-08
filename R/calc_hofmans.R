@@ -1,7 +1,8 @@
-#' Cumulative audience under Hofmans' accumulation model
+#' Cumulative reach under Hofmans' accumulation model
 #'
-#' Implements Hofmans' (1966) accumulation model for the cumulative audience
-#' of several insertions in one vehicle -- the "accumulation" domain in Aldás
+#' Implements Hofmans' (1966) accumulation model for the cumulative reach (the
+#' proportion of the population exposed at least once) of several insertions in
+#' one vehicle -- the "accumulation" domain in Aldás
 #' Manzano's (1998) three-way split. It adapts Agostini's duplication formula
 #' by replacing the number of vehicles with the number of insertions, and it
 #' needs only the audience after one and two insertions. It is unrelated to
@@ -27,12 +28,13 @@
 #' @param R3 Optional cumulative reach after the third insertion, as a
 #'   proportion with `R2 < R3 < 3 * R1`. When supplied, it is used to estimate
 #'   the exponent `alpha` of Hofmans' variable coefficient (see Details).
-#' @param show_steps Logical. If `TRUE`, prints the intermediate calculation
-#'   steps and the resulting table.
+#' @param show_steps Logical. If `TRUE`, prints the parameters `k`, `d` and
+#'   `alpha` and the table of cumulative reach.
 #'
 #' @details
-#' Let \eqn{d = 2 R_1 - R_2} be the audience duplicated between two
-#' insertions, assumed constant for every pair of insertions, and
+#' Let \eqn{d = 2 R_1 - R_2} be the duplicated reach of two insertions (the
+#' proportion of the population exposed to both), assumed constant for every
+#' pair of insertions, and
 #' \eqn{k = 2 R_1 / R_2} the coefficient that makes the formula reproduce
 #' \eqn{R_2} exactly. Cumulative reach after \eqn{N} insertions is
 #' \deqn{R_N = \frac{(N R_1)^2}{N R_1 + k_N \, d \binom{N}{2}}.}
@@ -46,8 +48,8 @@
 #' coefficient formula applies; with it, `alpha` is estimated and the curve
 #' reproduces `R3` exactly.
 #'
-#' The model assumes a constant audience and a constant duplication between
-#' every pair of insertions.
+#' The model assumes a constant reach per insertion (`R1`) and a constant
+#' duplication between every pair of insertions.
 #'
 #' @return A list of class `"reach_hofmans_accumulation"` with components:
 #' \itemize{

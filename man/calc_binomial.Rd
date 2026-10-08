@@ -35,14 +35,15 @@ assumes random duplication \emph{and} random accumulation (repeat insertions in
 the same vehicle are also independent), homogeneous individuals and
 homogeneous vehicles. Under these assumptions every insertion is an
 independent Bernoulli trial with the same exposure probability, which is
-the mean audience of the plan's vehicles divided by the population.
+the insertion-weighted mean audience of the plan (each vehicle's audience
+counted once per insertion) divided by the population.
 Exposure probabilities are assumed stationary over time.
 }
 \details{
 Aldás Manzano (1998, Section 3.3.1.1) defines the exposure probability as
 \eqn{p = \bar{A} / P}, where \eqn{\bar{A}} is the simple mean of the
 vehicle audiences and every vehicle receives the same number of insertions
-\eqn{n}, so the plan has \eqn{N = n m} insertions. With unequal insertion
+\eqn{n}, so a plan with \eqn{m} vehicles has \eqn{N = n m} insertions. With unequal insertion
 counts, this function uses the insertion-weighted mean audience,
 \eqn{\sum_i n_i A_i / \sum_i n_i}. The two definitions coincide when all
 vehicles receive the same number of insertions, and the weighted mean

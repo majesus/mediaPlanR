@@ -15,8 +15,9 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 
 #' Reach and exposure distribution under the Sainsbury model
 #'
-#' Implements the Sainsbury model, developed by E. J. Sainsbury at the London
-#' Press Exchange, to calculate reach and the exposure distribution (and its
+#' Implements the Sainsbury model, which Aldás Manzano (1998, Section 3.2.2.2)
+#' reports as developed at the London Press Exchange and formalized by Caffyn
+#' and Sagovsky (1963), to calculate reach and the exposure distribution (and its
 #' cumulative counterpart) of a set of advertising vehicles. The model assumes
 #' random duplication *and* random accumulation, homogeneous individual
 #' exposure probabilities and heterogeneous vehicle exposure probabilities.
@@ -119,7 +120,8 @@ calc_sainsbury <- function(audiences, population,
 #' the same vehicle are also independent), homogeneous individuals and
 #' homogeneous vehicles. Under these assumptions every insertion is an
 #' independent Bernoulli trial with the same exposure probability, which is
-#' the mean audience of the plan's vehicles divided by the population.
+#' the insertion-weighted mean audience of the plan (each vehicle's audience
+#' counted once per insertion) divided by the population.
 #' Exposure probabilities are assumed stationary over time.
 #'
 #' @references
@@ -148,7 +150,7 @@ calc_sainsbury <- function(audiences, population,
 #' Aldás Manzano (1998, Section 3.3.1.1) defines the exposure probability as
 #' \eqn{p = \bar{A} / P}, where \eqn{\bar{A}} is the simple mean of the
 #' vehicle audiences and every vehicle receives the same number of insertions
-#' \eqn{n}, so the plan has \eqn{N = n m} insertions. With unequal insertion
+#' \eqn{n}, so a plan with \eqn{m} vehicles has \eqn{N = n m} insertions. With unequal insertion
 #' counts, this function uses the insertion-weighted mean audience,
 #' \eqn{\sum_i n_i A_i / \sum_i n_i}. The two definitions coincide when all
 #' vehicles receive the same number of insertions, and the weighted mean
@@ -273,8 +275,9 @@ calc_binomial <- function(audiences, population,
 #' @seealso
 #' [calc_sainsbury()], [calc_binomial()] and [calc_metheringham()] for plans
 #' with several vehicles, [calc_hofmans_accumulation()] for an ad hoc
-#' accumulation model, and [nbd_exposure_distribution()] for the experimental
-#' Negative-Binomial count approximation.
+#' accumulation model, and [nbd_exposure_distribution()] for a
+#' Negative-Binomial count approximation, which applies to unbounded count
+#' processes rather than to a finite number of insertions.
 #' @export
 calc_beta_binomial <- function(A1, A2, P, n) {
   assert_number(P, "P", min = 0, min_open = TRUE)

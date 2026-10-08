@@ -43,9 +43,8 @@ remotes::install_github("majesus/mediaPlanR", build = FALSE)
 This second route skips the vignette. Then load the package:
 
 
-```r
+``` r
 library(mediaPlanR)
-#> mediaPlanR 2.0.0 | Reliable cross-media reach and frequency planning. See ?media_plan
 ```
 
 ## The ideas in five minutes
@@ -69,7 +68,7 @@ Take a population of 1,000,000 people and two vehicles with one insertion each,
 reaching 300,000 and 400,000 people:
 
 
-```r
+``` r
 population <- 1000000
 audiences  <- c(A = 300000, B = 400000)
 
@@ -85,7 +84,7 @@ overlap only by chance (**random duplication**), the share of the population in
 both is the product of the two shares, and the reach follows directly:
 
 
-```r
+``` r
 duplicated_people <- prod(audiences / population) * population
 duplicated_people                           # people expected in both audiences
 #> [1] 120000
@@ -97,7 +96,7 @@ sum(audiences) - duplicated_people          # reach, in people
 distribution:
 
 
-```r
+``` r
 calc_sainsbury(audiences, population)
 #> SAINSBURY MODEL
 #> ===============
@@ -144,7 +143,7 @@ population) instead of calculating with them. The optional `target_audience`
 column holds the people of your target group in each insertion.
 
 
-```r
+``` r
 plan <- media_plan(
   data.frame(
     channel = c("TV", "Radio", "Digital"),
@@ -169,7 +168,7 @@ plan
 channel and for the whole plan. Every ratio has an explicit denominator:
 
 
-```r
+``` r
 metrics <- plan_metrics(plan)
 metrics$by_channel[, c("channel", "impressions", "spend", "rating_points",
                        "cpm_impressions")]
@@ -192,7 +191,7 @@ metrics$totals[c("impressions", "spend", "grps")]
 model is Sainsbury's, which assumes random duplication:
 
 
-```r
+``` r
 reach <- estimate_reach(plan, model = "sainsbury")
 reach
 #> Reach model: sainsbury
@@ -204,7 +203,7 @@ and the exposure distribution includes the zero-exposure cell, so it always sums
 to one:
 
 
-```r
+``` r
 reach$reach$percent
 #> [1] 88.29653
 round(reach$distribution[, c("contacts", "percent")], 2)
@@ -232,7 +231,7 @@ the effective frequency you choose is the effective reach: with an effective
 frequency of 2, it is the 60.5% shown for `min_contacts = 2`.
 
 
-```r
+``` r
 reach$cumulative[reach$cumulative$min_contacts %in% 1:4,
                  c("min_contacts", "percent", "people")]
 #>   min_contacts  percent   people
@@ -246,7 +245,7 @@ Passing the estimated reach back to `plan_metrics()` adds the metrics that need
 it, such as the cost of reaching a thousand different people:
 
 
-```r
+``` r
 plan_metrics(plan, reach = reach$reach$people)$totals[
   c("reach_percent", "average_frequency", "cost_per_thousand_reached")]
 #> $reach_percent
@@ -264,7 +263,7 @@ side by side. Sainsbury lets each vehicle keep its own audience; Binomial gives
 every insertion the plan's insertion-weighted average probability:
 
 
-```r
+``` r
 compare_reach_models(plan, c("sainsbury", "binomial"))
 #>       model reach_probability reach_percent reach_people average_frequency
 #> 1 sainsbury         0.8829653      88.29653     882965.3          2.208467
@@ -281,7 +280,7 @@ twice, and `max_insertions` caps the insertions of each channel (the search is
 not limited to the insertions of the original plan):
 
 
-```r
+``` r
 optimized <- optimize_media_plan(
   plan,
   budget = 50000,
@@ -291,7 +290,7 @@ optimized <- optimize_media_plan(
 )
 optimized
 #> Media optimization (verified global optimum)
-#> Spend: 48600.00 / 50000.00 EUR | Reach: 94.23% | Reach 2+: 76.46%
+#> Spend: 48600.00 / 50000.00 EUR | Reach: 94.23% | Effective reach (2 or more exposures): 76.46%
 #>  channel insertions
 #>       TV          1
 #>    Radio          8
@@ -318,7 +317,7 @@ the share of the target that the channel reaches (*target rating*) and the
 with its share of the population (100 means the channel is neutral):
 
 
-```r
+``` r
 audience_metrics(
   gross_audience = c(250000, 150000),
   target_audience = c(125000, 75000),
@@ -346,7 +345,7 @@ Consider one vehicle with a 500,000-person audience in a population of
 independent 50% chance, so almost everybody is reached:
 
 
-```r
+``` r
 calc_binomial(audiences = 500000, population = 1000000, insertions = 5)$reach$percent
 #> [1] 96.875
 ```
@@ -359,7 +358,7 @@ of exposure and estimates how those probabilities are spread from the two
 audience figures:
 
 
-```r
+``` r
 beta_binomial <- calc_beta_binomial(A1 = 500000, A2 = 550000, P = 1000000, n = 5)
 beta_binomial$reach$percent
 #> [1] 60.33654
@@ -416,7 +415,7 @@ a small table. The quickest way to see what a function expects is its example
 dataset, which is already a list of arguments:
 
 
-```r
+``` r
 data(csd_kim2005)     # reach and duplication figures of a worked example, Kim (2005)
 str(csd_kim2005)
 #> List of 3
@@ -433,7 +432,7 @@ of the model: headline metrics, parameters, the exposure distribution, the
 cumulative distribution and diagnostics.
 
 
-```r
+``` r
 csd <- do.call(calc_csd, csd_kim2005)
 csd
 #> CANONICAL SEQUENTIAL AGGREGATION DISTRIBUTION (CSD)
@@ -511,8 +510,9 @@ Example datasets exist for the main models (`ratings_example`,
 
 ### CSD, MSAD, CBD and MBD
 
-These four models take the same three kinds of input, all as **proportions of
-the population** (between 0 and 1):
+These four models take the same three kinds of input. The reach and duplication
+figures are **proportions of the population** (between 0 and 1); only
+`population` is a count of people:
 
 - `vehicles_data`: one row per vehicle with `insertions` (planned insertions, a
   whole number), `R1` (reach after one insertion, that is, the vehicle's
@@ -523,12 +523,13 @@ the population** (between 0 and 1):
 - `duplications`: a symmetric square matrix with the proportion of the
   population reached by both vehicles with one insertion each. The diagonal is
   ignored. Rows and columns follow the order of `vehicles_data`. A duplication
-  cannot exceed the smaller of the two audiences.
+  cannot exceed the smaller of the two audiences, and cannot be smaller than
+  the sum of the two audiences minus one.
 - `population`: the number of people in the population, so that results are also
   expressed in people. The default, 1, leaves them as proportions.
 
 
-```r
+``` r
 vehicles <- data.frame(
   vehicle    = c("TV", "Radio", "Digital"),
   insertions = c(3, 2, 4),
@@ -638,7 +639,7 @@ from the same inputs (CSD and CBD obtain reach from the same canonical
 expansion, which is why their reach coincides here):
 
 
-```r
+``` r
 v <- vehicles[, c("insertions", "R1", "R2")]
 models <- list(CSD = calc_csd, MSAD = calc_msad, CBD = calc_cbd, MBD = calc_mbd)
 data.frame(
@@ -657,14 +658,17 @@ data.frame(
 The models do not accept every input. When the duplications are incompatible
 with the model, the function stops with a message that explains why; it does
 not silently alter your data. For example, `calc_mbd()` rejects the same plan
-with duplications of 0.07, 0.04 and 0.02, because together they imply less
-overlap than random duplication would for the Beta-Binomial distribution that
-the model imputes for three vehicles.
+with duplications of 0.07, 0.04 and 0.02. Each pair overlaps slightly more than
+chance would, but the Beta-Binomial distribution that the model imputes for
+three vehicles uses the average audience (0.21) and the average duplication
+(0.043), and that average is below the overlap expected by chance for the
+average audience (0.21 x 0.21 = 0.044), which that distribution cannot
+represent.
 
 ### The other models
 
 
-```r
+``` r
 # Random duplication: three vehicles with 2, 1 and 3 insertions
 calc_sainsbury(audiences = c(300000, 400000, 200000),
                population = 1000000, insertions = c(2, 1, 3))$reach$percent
@@ -724,7 +728,7 @@ that the probabilities add up to one and that the average frequency equals the
 mean number of exposures per person divided by the reach.
 
 
-```r
+``` r
 sum(csd$distribution$probability)
 #> [1] 1
 csd$average_frequency
@@ -748,7 +752,7 @@ hypothetical: a panel of 1,000 people classified by the number of exposures to
 the three-vehicle schedule of the previous sections (0 to 9 exposures).
 
 
-```r
+``` r
 observed <- data.frame(
   contacts = 0:9,
   observed = c(330, 150, 160, 190, 80, 50, 25, 10, 5, 0)
@@ -764,10 +768,12 @@ round(unlist(evaluation$summary[c("kim_aer", "kim_ape")]), 3)
 #>   0.016   0.026
 ```
 
-`kim_aer` is the average relative error in reach, |observed - predicted| /
-observed. `kim_ape` is the average relative error in the exposure distribution:
-the absolute differences over the exposure levels of one or more, divided by the
-observed reach (both are proposed by Kim, 2005). `evaluation$summary` also holds
+`kim_aer` is Kim's average percentage error in reach (AER), |observed reach -
+predicted reach| / observed reach, averaged over schedules. `kim_ape` is Kim's
+average percentage error in the exposure distribution (APE): the sum, over the
+exposure levels of one or more, of the absolute differences between observed and
+predicted shares, divided by the observed reach (both are proposed by Kim,
+2005). Both are shown as proportions. `evaluation$summary` also holds
 the total variation distance and other diagnostics. These errors are descriptive
 measures of fit, not statistical tests. The function
 requires the observed and predicted distributions to cover exactly the same

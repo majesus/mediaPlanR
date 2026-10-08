@@ -8,6 +8,8 @@ calc_canex(vehicles_data, duplications, population = 1e+06)
 }
 \arguments{
 \item{vehicles_data}{Data frame with one row per vehicle and columns
+(note that \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}} name
+the insertions column \code{insertions} instead of \code{k})
 \itemize{
 \item \code{k}: number of insertions in the vehicle (a positive integer);
 \item \code{R1}: reach after the first insertion, as a proportion in (0, 1];
@@ -32,7 +34,7 @@ A list of class \code{"reach_canex"} with components:
 reached.
 \item \code{distribution}: data frame with \code{contacts} (total exposures, from
 zero), \code{probability}, \code{percent}, \code{people} and \code{cumulative_probability}
-(the probability of at least that many exposures).
+(the probability of \code{contacts} or more exposures).
 \item \code{diagnostics}: list with \code{negative_mass_truncated} (probability mass
 that was negative before truncation), \code{mass_before_renormalization} and
 \code{correlation_min_eigenvalue} (the smallest eigenvalue of the
@@ -95,7 +97,7 @@ truncated distribution has a mean of 1.0227.
 
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
-as given and check them against the Frechet bounds implied by the audiences
+as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
@@ -114,7 +116,7 @@ expansion itself admits negative correlations. \code{\link[=calc_agostini_duplic
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
 duplications.
 
-Second, pairwise duplications that satisfy the Frechet bounds can still be
+Second, pairwise duplications that satisfy the Fréchet bounds can still be
 impossible jointly for three or more vehicles. For every triple of vehicles
 the functions check that the exposure to all three can have a non-negative
 probability, given the audiences and the three pairwise duplications, and

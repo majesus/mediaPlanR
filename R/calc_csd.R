@@ -61,20 +61,26 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' preserves both marginal distributions and sets the zero-exposure cell to one
 #' minus the canonical reach.
 #'
-#' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`.
-#'   `R1` is the reach after one insertion and `R2` the cumulative reach after
-#'   two insertions, as proportions. `R2` may be `NA` only when `insertions`
-#'   is one.
+#' @param vehicles_data Data frame with one row per vehicle (at least two rows)
+#'   and columns `insertions` (planned insertions, a positive integer), `R1` and
+#'   `R2`. `R1` is the reach after one insertion, a proportion strictly between
+#'   zero and one, and `R2` the cumulative reach after two insertions, a
+#'   proportion with `R1 <= R2 <= 2 * R1 - R1^2` (the upper limit is the reach
+#'   under independent insertions). `R2` may be `NA` only when `insertions` is
+#'   one. Note that [calc_canex()] names the insertions column `k`.
 #' @param duplications Symmetric matrix of pairwise one-insertion audience
 #'   duplications, as proportions of the population. The diagonal is ignored.
 #' @param aggregation_order Either `"audience_desc"` (vehicles in decreasing
 #'   order of one-insertion reach), `"given"` (the row order), or a
 #'   permutation of the row indices. Use an explicit permutation to reproduce
-#'   a published aggregation criterion such as Kim's TD forward example.
+#'   a published aggregation order, such as the one of Kim's worked example
+#'   (labelled "TD forward" in the dissertation: aggregation guided by the
+#'   total duplication of each pair, between- plus within-vehicle, in forward
+#'   order).
 #' @param population Positive population used only to express probabilities
 #'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
-#'   The Frechet and triple-feasibility checks apply it relative to the smaller
+#'   The Fréchet and triple-feasibility checks apply it relative to the smaller
 #'   audience involved.
 #'
 #' @return A `reach_csd` object: a list with `reach` (`probability`, `percent`
@@ -116,7 +122,7 @@ csd_canonical_reach <- function(indices, marginals, single_reach,
 #' Doctoral dissertation, The University of Texas at Austin, pp. 78-97.
 #'
 #' @examples
-#' # Kim (2005), Tables 4.2.2.1-4.2.2.10: TD forward order
+#' # Kim (2005), Tables 4.2.2.1-4.2.2.10: the order of Kim's worked example
 #' data(csd_kim2005)
 #' result <- do.call(calc_csd, csd_kim2005)
 #' result$reach
@@ -234,7 +240,8 @@ calc_csd <- function(vehicles_data, duplications,
 #'
 #' By default, the full report used by the classical models: headline metrics,
 #' model parameters, the vehicles and aggregation steps, the exposure
-#' distribution and the cumulative N+ distribution, and numerical diagnostics.
+#' distribution, the cumulative distribution (the share of the population
+#' exposed N times or more, for each N), and numerical diagnostics.
 #' With `full = FALSE`, a compact summary: reach, average frequency,
 #' aggregation order and numerical diagnostics.
 #'

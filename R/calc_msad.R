@@ -31,10 +31,12 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' complete worked numerical example; Kim's own three-vehicle example is CSD,
 #' not MSAD.
 #'
-#' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`.
-#'   `R1` is the reach after one insertion and `R2` the cumulative reach after
-#'   two insertions, as proportions. `R2` may be `NA` only when `insertions`
-#'   is one.
+#' @param vehicles_data Data frame with one row per vehicle (at least two rows)
+#'   and columns `insertions` (planned insertions, a positive integer), `R1` and
+#'   `R2`. `R1` is the reach after one insertion, a proportion strictly between
+#'   zero and one, and `R2` the cumulative reach after two insertions, a
+#'   proportion with `R1 <= R2 <= 2 * R1 - R1^2`. `R2` may be `NA` only when
+#'   `insertions` is one.
 #' @param duplications Symmetric matrix of pairwise one-insertion audience
 #'   duplications, as proportions of the population. The diagonal is ignored.
 #' @param aggregation_order Either `"audience_desc"` (Kim's larger-audience-
@@ -43,7 +45,7 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' @param population Positive population used only to express probabilities
 #'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
-#'   The Frechet and triple-feasibility checks apply it relative to the smaller
+#'   The Fréchet and triple-feasibility checks apply it relative to the smaller
 #'   audience involved.
 #'
 #' @return A `reach_msad` object: a list with `reach` (`probability`, `percent`
@@ -60,19 +62,23 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' with \eqn{K_{ij}=(A_i+A_j)/(A_i+A_j-A_{ij})}, where \eqn{R_{n_i}} is the
 #' reach of vehicle \eqn{i} for its own \eqn{n_i} insertions, \eqn{A_i} its
 #' one-insertion audience and \eqn{A_{ij}} the one-insertion duplication of
-#' vehicles \eqn{i} and \eqn{j}. At every aggregation step the joint table is
+#' vehicles \eqn{i} and \eqn{j}, all as proportions of the population. At every aggregation step the joint table is
 #' conformed to the two input marginal distributions and to the Morgensztern
 #' union reach. Consequently all probabilities remain non-negative, the
 #' margins are preserved, and the zero-exposure probability is exactly
 #' \eqn{1 - R_m}.
 #'
 #' The function reproduces the three-vehicle numerical example of Lee (1988,
-#' pp. 81-93; two insertions per vehicle, aggregation in the order given) to
+#' pp. 81-93; two insertions per vehicle, aggregation in the order Lee obtains
+#' with his total-duplication criterion, `aggregation_order = "given"` with the
+#' vehicles listed in that order) to
 #' within 0.0011 in every cell of the exposure distribution, which Lee prints
 #' to three decimals.
 #'
-#' MSAD is intended to reduce, but does not guarantee the elimination of,
-#' declining reach. The reach formula can also be incompatible with the
+#' MSAD is intended to reduce, but does not guarantee the elimination of, the
+#' declining reach phenomenon (Leckenby & Rice, 1986): the reach that some
+#' exposure-distribution models estimate for a schedule can fall when
+#' insertions or vehicles are added, which cannot happen in reality. The reach formula can also be incompatible with the
 #' supplied marginal distributions. In that case the function stops and reports
 #' the feasible interval instead of silently altering the target. The
 #' aggregation order can change the exposure distribution even when the final

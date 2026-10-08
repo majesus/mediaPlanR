@@ -79,6 +79,8 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' second-order correlation term.
 #'
 #' @param vehicles_data Data frame with one row per vehicle and columns
+#'   (note that [calc_csd()], [calc_msad()], [calc_cbd()] and [calc_mbd()] name
+#'   the insertions column `insertions` instead of `k`)
 #'   \itemize{
 #'     \item `k`: number of insertions in the vehicle (a positive integer);
 #'     \item `R1`: reach after the first insertion, as a proportion in (0, 1];
@@ -137,7 +139,7 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' @section Domain of validity:
 #' The multivariate models ([calc_canex()], [calc_csd()], [calc_msad()],
 #' [calc_cbd()] and [calc_mbd()]) take the observed one-insertion duplications
-#' as given and check them against the Frechet bounds implied by the audiences
+#' as given and check them against the Fréchet bounds implied by the audiences
 #' and, for every triple of vehicles, against joint feasibility. The published
 #' methods have three limits that follow from this.
 #'
@@ -156,7 +158,7 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' and [calc_hofmans_duplication()] can be used to impute null or missing
 #' duplications.
 #'
-#' Second, pairwise duplications that satisfy the Frechet bounds can still be
+#' Second, pairwise duplications that satisfy the Fréchet bounds can still be
 #' impossible jointly for three or more vehicles. For every triple of vehicles
 #' the functions check that the exposure to all three can have a non-negative
 #' probability, given the audiences and the three pairwise duplications, and
@@ -180,7 +182,7 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'     reached.
 #'   \item `distribution`: data frame with `contacts` (total exposures, from
 #'     zero), `probability`, `percent`, `people` and `cumulative_probability`
-#'     (the probability of at least that many exposures).
+#'     (the probability of `contacts` or more exposures).
 #'   \item `diagnostics`: list with `negative_mass_truncated` (probability mass
 #'     that was negative before truncation), `mass_before_renormalization` and
 #'     `correlation_min_eigenvalue` (the smallest eigenvalue of the

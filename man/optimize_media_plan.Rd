@@ -22,17 +22,23 @@ upper bounds of the search.}
 
 \item{budget}{Maximum total spend, in the plan's currency.}
 
-\item{objective}{\code{"max_reach"} maximizes effective reach within the budget;
-\code{"min_cost"} minimizes spend subject to \code{target_reach}.}
+\item{objective}{\code{"max_reach"} maximizes effective reach within the budget
+(despite its name, the quantity maximized is the effective reach defined by
+\code{effective_frequency}; with the default \code{effective_frequency = 1} it is the
+ordinary reach). \code{"min_cost"} minimizes spend, within the budget, subject to
+effective reach being at least \code{target_reach}.}
 
-\item{target_reach}{Required effective reach, as a proportion, for
-\code{objective = "min_cost"}.}
+\item{target_reach}{Required effective reach, as a proportion of the
+population between zero and one, for \code{objective = "min_cost"}.}
 
-\item{effective_frequency}{Minimum number of exposures that defines
-effective reach: the proportion of the population exposed at least that
-many times.}
+\item{effective_frequency}{Effective frequency: the minimum number of
+exposures, \eqn{f}, that a person needs to count as effectively reached
+(a positive integer, default 1). Effective reach is the proportion of the
+population exposed \code{effective_frequency} times or more, that is, \eqn{f} or
+more times; it is not the proportion exposed exactly \eqn{f} times.}
 
-\item{max_insertions}{Integer upper bound of insertions for each channel.}
+\item{max_insertions}{Integer vector with the maximum number of insertions
+allowed in each channel, in the order of the rows of the plan.}
 
 \item{model}{\code{"sainsbury"} or \code{"binomial"}; see \code{\link[=estimate_reach]{estimate_reach()}}.
 Candidate allocations routinely place several insertions in the same
@@ -51,7 +57,8 @@ and the greedy heuristic otherwise.}
 \value{
 A \code{media_optimization} object: a list with the optimized \code{plan}, the
 named \code{allocation}, the \code{reach} result of \code{\link[=estimate_reach]{estimate_reach()}}, the plan
-\code{metrics}, the \code{effective_frequency} and \code{effective_reach}, \code{spend},
+\code{metrics}, the \code{effective_frequency} and \code{effective_reach} (a proportion of the
+population exposed \code{effective_frequency} times or more), \code{spend},
 \code{budget}, \code{target_reach} and \code{target_met}, the \code{method} used,
 \code{global_optimum} (\code{TRUE} only for exhaustive search),
 \code{combinations_evaluated} and, for exhaustive search, a \code{search_table} with
@@ -66,7 +73,9 @@ minimize spend for a required effective reach.
 \details{
 Exhaustive search evaluates every allocation within \code{max_insertions} whose
 spend does not exceed the budget and returns the best one, so its result is
-a global optimum. Ties in effective reach are broken in favor of lower
+a global optimum for the chosen reach \code{model} and within those bounds (the
+optimum is relative to the model: a different model can rank allocations
+differently). Ties in effective reach are broken in favor of lower
 spend and then higher reach. For \code{objective = "min_cost"} the cheapest
 allocation that reaches \code{target_reach} is returned, and an error is raised
 when none does.

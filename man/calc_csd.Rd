@@ -13,10 +13,13 @@ calc_csd(
 )
 }
 \arguments{
-\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2}.
-\code{R1} is the reach after one insertion and \code{R2} the cumulative reach after
-two insertions, as proportions. \code{R2} may be \code{NA} only when \code{insertions}
-is one.}
+\item{vehicles_data}{Data frame with one row per vehicle (at least two rows)
+and columns \code{insertions} (planned insertions, a positive integer), \code{R1} and
+\code{R2}. \code{R1} is the reach after one insertion, a proportion strictly between
+zero and one, and \code{R2} the cumulative reach after two insertions, a
+proportion with \verb{R1 <= R2 <= 2 * R1 - R1^2} (the upper limit is the reach
+under independent insertions). \code{R2} may be \code{NA} only when \code{insertions} is
+one. Note that \code{\link[=calc_canex]{calc_canex()}} names the insertions column \code{k}.}
 
 \item{duplications}{Symmetric matrix of pairwise one-insertion audience
 duplications, as proportions of the population. The diagonal is ignored.}
@@ -24,13 +27,16 @@ duplications, as proportions of the population. The diagonal is ignored.}
 \item{aggregation_order}{Either \code{"audience_desc"} (vehicles in decreasing
 order of one-insertion reach), \code{"given"} (the row order), or a
 permutation of the row indices. Use an explicit permutation to reproduce
-a published aggregation criterion such as Kim's TD forward example.}
+a published aggregation order, such as the one of Kim's worked example
+(labelled "TD forward" in the dissertation: aggregation guided by the
+total duplication of each pair, between- plus within-vehicle, in forward
+order).}
 
 \item{population}{Positive population used only to express probabilities
 as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
 \item{tolerance}{Positive numerical tolerance for probability constraints.
-The Frechet and triple-feasibility checks apply it relative to the smaller
+The Fréchet and triple-feasibility checks apply it relative to the smaller
 audience involved.}
 }
 \value{
@@ -75,7 +81,7 @@ is returned.
 
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
-as given and check them against the Frechet bounds implied by the audiences
+as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
@@ -94,7 +100,7 @@ expansion itself admits negative correlations. \code{\link[=calc_agostini_duplic
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
 duplications.
 
-Second, pairwise duplications that satisfy the Frechet bounds can still be
+Second, pairwise duplications that satisfy the Fréchet bounds can still be
 impossible jointly for three or more vehicles. For every triple of vehicles
 the functions check that the exposure to all three can have a non-negative
 probability, given the audiences and the three pairwise duplications, and
@@ -112,7 +118,7 @@ or 0.5, instead of altering an invalid target.
 }
 
 \examples{
-# Kim (2005), Tables 4.2.2.1-4.2.2.10: TD forward order
+# Kim (2005), Tables 4.2.2.1-4.2.2.10: the order of Kim's worked example
 data(csd_kim2005)
 result <- do.call(calc_csd, csd_kim2005)
 result$reach

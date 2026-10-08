@@ -35,7 +35,10 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' Conditional Beta Distribution model
 #'
 #' Implements the Conditional Beta Distribution (CBD) of Kim (1994), reviewed
-#' in Kim (2005), for several vehicles with several insertions each.
+#' in Kim (2005), for several vehicles with several insertions each. The
+#' "(0,1) grid" is the set of the \eqn{2^m} combinations of being exposed (1) or
+#' not exposed (0) to the first insertion of each of the \eqn{m} vehicles; the
+#' notation "(0,1)" refers to those two states, not to an interval.
 #' Between-vehicle duplication is modeled first, at the one-insertion (0,1)
 #' level, by Danaher's (1991) second-order canonical expansion -- the mechanism
 #' [calc_canex()] and [calc_csd()] use. Conditionally on the (0,1) exposure
@@ -46,8 +49,9 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' insertions.
 #'
 #' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
-#'   with the same convention as [calc_csd()] and [calc_mbd()] (`R2` may be
-#'   `NA` only when `insertions` is one). At most 12 vehicles are supported.
+#'   with the same convention as [calc_csd()] (`R1` strictly between zero and
+#'   one, `R1 <= R2 <= 2 * R1 - R1^2`, and `R2` may be `NA` only when
+#'   `insertions` is one). At most 12 vehicles are supported.
 #' @param duplications Symmetric matrix of pairwise one-insertion audience
 #'   duplications, as proportions of the population. The diagonal is ignored.
 #' @param aggregation_order Either `"audience_desc"` (vehicles in decreasing
@@ -59,7 +63,7 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' @param population Positive population used only to express probabilities
 #'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
-#'   The Frechet and triple-feasibility checks apply it relative to the smaller
+#'   The Fréchet and triple-feasibility checks apply it relative to the smaller
 #'   audience involved.
 #'
 #' @return A `reach_cbd` object: a list with `reach` (`probability`, `percent`
@@ -117,14 +121,14 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' comparisons of Kim (2005, Appendix B) and of Hong (1998, Appendix E) within
 #' the rounding of those sources (0.01 percentage points), taking the
 #' duplication that each source implies, and the worked example of Kim (1994,
-#' p. 139; three vehicles with 2, 1 and 3 insertions, SMRB 1979 data) except
+#' pp. 125-139; three vehicles with 2, 1 and 3 insertions, SMRB 1979 data) except
 #' for its zero cell. In that example the zero of the canonical expansion is
 #' printed as 0.5066,
 #' whereas the formula applied to the printed inputs gives about 0.510 (and no
 #' choice of the inputs within their rounding goes below 0.507), so the printed
 #' value is an arithmetic error of the source; this
 #' function evaluates the formula, so its zero and one-contact probabilities
-#' differ from the printed ones by about 0.4 percentage points in that
+#' differ from the printed ones by 0.36 and 0.29 percentage points in that
 #' example. See the package tests for the exact cases.
 #'
 #' Because the canonical expansion can assign small negative probabilities to

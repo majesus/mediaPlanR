@@ -12,8 +12,8 @@ fit_nbd_exposure(counts, report_max = NULL, conf_level = 0.95)
 \item{report_max}{Optional open-tail threshold passed to
 \code{\link[=nbd_exposure_distribution]{nbd_exposure_distribution()}}.}
 
-\item{conf_level}{Confidence level for the profile-scale Wald interval for
-\code{size} when an interior Negative-Binomial solution exists.}
+\item{conf_level}{Confidence level of the Wald interval for \code{size}, computed
+on the log scale of \code{size}, when an interior Negative-Binomial solution exists.}
 }
 \value{
 An \code{nbd_exposure_fit} object containing estimates, likelihood

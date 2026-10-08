@@ -13,10 +13,12 @@ calc_msad(
 )
 }
 \arguments{
-\item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2}.
-\code{R1} is the reach after one insertion and \code{R2} the cumulative reach after
-two insertions, as proportions. \code{R2} may be \code{NA} only when \code{insertions}
-is one.}
+\item{vehicles_data}{Data frame with one row per vehicle (at least two rows)
+and columns \code{insertions} (planned insertions, a positive integer), \code{R1} and
+\code{R2}. \code{R1} is the reach after one insertion, a proportion strictly between
+zero and one, and \code{R2} the cumulative reach after two insertions, a
+proportion with \verb{R1 <= R2 <= 2 * R1 - R1^2}. \code{R2} may be \code{NA} only when
+\code{insertions} is one.}
 
 \item{duplications}{Symmetric matrix of pairwise one-insertion audience
 duplications, as proportions of the population. The diagonal is ignored.}
@@ -29,7 +31,7 @@ indices.}
 as people. The default, 1, leaves \code{people} equal to \code{probability}.}
 
 \item{tolerance}{Positive numerical tolerance for probability constraints.
-The Frechet and triple-feasibility checks apply it relative to the smaller
+The Fréchet and triple-feasibility checks apply it relative to the smaller
 audience involved.}
 }
 \value{
@@ -57,19 +59,23 @@ For a subset of vehicles, the Morgensztern reach is
 with \eqn{K_{ij}=(A_i+A_j)/(A_i+A_j-A_{ij})}, where \eqn{R_{n_i}} is the
 reach of vehicle \eqn{i} for its own \eqn{n_i} insertions, \eqn{A_i} its
 one-insertion audience and \eqn{A_{ij}} the one-insertion duplication of
-vehicles \eqn{i} and \eqn{j}. At every aggregation step the joint table is
+vehicles \eqn{i} and \eqn{j}, all as proportions of the population. At every aggregation step the joint table is
 conformed to the two input marginal distributions and to the Morgensztern
 union reach. Consequently all probabilities remain non-negative, the
 margins are preserved, and the zero-exposure probability is exactly
 \eqn{1 - R_m}.
 
 The function reproduces the three-vehicle numerical example of Lee (1988,
-pp. 81-93; two insertions per vehicle, aggregation in the order given) to
+pp. 81-93; two insertions per vehicle, aggregation in the order Lee obtains
+with his total-duplication criterion, \code{aggregation_order = "given"} with the
+vehicles listed in that order) to
 within 0.0011 in every cell of the exposure distribution, which Lee prints
 to three decimals.
 
-MSAD is intended to reduce, but does not guarantee the elimination of,
-declining reach. The reach formula can also be incompatible with the
+MSAD is intended to reduce, but does not guarantee the elimination of, the
+declining reach phenomenon (Leckenby & Rice, 1986): the reach that some
+exposure-distribution models estimate for a schedule can fall when
+insertions or vehicles are added, which cannot happen in reality. The reach formula can also be incompatible with the
 supplied marginal distributions. In that case the function stops and reports
 the feasible interval instead of silently altering the target. The
 aggregation order can change the exposure distribution even when the final
@@ -79,7 +85,7 @@ schedule reach is unchanged.
 
 The multivariate models (\code{\link[=calc_canex]{calc_canex()}}, \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}},
 \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}) take the observed one-insertion duplications
-as given and check them against the Frechet bounds implied by the audiences
+as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
@@ -98,7 +104,7 @@ expansion itself admits negative correlations. \code{\link[=calc_agostini_duplic
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} can be used to impute null or missing
 duplications.
 
-Second, pairwise duplications that satisfy the Frechet bounds can still be
+Second, pairwise duplications that satisfy the Fréchet bounds can still be
 impossible jointly for three or more vehicles. For every triple of vehicles
 the functions check that the exposure to all three can have a non-negative
 probability, given the audiences and the three pairwise duplications, and

@@ -326,8 +326,9 @@ Example datasets exist for the main models (`ratings_example`,
 
 ### CSD, MSAD, CBD and MBD
 
-These four models take the same three kinds of input, all as **proportions of
-the population** (between 0 and 1):
+These four models take the same three kinds of input. The reach and duplication
+figures are **proportions of the population** (between 0 and 1); only
+`population` is a count of people:
 
 - `vehicles_data`: one row per vehicle with `insertions` (planned insertions, a
   whole number), `R1` (reach after one insertion, that is, the vehicle's
@@ -338,7 +339,8 @@ the population** (between 0 and 1):
 - `duplications`: a symmetric square matrix with the proportion of the
   population reached by both vehicles with one insertion each. The diagonal is
   ignored. Rows and columns follow the order of `vehicles_data`. A duplication
-  cannot exceed the smaller of the two audiences.
+  cannot exceed the smaller of the two audiences, and cannot be smaller than
+  the sum of the two audiences minus one.
 - `population`: the number of people in the population, so that results are also
   expressed in people. The default, 1, leaves them as proportions.
 
@@ -395,9 +397,12 @@ data.frame(
 The models do not accept every input. When the duplications are incompatible
 with the model, the function stops with a message that explains why; it does
 not silently alter your data. For example, `calc_mbd()` rejects the same plan
-with duplications of 0.07, 0.04 and 0.02, because together they imply less
-overlap than random duplication would for the Beta-Binomial distribution that
-the model imputes for three vehicles.
+with duplications of 0.07, 0.04 and 0.02. Each pair overlaps slightly more than
+chance would, but the Beta-Binomial distribution that the model imputes for
+three vehicles uses the average audience (0.21) and the average duplication
+(0.043), and that average is below the overlap expected by chance for the
+average audience (0.21 x 0.21 = 0.044), which that distribution cannot
+represent.
 
 ### The other models
 
@@ -491,10 +496,12 @@ evaluation <- evaluate_exposure_model(
 round(unlist(evaluation$summary[c("kim_aer", "kim_ape")]), 3)
 ```
 
-`kim_aer` is the average relative error in reach, |observed - predicted| /
-observed. `kim_ape` is the average relative error in the exposure distribution:
-the absolute differences over the exposure levels of one or more, divided by the
-observed reach (both are proposed by Kim, 2005). `evaluation$summary` also holds
+`kim_aer` is Kim's average percentage error in reach (AER), |observed reach -
+predicted reach| / observed reach, averaged over schedules. `kim_ape` is Kim's
+average percentage error in the exposure distribution (APE): the sum, over the
+exposure levels of one or more, of the absolute differences between observed and
+predicted shares, divided by the observed reach (both are proposed by Kim,
+2005). Both are shown as proportions. `evaluation$summary` also holds
 the total variation distance and other diagnostics. These errors are descriptive
 measures of fit, not statistical tests. The function
 requires the observed and predicted distributions to cover exactly the same

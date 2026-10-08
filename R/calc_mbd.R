@@ -224,7 +224,8 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' distributions are convolved into a growing pseudo-vehicle.
 #'
 #' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
-#'   with the same convention as [calc_csd()] (`R2` may be `NA` only when
+#'   with the same convention as [calc_csd()] (`R1` strictly between zero and
+#'   one, `R1 <= R2 <= 2 * R1 - R1^2`, and `R2` may be `NA` only when
 #'   `insertions` is one). At most 12 vehicles are supported.
 #' @param duplications Symmetric matrix of pairwise one-insertion audience
 #'   duplications, as proportions of the population. The diagonal is ignored.
@@ -236,7 +237,7 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' @param population Positive population used only to express probabilities
 #'   as people. The default, 1, leaves `people` equal to `probability`.
 #' @param tolerance Positive numerical tolerance for probability constraints.
-#'   The Frechet and triple-feasibility checks apply it relative to the smaller
+#'   The Fréchet and triple-feasibility checks apply it relative to the smaller
 #'   audience involved.
 #'
 #' @return A `reach_mbd` object: a list with `reach` (`probability`, `percent`
@@ -277,9 +278,9 @@ mbd_safety_net <- function(distribution, tolerance) {
 #'
 #' Cheong also reports that the aggregation order can change the collapsed
 #' distribution, that this was not investigated systematically, and that the
-#' model was tested computationally only up to 12-13 vehicles because of the
-#' exponential cost of the exposure grid. `calc_mbd()` stops above 12 vehicles
-#' for this reason.
+#' model was evaluated on schedules of 12 vehicles because the computing time
+#' of the exposure grid becomes prohibitive above 13 vehicles. `calc_mbd()`
+#' stops above 12 vehicles for this reason.
 #'
 #' # Validation against the published example
 #'
@@ -298,10 +299,12 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' coincide, so the result of this model does not depend on the duplication
 #' between vehicles in that limit; this follows from Cheong's construction.
 #'
-#' Cheong reports MBD as the most accurate of the eleven models tested for
-#' reach alone (comScore 2003 data, 440 schedules) but not for the complete
-#' exposure distribution, where [calc_canex()] and the Conditional Beta
-#' Distribution model ([calc_cbd()]) were more accurate.
+#' Of the eleven models Cheong evaluated (comScore 2003 data, 440 schedules),
+#' the three versions of MBD were the most accurate for reach alone (average
+#' percentage error in reach of 1.18% for the best version), but not for the
+#' complete exposure distribution, where [calc_canex()] (6.91% average
+#' percentage error) and the Conditional Beta Distribution model ([calc_cbd()],
+#' 8.80%) were more accurate than the MBD versions (10.19% to 12.10%).
 #'
 #' @references
 #' Cheong, Y. (2007). Multivariate Beta Binomial Distribution Model as a Web
@@ -313,7 +316,10 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' Internet exposure frequency distributions. Journal of Advertising, 40(1),
 #' 7-23. \doi{10.2753/JOA0091-3367400101}
 #'
-#' Waring, E. (1792). Meditationes Algebraicae. Cambridge.
+#' Waring, E. (1792). On the principles of translating algebraic quantities into
+#' probable relations and annuities. Cambridge. (The work Cheong, 2007, and
+#' Aldás Manzano, 1998, cite for the theorem; not to be confused with Waring's
+#' *Meditationes Algebraicae*, 1770.)
 #'
 #' @examples
 #' # Cheong (2007), Chapter 4.2: three-vehicle conceptual example

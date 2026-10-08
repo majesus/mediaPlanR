@@ -73,14 +73,20 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #' @param plan A `media_plan` object. Its current insertions are the default
 #'   upper bounds of the search.
 #' @param budget Maximum total spend, in the plan's currency.
-#' @param objective `"max_reach"` maximizes effective reach within the budget;
-#'   `"min_cost"` minimizes spend subject to `target_reach`.
-#' @param target_reach Required effective reach, as a proportion, for
-#'   `objective = "min_cost"`.
-#' @param effective_frequency Minimum number of exposures that defines
-#'   effective reach: the proportion of the population exposed at least that
-#'   many times.
-#' @param max_insertions Integer upper bound of insertions for each channel.
+#' @param objective `"max_reach"` maximizes effective reach within the budget
+#'   (despite its name, the quantity maximized is the effective reach defined by
+#'   `effective_frequency`; with the default `effective_frequency = 1` it is the
+#'   ordinary reach). `"min_cost"` minimizes spend, within the budget, subject to
+#'   effective reach being at least `target_reach`.
+#' @param target_reach Required effective reach, as a proportion of the
+#'   population between zero and one, for `objective = "min_cost"`.
+#' @param effective_frequency Effective frequency: the minimum number of
+#'   exposures, \eqn{f}, that a person needs to count as effectively reached
+#'   (a positive integer, default 1). Effective reach is the proportion of the
+#'   population exposed `effective_frequency` times or more, that is, \eqn{f} or
+#'   more times; it is not the proportion exposed exactly \eqn{f} times.
+#' @param max_insertions Integer vector with the maximum number of insertions
+#'   allowed in each channel, in the order of the rows of the plan.
 #' @param model `"sainsbury"` or `"binomial"`; see [estimate_reach()].
 #'   Candidate allocations routinely place several insertions in the same
 #'   vehicle, so the Negative-Binomial approximation, which is scoped to
@@ -94,7 +100,9 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #' @details
 #' Exhaustive search evaluates every allocation within `max_insertions` whose
 #' spend does not exceed the budget and returns the best one, so its result is
-#' a global optimum. Ties in effective reach are broken in favor of lower
+#' a global optimum for the chosen reach `model` and within those bounds (the
+#' optimum is relative to the model: a different model can rank allocations
+#' differently). Ties in effective reach are broken in favor of lower
 #' spend and then higher reach. For `objective = "min_cost"` the cheapest
 #' allocation that reaches `target_reach` is returned, and an error is raised
 #' when none does.
@@ -109,7 +117,8 @@ greedy_allocation <- function(plan, budget, max_insertions, model,
 #'
 #' @return A `media_optimization` object: a list with the optimized `plan`, the
 #'   named `allocation`, the `reach` result of [estimate_reach()], the plan
-#'   `metrics`, the `effective_frequency` and `effective_reach`, `spend`,
+#'   `metrics`, the `effective_frequency` and `effective_reach` (a proportion of the
+#'   population exposed `effective_frequency` times or more), `spend`,
 #'   `budget`, `target_reach` and `target_met`, the `method` used,
 #'   `global_optimum` (`TRUE` only for exhaustive search),
 #'   `combinations_evaluated` and, for exhaustive search, a `search_table` with
@@ -255,7 +264,7 @@ optimize_media_plan <- function(plan, budget,
 print.media_optimization <- function(x, ...) {
   label <- if (x$global_optimum) "verified global optimum" else "greedy heuristic"
   cat(sprintf("Media optimization (%s)\n", label))
-  cat(sprintf("Spend: %.2f / %.2f %s | Reach: %.2f%% | Reach %d+: %.2f%%\n",
+  cat(sprintf("Spend: %.2f / %.2f %s | Reach: %.2f%% | Effective reach (%d or more exposures): %.2f%%\n",
               x$spend, x$budget, x$plan$currency, x$reach$reach$percent,
               as.integer(x$effective_frequency), 100 * x$effective_reach))
   print(data.frame(channel = names(x$allocation), insertions = x$allocation),
