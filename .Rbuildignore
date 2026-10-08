@@ -17,3 +17,4 @@
 ^tests/testthat/fixtures/cbd_published_plans\.csv$
 ^tests/testthat/fixtures/kim2005_appB_models\.csv$
 ^tests/testthat/fixtures/README\.md$
+^Claude outputs$
