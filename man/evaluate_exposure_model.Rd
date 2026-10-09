@@ -132,7 +132,10 @@ valid comparisons of the collapsed distributions, not of the exact ones.
 
 The observed reach must be positive: the relative errors divide by it, so a
 schedule whose observed mass is entirely at zero exposures stops with an
-error, even though the absolute distances could be computed.
+error, even though the absolute distances could be computed. Because the
+reach is one minus the zero cell, it is resolved only down to the
+double-precision epsilon (about 2.2e-16): any observed reach above that is
+accepted, including one person reached in a universe of a billion.
 
 Masses are used as supplied. A probability or percent distribution whose
 total is within \code{sum_tolerance} of one is not renormalized, so its reach

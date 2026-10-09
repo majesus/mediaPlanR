@@ -13,7 +13,7 @@ allocation_reach <- function(plan, allocation, model, effective_frequency = 1L) 
   }
   effective <- if (effective_frequency > n) 0 else
     sum(distribution[(effective_frequency + 1L):(n + 1L)])
-  list(reach = 1 - distribution[1L], effective_reach = effective)
+  list(reach = sum(distribution[-1L]), effective_reach = effective)
 }
 
 enumerate_allocations <- function(max_insertions) {

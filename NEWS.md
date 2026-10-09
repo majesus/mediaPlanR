@@ -6,6 +6,21 @@ backward compatible with them: function names, arguments, example datasets and
 returned objects changed. The Shiny explorers and the budget/KPI helpers of the
 earlier snapshots are not part of this package.
 
+## Corrections from the re-audit of 2026-10-09
+
+* `estimate_reach()` and the allocation search of `optimize_media_plan()` now
+  obtain the reach by summing the positive cells instead of computing
+  `1 - p0`, so very small reaches (down to one person in 1e17) agree with the
+  direct models `calc_sainsbury()` and `calc_binomial()` instead of losing
+  digits or collapsing to zero.
+* `evaluate_exposure_model()` accepts any observed reach above the
+  double-precision epsilon (it used to reject reaches below about 1.5e-8 as
+  zero); the limit is now stated in the help page and in the error message.
+* The installed-package load test now checks a component that exists.
+* `inst/DATA-PROVENANCE.md`: the statement on redistribution distinguishes the
+  datasets and tables (not distributed) from the individual printed values
+  quoted next to the computed differences.
+
 ## Corrections from the follow-up audit of the corrected manual (2026-10-08)
 
 Validation:

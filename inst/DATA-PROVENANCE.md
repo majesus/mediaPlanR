@@ -49,10 +49,15 @@ public history. The statements of the documentation about the 80 two-vehicle
 plans (agreement within 0.01 percentage points) describe those local runs.
 
 Redistribution: the package archive distributes only original illustrative
-datasets, formulas and algorithms. No numeric input or printed output of a
-published worked example is distributed in the archive or tracked in the public
-repository from this revision on (earlier commits of the public history still
-contain the former datasets and the two published-plan tables). The comparisons
+datasets, formulas and algorithms. No dataset, input table or complete output
+table of a published worked example is distributed in the archive or tracked in
+the public repository from this revision on (earlier commits of the public
+history still contain the former datasets and the two published-plan tables).
+This file does quote, for documentation and attribution, a small number of
+individual printed values and short result rows (for example the seven printed
+cells of the Cheong 2007 example, the printed MSAD cells of Lee 1988 and
+isolated values of Kim 1994 and 2005) next to the differences computed from
+them; those are the only published numbers the archive contains. The comparisons
 with published examples quoted in the documentation describe the maintainer's
 local runs. No permission from the authors or their institutions is claimed,
 no finding of infringement is made, and the package's MIT declaration does not

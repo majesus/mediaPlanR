@@ -1,54 +1,48 @@
 ## Submission
 
-mediaPlanR 2.0.0, a new submission (first release on CRAN). Date field 2026-10-08.
+mediaPlanR 2.0.0, a new submission (first release on CRAN). Date field 2026-10-09.
 
-Source archive: `mediaPlanR_2.0.0.tar.gz`, built with `R CMD build` (R 4.4.1,
-Windows) from commit `d1cd8db87a8ecfbfea01f23266aa401dfa3eebe4`.
-SHA-256: `b7d20cea7c83e1e90d2c770664abcba285d5f1b929bc5d5ce694d54da26379d0`.
-Later commits change only this file, which is excluded from the archive
+Source archive: `mediaPlanR_2.0.0.tar.gz`, built with `R CMD build` (R 4.6.1,
+Windows) on 2026-10-09. It is the only archive to submit; the earlier archives
+of the same name (SHA-256 `53ee4de2...` of 2026-10-07 and `b7d20cea...` of
+2026-10-08) are superseded and were moved to `superseded/`.
+SHA-256: `4d1cf0c5d31dc40d1f62fb751212195fa50566b6115f3230d6b36a40046e50c8`.
+Later commits may change only this file, which is excluded from the archive
 through `.Rbuildignore`.
 
 ## R CMD check results
 
-0 errors | 0 warnings | 3 notes
+0 errors | 0 warnings | 1 note
 
 * This is a new submission.
-* "unable to verify current time" (checking for future file timestamps). It
-  appears only on the local Windows machine, which could not reach a time
-  server; it does not depend on the package.
-* "Skipping checking math rendering: package 'V8' unavailable" (checking HTML
-  version of manual). V8 is not installed on the local machine.
 
 ## Test environments
 
-* Windows 11, R 4.4.1 (2024-06-14 ucrt), local: `R CMD check --as-cran
-  --run-donttest` with `_R_CHECK_FORCE_SUGGESTS_` and
+* Windows 11, R Under development (unstable) 2026-10-08 r90650 (ucrt), local:
+  `R CMD check --as-cran --run-donttest` with `_R_CHECK_FORCE_SUGGESTS_` and
   `_R_CHECK_CRAN_INCOMING_` set to true, on the archive above, including the
-  PDF manual, the examples, the tests (2963 expectations pass and 8 are
-  skipped in the archive: 6 because the local-only validation tables are
+  PDF and HTML manuals, the examples, the tests (2978 expectations pass and 8
+  are skipped in the archive: 6 because the local-only validation tables are
   absent, 1 because it does not run on CRAN, 1 because a directory is absent
-  in that context) and the rebuilt vignette.
-* GitHub Actions, run 37844335813, commit `26d32f1` (it differs from the source
-  of the archive only in this file): `R CMD check --as-cran --run-donttest` on
-  Ubuntu (R release, oldrel-1 and devel), macOS (R release) and Windows (R
-  release), plus a job with R 4.0.5 on Ubuntu that installs the package and
-  runs a smoke test using only base and recommended packages (it checks the
-  declared minimum, `Depends: R (>= 4.0)`). All six jobs succeeded; the
-  workflow treats warnings as failures. The notes reported by each job were
-  not reviewed.
+  in that context) and the rebuilt vignette. The notes about the current time
+  and about V8 that appeared on the earlier local machine do not appear here.
+* The re-audit of 2026-10-09 ran the same check on the previous revision of the
+  package with R 4.6.1 and R-devel on Windows, and reviewed the full logs of
+  the six GitHub Actions jobs of that revision (Ubuntu release, oldrel-1 and
+  devel; macOS and Windows release; and the R 4.0.5 job that checks the
+  declared minimum, `Depends: R (>= 4.0)`): 0 errors, 0 warnings and only the
+  new-submission note in each.
 
 Not run: win-builder and R-hub.
 
 ## Other checks
 
 * `spelling::spell_check_package(vignettes = TRUE)`: no findings.
-* `urlchecker::url_check()`: 14 URLs; 6 correct and 8 `https://doi.org/` links
-  (README.md and the vignette) answered HTTP 403 to automated requests from the
-  local machine, as publishers commonly do. The DOIs cited in DESCRIPTION are
-  written as `<doi:...>`. The identity of the nine DOIs cited was verified
-  against Crossref metadata in the review of 2026-10-03.
+* `urlchecker::url_check()`: 14 URLs, all correct on 2026-10-09. The DOIs
+  cited in DESCRIPTION are written as `<doi:...>`. The identity of the nine DOIs
+  cited was verified against Crossref metadata in the review of 2026-10-03.
 * mediaPlanR was absent from the CRAN package index and from the archive on
-  2026-10-08 (HTTP 404). This is a dated availability check, not a reservation.
+  2026-10-09 (HTTP 404). This is a dated availability check, not a reservation.
 
 ## Notes for the reviewer
 
@@ -85,13 +79,17 @@ Not run: win-builder and R-hub.
 
 ## Before submitting (maintainer's checklist)
 
+* Commit these changes, push, and record here the number of the new GitHub
+  Actions run (the archive above was checked locally; the six jobs have not yet
+  run on this revision).
 * The tag `v2.0.0` already exists on GitHub and points to an old commit
   (`846c336`, 2026-09-24). Decide whether to move it to the submitted commit or
-  to tag the release only after CRAN accepts it.
+  to tag the release only after CRAN accepts it (recommended: tag after
+  acceptance).
 * The redistribution basis in `inst/DATA-PROVENANCE.md` is the maintainer's
   position, not a permission granted by the authors or their institutions;
   attribution does not establish permission.
-* Submit through <https://cran.r-project.org/submit.html> with the archive above,
-  then confirm the e-mail sent to the maintainer address. Paste the sections
+* Submit through <https://cran.r-project.org/submit.html> with the archive above
+  (`cran_submission/`), then confirm the e-mail sent to the maintainer address. Paste the sections
   "R CMD check results" and "Notes for the reviewer" in the comments field.
 * Optional, before submitting: `devtools::check_win_devel()`.

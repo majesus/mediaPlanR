@@ -280,7 +280,10 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #'
 #' The observed reach must be positive: the relative errors divide by it, so a
 #' schedule whose observed mass is entirely at zero exposures stops with an
-#' error, even though the absolute distances could be computed.
+#' error, even though the absolute distances could be computed. Because the
+#' reach is one minus the zero cell, it is resolved only down to the
+#' double-precision epsilon (about 2.2e-16): any observed reach above that is
+#' accepted, including one person reached in a universe of a billion.
 #'
 #' Masses are used as supplied. A probability or percent distribution whose
 #' total is within `sum_tolerance` of one is not renormalized, so its reach
@@ -404,9 +407,13 @@ evaluate_exposure_model <- function(
     zero_row <- distribution$contacts == 0L
     observed_reach <- 1 - distribution$observed_probability[zero_row]
     predicted_reach <- 1 - distribution$predicted_probability[zero_row]
-    if (observed_reach <= .Machine$double.eps^0.5) {
+    # The reach is one minus the zero cell (see Details), so it cannot be
+    # resolved below the double-precision epsilon.
+    if (observed_reach <= .Machine$double.eps) {
       stop(sprintf(
-        "Observed reach is zero for schedule '%s'; relative AER/APE are undefined.",
+        paste0("Observed reach is zero for schedule '%s' (or below the ",
+               "double-precision resolution of 1 minus the zero cell, ",
+               "2.2e-16); relative AER/APE are undefined."),
         id
       ), call. = FALSE)
     }

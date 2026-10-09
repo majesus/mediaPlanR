@@ -18,7 +18,9 @@ new_reach_result <- function(probability, population, model, parameters = list()
   probability <- pmax(probability, 0)
   probability <- probability / sum(probability)
   contacts <- seq_along(probability) - 1L
-  reach_probability <- 1 - probability[1L]
+  # Sum of the positive cells, not 1 - p0: the subtraction loses every digit of
+  # a tiny reach (and returns zero below the double-precision epsilon).
+  reach_probability <- sum(probability[-1L])
   mean_contacts_population <- sum(contacts * probability)
   average_frequency <- if (reach_probability > 0) {
     mean_contacts_population / reach_probability

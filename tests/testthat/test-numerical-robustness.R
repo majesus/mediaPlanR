@@ -135,3 +135,37 @@ test_that("schedules with extreme audience scales keep valid distributions", {
     }
   }
 })
+
+test_that("estimate_reach() keeps the reach of the direct model for tiny reaches", {
+  for (p in c(1e-8, 1e-11, 1e-16, 1e-17)) {
+    plan <- media_plan(
+      data.frame(channel = "A", audience = 1, insertions = 1,
+                 cost_per_insertion = 1),
+      population = 1 / p
+    )
+    direct <- calc_sainsbury(1, 1 / p, 1)
+    fit <- estimate_reach(plan)
+    expect_equal(fit$reach$people, direct$reach$people, tolerance = 1e-12,
+                 info = format(p))
+    expect_equal(fit$average_frequency, 1, tolerance = 1e-12, info = format(p))
+    expect_equal(fit$cumulative$people[2L], fit$reach$people, tolerance = 1e-12,
+                 info = format(p))
+  }
+})
+
+test_that("the evaluator accepts any observed reach above double precision", {
+  tiny <- data.frame(contacts = 0:1, observed = c(999999999, 1))
+  predicted <- data.frame(contacts = 0:1, predicted = c(999999999, 1))
+  fit <- evaluate_exposure_model(tiny, predicted, observed_scale = "count",
+                                 predicted_scale = "count")
+  expect_equal(fit$summary$kim_aer, 0)
+  expect_equal(fit$by_schedule$observed_reach, 1e-9, tolerance = 1e-6)
+  none <- data.frame(contacts = 0:1, observed = c(1, 0))
+  expect_error(
+    evaluate_exposure_model(none, data.frame(contacts = 0:1,
+                                             predicted = c(1, 0)),
+                            observed_scale = "count",
+                            predicted_scale = "count"),
+    "Observed reach is zero"
+  )
+})
