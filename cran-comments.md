@@ -26,12 +26,15 @@ through `.Rbuildignore`.
   absent, 1 because it does not run on CRAN, 1 because a directory is absent
   in that context) and the rebuilt vignette. The notes about the current time
   and about V8 that appeared on the earlier local machine do not appear here.
-* The re-audit of 2026-10-09 ran the same check on the previous revision of the
-  package with R 4.6.1 and R-devel on Windows, and reviewed the full logs of
-  the six GitHub Actions jobs of that revision (Ubuntu release, oldrel-1 and
-  devel; macOS and Windows release; and the R 4.0.5 job that checks the
-  declared minimum, `Depends: R (>= 4.0)`): 0 errors, 0 warnings and only the
-  new-submission note in each.
+* GitHub Actions, run 37903187686, commit `9312c72` (it differs from the source
+  of the archive only in this file): `R CMD check --as-cran --run-donttest` on
+  Ubuntu (R release, oldrel-1 and devel), macOS (R release) and Windows (R
+  release), plus a job with R 4.0.5 on Ubuntu that installs the package and
+  runs a smoke test using only base and recommended packages (it checks the
+  declared minimum, `Depends: R (>= 4.0)`). All six jobs succeeded; the
+  workflow treats warnings as failures. The individual notes of this run were
+  not read; those of the previous revision (run 37844750201), reviewed in the
+  re-audit of 2026-10-09, were only the new-submission note in each job.
 
 Not run: win-builder and R-hub.
 
@@ -79,9 +82,6 @@ Not run: win-builder and R-hub.
 
 ## Before submitting (maintainer's checklist)
 
-* Commit these changes, push, and record here the number of the new GitHub
-  Actions run (the archive above was checked locally; the six jobs have not yet
-  run on this revision).
 * The tag `v2.0.0` already exists on GitHub and points to an old commit
   (`846c336`, 2026-09-24). Decide whether to move it to the submitted commit or
   to tag the release only after CRAN accepts it (recommended: tag after
