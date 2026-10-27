@@ -36,7 +36,7 @@ run_checked <- function(label, program, args = character()) {
   step_log <- tempfile("step-", fileext = ".txt")
   on.exit(unlink(step_log))
   status <- suppressWarnings(
-    system2(program, args, stdout = step_log, stderr = step_log)
+    system2(program, shQuote(args), stdout = step_log, stderr = step_log)
   )
   lines <- if (file.exists(step_log)) {
     readLines(step_log, warn = FALSE)
