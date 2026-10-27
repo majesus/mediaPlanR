@@ -45,6 +45,7 @@ test_that("MP-02: the Beta-Binomial keeps its mass and its mean near independenc
                      fit$distribution$percent / 100)
     expect_equal(sum(probability), 1, tolerance = 1e-13)
     expect_lte(fit$reach$percent, 100)
+    expect_true(all(fit$cumulative$percent >= 0 & fit$cumulative$percent <= 100))
     expect_equal(sum(0:500 * probability), 150, tolerance = 1e-11)
     expect_lt(max(abs(probability -
                         reference_bbd(500, params$alpha, params$beta))), 1e-12)

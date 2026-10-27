@@ -146,7 +146,14 @@ bbd_distribution <- function(size, alpha, beta) {
                                      shape_term))
     probability <- exp(log_probability - max(log_probability))
   }
-  probability / sum(probability)
+  probability <- probability / sum(probability)
+  # A rounded normalization can leave the mass just above one on some
+  # platforms. Round the rescaling denominator upward in that case.
+  total <- sum(probability)
+  if (total > 1) {
+    probability <- probability / (total * (1 + .Machine$double.eps))
+  }
+  probability
 }
 
 dbetabinom <- function(x, size, alpha, beta) {

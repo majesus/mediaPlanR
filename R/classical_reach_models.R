@@ -397,8 +397,10 @@ calc_beta_binomial <- function(R1, R2, insertions, population = 1) {
     dbetabinom(0:n, size = n, alpha = params$alpha, beta = params$beta)
   }
 
-  R_dist <- rev(cumsum(rev(P_dist)))
-  reach <- sum(P_dist[-1L])
+  # Summing normalized probabilities can exceed one by roundoff. Bound the
+  # tails while retaining direct summation for accurate very small reaches.
+  R_dist <- pmin(1, rev(cumsum(rev(P_dist))))
+  reach <- min(1, sum(P_dist[-1L]))
 
   structure(list(
     reach = list(percent = reach * 100, people = reach * P),

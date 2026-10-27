@@ -64,7 +64,9 @@ jobs:
 
       - name: Install manual fonts
         if: matrix.config.manual == true
-        run: tlmgr install inconsolata
+        run: |
+          tlmgr update --self
+          tlmgr install inconsolata
 
       - uses: r-lib/actions/check-r-package@v2
         with:
