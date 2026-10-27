@@ -34,6 +34,16 @@ Direct retrieval of that publisher page returns HTTP 403 in this environment.
 The bibliographic identifier is retained; the resolver discrepancy is recorded
 for review rather than treated as a successful DOI check.
 
+Follow-up on 2026-10-27: a Crossref REST API title search (query.title =
+"An Improved Beta Binomial Reach Frequency Model for Magazines", rows = 3)
+returned three unrelated records, with no matching article or replacement DOI
+among those results. This limited search does not establish that no other
+identifier exists. The publisher's indexed article page still identifies
+10.1080/01633392.1984.10505351, Leckenby and Boyd, volume 7(1), pages 1-24.
+No replacement identifier was found, so the reference remains unchanged.
+The eight HTTP 403 DOI links also remain unchanged: access denial alone is
+not evidence of an invalid bibliographic identifier.
+
 GitHub Actions validation of the same source commit:
 https://github.com/majesus/mediaPlanR/actions/runs/40579841697
 
