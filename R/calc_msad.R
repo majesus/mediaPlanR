@@ -1,6 +1,10 @@
 # Morgensztern reach of a subset of vehicles (Aldas Manzano, 1998, equation
 # 3.106; Kim, 2005, p. 67): `single_reach` are one-insertion audiences,
-# `vehicle_reach` the reach of each vehicle for its own insertions.
+# `vehicle_reach` the reach of each vehicle for its own insertions. The ratio
+# of the reach of a vehicle to its one-insertion audience (between one and its
+# insertions) is formed before the product, and the square of the total is
+# written as total * (total / denominator), so that no intermediate quantity
+# of small audiences underflows.
 msad_morgensztern_reach <- function(indices, single_reach,
                                      vehicle_reach, duplications) {
   if (length(indices) == 1L) return(vehicle_reach[indices])
@@ -14,10 +18,10 @@ msad_morgensztern_reach <- function(indices, single_reach,
     k_ij <- (single_reach[i] + single_reach[j]) /
       (single_reach[i] + single_reach[j] - duplication)
     denominator <- denominator +
-      k_ij * duplication * vehicle_reach[i] * vehicle_reach[j] /
-      (single_reach[i] * single_reach[j])
+      k_ij * duplication * (vehicle_reach[i] / single_reach[i]) *
+      (vehicle_reach[j] / single_reach[j])
   }
-  total_vehicle_reach^2 / denominator
+  total_vehicle_reach * (total_vehicle_reach / denominator)
 }
 
 #' Morgensztern Sequential Aggregation Distribution model
@@ -36,7 +40,8 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #'   `R2`. `R1` is the reach after one insertion, a proportion between 0 and 1
 #'   (not a percentage) and strictly between zero and one, and `R2` the
 #'   cumulative reach after two insertions (the proportion exposed at least
-#'   once in two insertions), a proportion with `R1 <= R2 <= 2 * R1 - R1^2`. If
+#'   once in two insertions), a proportion with `R1 <= R2 <= 2 * R1 - R1^2`
+#'   (the range of the Beta-Binomial family; see [calc_beta_binomial()]). If
 #'   `R2` is outside that range the function stops with an explanatory error.
 #'   `R2` may be `NA` only when `insertions` is one.
 #' @param duplications Symmetric matrix whose element `[i, j]` is the
@@ -122,10 +127,18 @@ msad_morgensztern_reach <- function(indices, single_reach,
 #' result <- do.call(calc_msad, msad_example)
 #' result$reach
 #'
-#' @seealso [calc_csd()] for the canonical alternative and [calc_mbd()] and
-#'   [calc_cbd()] for models that peel vehicles into insertion-level
-#'   distributions.
+#' @seealso [calc_csd()] for the canonical alternative, and [calc_cbd()] and
+#'   [calc_mbd()] for multivariate models that expand each vehicle into
+#'   insertion-level distributions instead of aggregating the vehicles
+#'   sequentially.
 #' @inheritSection calc_canex Domain of validity
+#' @section Computational limits:
+#' The cells of the largest joint table (the exposure levels of the vehicles
+#' already combined times those of the vehicle added) are counted from the
+#' insertions before anything is allocated, and a schedule above the budget
+#' is refused with an explanation. The budget is the option
+#' `mediaPlanR.max_table_cells`, `1e7` cells by default (80 MB for each
+#' matrix of that size); see the section "Computational limits" of [mediaPlanR].
 #' @export
 calc_msad <- function(vehicles_data, duplications,
                       aggregation_order = c("audience_desc", "given"),
@@ -139,11 +152,12 @@ calc_msad <- function(vehicles_data, duplications,
   R2 <- input$R2
   order_index <- input$order_index
   order_rule <- input$order_rule
+  check_sequential_table_size(insertions, order_index, "calc_msad")
 
   marginals <- lapply(seq_len(n), function(i) {
     vehicle_exposure_distribution(insertions[i], R1[i], R2[i])
   })
-  vehicle_reach <- vapply(marginals, function(x) 1 - x[1L], numeric(1))
+  vehicle_reach <- vapply(marginals, distribution_reach, numeric(1))
 
   current <- marginals[[order_index[1L]]]
   included <- order_index[1L]
@@ -171,8 +185,11 @@ calc_msad <- function(vehicles_data, duplications,
   steps <- do.call(rbind, steps)
   contacts <- seq_along(current) - 1L
   cumulative <- rev(cumsum(rev(current)))
-  reach <- 1 - current[1L]
-  average_frequency <- sum(contacts * current) / reach
+  # The reach is the sum of the positive cells, not 1 - P(0), which loses it
+  # for a small audience; the average frequency, 1 plus the excess of the
+  # levels above one over that reach, cannot fall below one.
+  reach <- distribution_reach(current)
+  average_frequency <- 1 + sum((contacts[-1L] - 1L) * current[-1L]) / reach
 
   result <- list(
     reach = list(

@@ -7,6 +7,9 @@
 #' parameters. The search returns the closest candidate within the stated
 #' bounds; it does not guarantee that the target is reached. Always check
 #' `converged`, `predicted_reach` and `error` before using `alpha` and `beta`.
+#' The concentration is searched in a finite interval, and the two limits of
+#' the family, the binomial and the polarized ones, are evaluated explicitly
+#' (see Details).
 #'
 #' The effective frequency `frequency` is a threshold chosen by the analyst for
 #' the objective, the creative, the medium and the period; the function does not
@@ -43,7 +46,25 @@
 #' smaller `n` in case of ties: the error is the criterion, and neither cost
 #' nor the minimum number of insertions is prioritized except to break ties.
 #' When the target cannot be reached, `converged` is `FALSE` and the closest
-#' candidate is returned. For example, with `R1 = 0.3`, `target_reach = 0.99`,
+#' candidate is returned.
+#'
+#' The search interval is finite: the natural logarithm of the concentration
+#' `alpha + beta` is searched between -15 and 15, that is, concentrations from
+#' about 3e-7 to 3.3e6. The two limits of the family that [calc_beta_binomial()]
+#' also represents, the polarized limit (concentration tending to zero: either
+#' all of the insertions or none) and the binomial limit (concentration tending
+#' to infinity: independent insertions), are not points of that interval, so
+#' they are evaluated explicitly as one more candidate for every `n` of at
+#' least two. A limit is returned only when its error is smaller, by more than
+#' 1e-12, than that of the best candidate of the interval, so that the results
+#' that the interval already resolves do not change. In that case `alpha`,
+#' `beta` and `concentration` are `0` (polarized) or `Inf` (binomial), as in
+#' [calc_beta_binomial()], where they indicate the limit and are not the
+#' parameters of a proper Beta distribution, and `fit_type` says which one it
+#' is. A target is outside the family only when it is farther than the limits
+#' allow (for example, an effective reach above the binomial limit with that
+#' number of insertions); a target merely beyond the ends of the interval
+#' receives the nearest of the limit and the interval. For example, with `R1 = 0.3`, `target_reach = 0.99`,
 #' `frequency = 1` and `max_insertions = 1` the only candidate has a
 #' probability of 0.3, so `predicted_reach` is 0.3, `error` is 0.69 and
 #' `converged` is `FALSE`.
@@ -51,8 +72,12 @@
 #' @return A `bbd_calibration` object: a list with `alpha`, `beta`,
 #'   `concentration`, `insertions` (the selected `n`), `R1`,
 #'   `frequency`, `type`, `target_reach`, `predicted_reach`, `error`,
-#'   `converged`, the full `distribution` (`contacts`, `probability` and
-#'   `cumulative_probability`) and the `candidates` evaluated for each `n`.
+#'   `converged`, `fit_type` (`"beta_binomial"`, `"binomial_limit"` or
+#'   `"polarized_limit"`), the full `distribution` (`contacts`, `probability`
+#'   and `cumulative_probability`) and the `candidates` evaluated for each `n`
+#'   (the selected one for that `n`, with its `log_concentration`, which is
+#'   `Inf` or `-Inf` for a limit, its `predicted` probability, its `error` and
+#'   its `fit_type`).
 #'
 #' @examples
 #' # A first insertion reaches 30% and the share exposed two or more times
@@ -83,15 +108,31 @@ calibrate_bbd <- function(R1, target_reach, frequency,
                 integer = TRUE)
   assert_number(tolerance, "tolerance", min = 0, min_open = TRUE)
 
-  probability_at <- function(log_concentration, n) {
+  # Distribution of the number of exposures with n insertions: the
+  # Beta-Binomial of mean R1 and concentration exp(log_concentration), or one
+  # of the two limits of the family.
+  distribution_at <- function(log_concentration, n, fit_type = "beta_binomial") {
+    if (fit_type == "binomial_limit") {
+      return(stats::dbinom(0:n, size = n, prob = R1))
+    }
+    if (fit_type == "polarized_limit") {
+      out <- numeric(n + 1L)
+      out[c(1L, n + 1L)] <- c(1 - R1, R1)
+      return(out)
+    }
     concentration <- exp(log_concentration)
-    alpha <- R1 * concentration
-    beta <- (1 - R1) * concentration
-    distribution <- dbetabinom(0:n, size = n, alpha = alpha, beta = beta)
+    dbetabinom(0:n, size = n, alpha = R1 * concentration,
+               beta = (1 - R1) * concentration)
+  }
+  target_probability <- function(distribution, n) {
     if (type == "exact") distribution[frequency + 1L] else
       sum(distribution[(frequency + 1L):(n + 1L)])
   }
+  probability_at <- function(log_concentration, n) {
+    target_probability(distribution_at(log_concentration, n), n)
+  }
 
+  limit_margin <- 1e-12
   candidates <- lapply(frequency:max_insertions, function(n) {
     grid <- seq(-15, 15, length.out = 301L)
     errors <- vapply(grid, function(x) abs(probability_at(x, n) - target_reach), numeric(1))
@@ -101,16 +142,38 @@ calibrate_bbd <- function(R1, target_reach, frequency,
     fit <- stats::optimize(function(x) (probability_at(x, n) - target_reach)^2,
                            c(lower, upper), tol = .Machine$double.eps^0.25)
     predicted <- probability_at(fit$minimum, n)
-    data.frame(n = n, log_concentration = fit$minimum,
-               predicted = predicted, error = abs(predicted - target_reach))
+    row <- data.frame(n = n, log_concentration = fit$minimum,
+                      predicted = predicted,
+                      error = abs(predicted - target_reach),
+                      fit_type = "beta_binomial", stringsAsFactors = FALSE)
+    # The limits are not in the interval of log concentrations (and with one
+    # insertion they coincide with each other and with every candidate).
+    if (n >= 2L) {
+      for (limit in c("polarized_limit", "binomial_limit")) {
+        limit_predicted <- target_probability(
+          distribution_at(NA_real_, n, limit), n)
+        limit_error <- abs(limit_predicted - target_reach)
+        if (limit_error < row$error - limit_margin) {
+          row <- data.frame(
+            n = n,
+            log_concentration = if (limit == "polarized_limit") -Inf else Inf,
+            predicted = limit_predicted, error = limit_error,
+            fit_type = limit, stringsAsFactors = FALSE)
+        }
+      }
+    }
+    row
   })
   candidates <- do.call(rbind, candidates)
   best <- candidates[order(candidates$error, candidates$n), ][1L, ]
-  concentration <- exp(best$log_concentration)
-  alpha <- R1 * concentration
-  beta <- (1 - R1) * concentration
-  distribution <- dbetabinom(0:best$n, size = best$n,
-                                      alpha = alpha, beta = beta)
+  fit_type <- best$fit_type
+  concentration <- switch(fit_type, binomial_limit = Inf, polarized_limit = 0,
+                          exp(best$log_concentration))
+  alpha <- switch(fit_type, binomial_limit = Inf, polarized_limit = 0,
+                  R1 * concentration)
+  beta <- switch(fit_type, binomial_limit = Inf, polarized_limit = 0,
+                 (1 - R1) * concentration)
+  distribution <- distribution_at(best$log_concentration, best$n, fit_type)
   cumulative <- rev(cumsum(rev(distribution)))
 
   structure(list(
@@ -125,6 +188,7 @@ calibrate_bbd <- function(R1, target_reach, frequency,
     predicted_reach = best$predicted,
     error = best$error,
     converged = best$error <= tolerance,
+    fit_type = fit_type,
     distribution = data.frame(
       contacts = 0:best$n,
       probability = distribution,

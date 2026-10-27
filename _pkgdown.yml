@@ -2,15 +2,6 @@ template:
   bootstrap: 5
   
 reference:
-- title: "Planning workflow"
-  desc: "Validated plans, metrics, reach and optimization"
-  contents:
-  - media_plan
-  - plan_metrics
-  - estimate_reach
-  - compare_reach_models
-  - optimize_media_plan
-  - audience_metrics
 - title: "Reach and exposure-distribution models"
   desc: "Classical models organized by plan shape"
   contents:

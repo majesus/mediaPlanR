@@ -16,7 +16,8 @@ calc_cbd(
 \item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2},
 with the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R1} and \code{R2} are proportions
 between 0 and 1, not percentages, \code{R1} is strictly between zero and one,
-\verb{R1 <= R2 <= 2 * R1 - R1^2}, and \code{R2} may be \code{NA} only when \code{insertions}
+\verb{R1 <= R2 <= 2 * R1 - R1^2}, the range of the Beta-Binomial family (see
+\code{\link[=calc_beta_binomial]{calc_beta_binomial()}}), and \code{R2} may be \code{NA} only when \code{insertions}
 is one; the function stops with an explanatory error if \code{R2} is outside
 that range). At most 12 vehicles are supported.}
 
@@ -57,26 +58,33 @@ negative-probability safety net of \code{\link[=calc_mbd]{calc_mbd()}} had to be
 }
 \description{
 Implements the Conditional Beta Distribution (CBD) of Kim (1994), reviewed
-in Kim (2005), for several vehicles with several insertions each. The
+in Kim (2005), for several vehicles with several insertions each. It is a
+multivariate model of conditional expansion, not a sequential-aggregation
+model like \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_msad]{calc_msad()}}: the vehicles are not combined one
+at a time, and the result does not depend on their order. The
 "(0,1) grid" is the set of the \eqn{2^m} combinations of being exposed (1) or
 not exposed (0) to the first insertion of each of the \eqn{m} vehicles; the
 notation "(0,1)" refers to those two states, not to an interval.
 Between-vehicle duplication is modeled first, at the one-insertion (0,1)
-level, by Danaher's (1991) second-order canonical expansion -- the mechanism
-\code{\link[=calc_canex]{calc_canex()}} and \code{\link[=calc_csd]{calc_csd()}} use. Conditionally on the (0,1) exposure
-state of every vehicle, the remaining insertions of each vehicle follow a
-Beta-Binomial distribution whose Beta parameters are updated by that state,
-and the vehicles are independent given the grid (Danaher 1992a). The zero
-cell of the grid is then conformed to the canonical expansion of all the
-insertions.
+level, by Danaher's (1991) canonical expansion, truncated to its pairwise
+terms -- the mechanism \code{\link[=calc_canex]{calc_canex()}} and \code{\link[=calc_csd]{calc_csd()}} use (see the section
+"Order of the expansion" of \code{\link[=calc_canex]{calc_canex()}}). Conditionally on the (0,1)
+exposure state of every vehicle, the remaining insertions of each vehicle
+follow a Beta-Binomial distribution whose Beta parameters are updated by that
+state, and the vehicles are independent given the grid (Danaher 1992a). The
+zero cell of the grid is then conformed to the zero probability of the
+schedule with all the insertions, which the general formulation of CBD lets
+any existing exposure model supply and which this implementation takes from
+the canonical expansion, as in \code{\link[=calc_canex]{calc_canex()}} (see step 3 below).
 }
 \details{
 The model follows Kim (1994, pp. 115-124):
 \enumerate{
 \item The joint distribution of exposure to one insertion of each vehicle (the
-\eqn{2^m} cells of the (0,1) grid) is obtained from the second-order
-canonical expansion with Bernoulli marginals, from the pairwise
-correlations implied by the observed one-insertion duplications.
+\eqn{2^m} cells of the (0,1) grid) is obtained from the canonical
+expansion truncated to its pairwise terms, with Bernoulli marginals, from
+the pairwise correlations implied by the observed one-insertion
+duplications.
 \item Given that vehicle \eqn{i} was (\eqn{x_i = 1}) or was not (\eqn{x_i = 0})
 exposed to its first insertion, its remaining \eqn{n_i - 1} insertions
 follow a Beta-Binomial distribution with parameters
@@ -87,10 +95,14 @@ convolved within each cell of the grid and weighted by the cell
 probability. A vehicle with one insertion contributes only its state
 \eqn{x_i}.
 \item In the all-zero cell of the grid, the probability of zero exposures is
-set to the canonical expansion of the zero cell computed with all the
-insertions (Danaher 1991, as in \code{\link[=calc_canex]{calc_canex()}}), and the remaining levels
-of that cell are rescaled so that the cell keeps its total probability
-(Kim 1994, p. 124).
+set to the zero probability of the schedule with all the insertions. In
+its general formulation CBD leaves the source of that probability open:
+Kim (1994, p. 124) lets any existing exposure model supply it, and Kim
+(2005, p. 65) gives CANEX as an example. The version implemented here,
+like Kim's worked example, takes it from the canonical expansion of
+Danaher (1991), as in \code{\link[=calc_canex]{calc_canex()}}. The remaining levels of that cell
+are rescaled so that the cell keeps its total probability (Kim 1994,
+pp. 124 and 131).
 }
 
 With a binomial-limit vehicle (\code{R2} equal to the reach under independence)
@@ -109,11 +121,15 @@ That property belongs to the uncorrected grid, not to the returned
 distribution: the zero-cell adjustment of step 3 and, if it is engaged, the
 truncation of negative cells and renormalization change the marginals of each
 vehicle and the mean number of exposures. The departure of the mean is
-reported in \code{diagnostics$mean_error} (between 0.0003 and 0.013 exposures in
-the package's reference schedules), so the marginals of the result should be
-judged through those diagnostics, separating the binary marginal of each
-vehicle, its distribution within the vehicle and the final distribution of
-the plan. As with \code{\link[=calc_canex]{calc_canex()}}, the \code{average_frequency} is the mean of the
+reported in \code{diagnostics$mean_error}. It can have either sign and it is not
+bounded by a universal constant: it is -0.0044 exposures per person for
+\link{csd_example}; in the maintainer's local runs it ranged from -0.011 to
++0.002 over the 80 two-vehicle plans of Kim (2005) and Hong (1998) and was
+-0.009 in the three-vehicle example of Kim (1994). The marginals of the
+result should therefore be judged through those diagnostics, separating the
+binary marginal of each vehicle, its distribution within the vehicle and the
+final distribution of the plan. As with \code{\link[=calc_canex]{calc_canex()}}, the
+\code{average_frequency} is the mean of the
 returned distribution over its reach: it uses the corrected mean, not the
 gross contacts per person of the input, so the two bases should not be mixed.
 }
@@ -155,6 +171,15 @@ The number of cells of the (0,1) grid grows as \eqn{2^m}, so the number of
 vehicles is limited to 12.
 }
 
+\section{Computational limits}{
+
+The work of the schedule is estimated from the insertions before anything
+is allocated, and a schedule above the budget is refused with an
+explanation. The budget is the option \code{mediaPlanR.max_work}, \code{1e9}
+elementary operations by default (one to two minutes); see the section
+"Computational limits" of \link{mediaPlanR}.
+}
+
 \section{Domain of validity}{
 
 In plain words. These models take the overlaps between vehicles
@@ -169,13 +194,16 @@ breaks these limits, the function stops with an error naming the pair:
 the data cannot be right and should be reviewed.
 \item The overlaps of three vehicles must also fit together. If they
 cannot, the function stops with an error naming the three vehicles.
-\item The models were built for the usual situation in which vehicles
+\item The studies that evaluated these models mostly used vehicles that
 overlap at least as much as chance alone would produce, that is, at
 least the product of their audiences (two vehicles with audiences of 30\%
-and 20\% overlap by 6\% if people chose vehicles independently). When a
-pair overlaps clearly less than that, the results can differ a lot from
-one model to another, and the function issues a warning that names the
-pair.
+and 20\% overlap by 6\% if people chose vehicles independently). A smaller
+overlap is not impossible and is not necessarily a measurement error: it
+can be valid data. But when a pair overlaps clearly less than that, the
+approximations of the models can differ a lot from one model to another,
+and the function issues a warning that names the pair. Check how the
+data were defined and read the diagnostics; do not replace valid
+observations automatically.
 }
 An error has one of two causes. Either the inputs break a constraint of the
 data (impossible overlaps: correct them), or the inputs are possible but the
@@ -195,20 +223,29 @@ as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
-First, Hong (1998, p. 238) notes that the models he evaluates assume a
-duplication between vehicles not below the random one, the product of the
-audiences, and treats null observed duplications as measurement error. With
-a lower duplication the models can diverge considerably. The functions warn
-(class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
+First, Hong (1998, pp. 238-239) formulates, for the models and the data of
+his study, the hypothesis that the duplication between vehicles is not below
+the random one, the product of the audiences, and treats null observed
+duplications as measurement problems. It is not a condition of the data or
+of the formulas: Danaher's canonical expansion itself admits negative
+correlations (Danaher, 1991, equation 3), and the logical limits of a
+duplication are the Fréchet bounds,
+\eqn{\max(0, p_i + p_j - 1) \le p_{ij} \le \min(p_i, p_j)}. For example,
+two vehicles with one insertion each and audiences of 0.30 and 0.20 can have
+a duplication of 0.03, below the random 0.06, with the valid joint
+distribution (neither, only the second, only the first, both) of
+(0.53, 0.17, 0.27, 0.03), and \code{calc_canex()} reproduces it without negative
+probabilities. With several insertions per vehicle, in contrast, a lower
+duplication can make the approximations diverge considerably. The functions
+warn (class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
 pair is below -0.1. That threshold is a decision of this package: the
 published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
 80 plans) include pairs slightly below the random duplication, with
 canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
 \code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
-under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
-expansion itself admits negative correlations. Hong (1998, pp. 238-239) treats
-a null duplication as a measurement error and replaces it by
-\eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
+under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Hong (1998,
+pp. 238-239) treats a null duplication as a measurement error and replaces
+it by \eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
 and random duplication over the pairs with non-zero observed duplication.
 The package does not implement this imputation: \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} estimate reach from a duplication matrix and
@@ -248,7 +285,7 @@ reach/frequency estimation. Unpublished doctoral dissertation, The
 University of Texas at Austin, pp. 115-139.
 
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
-Doctoral dissertation, The University of Texas at Austin, pp. 59-64.
+Doctoral dissertation, The University of Texas at Austin, pp. 59-65.
 Handle 2152/1590 (University of Texas at Austin repository).
 
 Hong, J. (1998). Advertising media models for Internet reach/frequency

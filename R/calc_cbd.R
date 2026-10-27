@@ -1,6 +1,6 @@
 #__________________________________________________________#
 
-# The full (0,1)^n joint exposure grid via Danaher's (1991a) second-order
+# The full (0,1)^n joint exposure grid via Danaher's (1991a) pairwise
 # canonical expansion: every vehicle is a Bernoulli(R1_i) marginal, and every
 # cell is adjusted by the sum of pairwise correlation terms only (no
 # three-way or higher terms) -- the same canonical formula already used by
@@ -17,17 +17,31 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
     x <- integer(n)
     if (length(t)) x[t] <- 1L
     z <- prod(ifelse(x == 1L, R1, 1 - R1))
+    # Standardized deviations are formed one vehicle at a time: the product
+    # sigma_i * sigma_j of two small audiences underflows to zero long before
+    # either factor does.
+    deviation <- (x - mu) / sigma
     adjustment <- 0
     if (n >= 2L) {
       pairs <- utils::combn(n, 2L)
       for (column in seq_len(ncol(pairs))) {
         i <- pairs[1L, column]; j <- pairs[2L, column]
         adjustment <- adjustment +
-          correlation_matrix[i, j] * (x[i] - mu[i]) * (x[j] - mu[j]) /
-          (sigma[i] * sigma[j])
+          correlation_matrix[i, j] * deviation[i] * deviation[j]
       }
     }
-    grid[[mbd_key(t)]] <- z * (1 + adjustment)
+    factor <- 1 + adjustment
+    # The product of several small audiences can underflow while the factor
+    # that multiplies it is huge (two coincident audiences of 1e-200: z is
+    # 1e-400 and the factor 1e200, the cell 1e-200). It is then evaluated on
+    # the log scale; a non-positive factor leaves a cell that rounds to zero
+    # or is negative, as before.
+    cell <- if (z < 1e-280 && factor > 0) {
+      exp(sum(log(ifelse(x == 1L, R1, 1 - R1))) + log(factor))
+    } else {
+      z * factor
+    }
+    grid[[mbd_key(t)]] <- cell
   }
   grid
 }
@@ -35,23 +49,30 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' Conditional Beta Distribution model
 #'
 #' Implements the Conditional Beta Distribution (CBD) of Kim (1994), reviewed
-#' in Kim (2005), for several vehicles with several insertions each. The
+#' in Kim (2005), for several vehicles with several insertions each. It is a
+#' multivariate model of conditional expansion, not a sequential-aggregation
+#' model like [calc_csd()] and [calc_msad()]: the vehicles are not combined one
+#' at a time, and the result does not depend on their order. The
 #' "(0,1) grid" is the set of the \eqn{2^m} combinations of being exposed (1) or
 #' not exposed (0) to the first insertion of each of the \eqn{m} vehicles; the
 #' notation "(0,1)" refers to those two states, not to an interval.
 #' Between-vehicle duplication is modeled first, at the one-insertion (0,1)
-#' level, by Danaher's (1991) second-order canonical expansion -- the mechanism
-#' [calc_canex()] and [calc_csd()] use. Conditionally on the (0,1) exposure
-#' state of every vehicle, the remaining insertions of each vehicle follow a
-#' Beta-Binomial distribution whose Beta parameters are updated by that state,
-#' and the vehicles are independent given the grid (Danaher 1992a). The zero
-#' cell of the grid is then conformed to the canonical expansion of all the
-#' insertions.
+#' level, by Danaher's (1991) canonical expansion, truncated to its pairwise
+#' terms -- the mechanism [calc_canex()] and [calc_csd()] use (see the section
+#' "Order of the expansion" of [calc_canex()]). Conditionally on the (0,1)
+#' exposure state of every vehicle, the remaining insertions of each vehicle
+#' follow a Beta-Binomial distribution whose Beta parameters are updated by that
+#' state, and the vehicles are independent given the grid (Danaher 1992a). The
+#' zero cell of the grid is then conformed to the zero probability of the
+#' schedule with all the insertions, which the general formulation of CBD lets
+#' any existing exposure model supply and which this implementation takes from
+#' the canonical expansion, as in [calc_canex()] (see step 3 below).
 #'
 #' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
 #'   with the same convention as [calc_csd()] (`R1` and `R2` are proportions
 #'   between 0 and 1, not percentages, `R1` is strictly between zero and one,
-#'   `R1 <= R2 <= 2 * R1 - R1^2`, and `R2` may be `NA` only when `insertions`
+#'   `R1 <= R2 <= 2 * R1 - R1^2`, the range of the Beta-Binomial family (see
+#'   [calc_beta_binomial()]), and `R2` may be `NA` only when `insertions`
 #'   is one; the function stops with an explanatory error if `R2` is outside
 #'   that range). At most 12 vehicles are supported.
 #' @param duplications Symmetric matrix whose element `[i, j]` is the
@@ -89,9 +110,10 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' The model follows Kim (1994, pp. 115-124):
 #'
 #' 1. The joint distribution of exposure to one insertion of each vehicle (the
-#'    \eqn{2^m} cells of the (0,1) grid) is obtained from the second-order
-#'    canonical expansion with Bernoulli marginals, from the pairwise
-#'    correlations implied by the observed one-insertion duplications.
+#'    \eqn{2^m} cells of the (0,1) grid) is obtained from the canonical
+#'    expansion truncated to its pairwise terms, with Bernoulli marginals, from
+#'    the pairwise correlations implied by the observed one-insertion
+#'    duplications.
 #' 2. Given that vehicle \eqn{i} was (\eqn{x_i = 1}) or was not (\eqn{x_i = 0})
 #'    exposed to its first insertion, its remaining \eqn{n_i - 1} insertions
 #'    follow a Beta-Binomial distribution with parameters
@@ -102,10 +124,14 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #'    probability. A vehicle with one insertion contributes only its state
 #'    \eqn{x_i}.
 #' 3. In the all-zero cell of the grid, the probability of zero exposures is
-#'    set to the canonical expansion of the zero cell computed with all the
-#'    insertions (Danaher 1991, as in [calc_canex()]), and the remaining levels
-#'    of that cell are rescaled so that the cell keeps its total probability
-#'    (Kim 1994, p. 124).
+#'    set to the zero probability of the schedule with all the insertions. In
+#'    its general formulation CBD leaves the source of that probability open:
+#'    Kim (1994, p. 124) lets any existing exposure model supply it, and Kim
+#'    (2005, p. 65) gives CANEX as an example. The version implemented here,
+#'    like Kim's worked example, takes it from the canonical expansion of
+#'    Danaher (1991), as in [calc_canex()]. The remaining levels of that cell
+#'    are rescaled so that the cell keeps its total probability (Kim 1994,
+#'    pp. 124 and 131).
 #'
 #' With a binomial-limit vehicle (`R2` equal to the reach under independence)
 #' the conditional distribution is the binomial one, and with a polarized one
@@ -123,11 +149,15 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' distribution: the zero-cell adjustment of step 3 and, if it is engaged, the
 #' truncation of negative cells and renormalization change the marginals of each
 #' vehicle and the mean number of exposures. The departure of the mean is
-#' reported in `diagnostics$mean_error` (between 0.0003 and 0.013 exposures in
-#' the package's reference schedules), so the marginals of the result should be
-#' judged through those diagnostics, separating the binary marginal of each
-#' vehicle, its distribution within the vehicle and the final distribution of
-#' the plan. As with [calc_canex()], the `average_frequency` is the mean of the
+#' reported in `diagnostics$mean_error`. It can have either sign and it is not
+#' bounded by a universal constant: it is -0.0044 exposures per person for
+#' [csd_example]; in the maintainer's local runs it ranged from -0.011 to
+#' +0.002 over the 80 two-vehicle plans of Kim (2005) and Hong (1998) and was
+#' -0.009 in the three-vehicle example of Kim (1994). The marginals of the
+#' result should therefore be judged through those diagnostics, separating the
+#' binary marginal of each vehicle, its distribution within the vehicle and the
+#' final distribution of the plan. As with [calc_canex()], the
+#' `average_frequency` is the mean of the
 #' returned distribution over its reach: it uses the corrected mean, not the
 #' gross contacts per person of the input, so the two bases should not be mixed.
 #'
@@ -175,7 +205,7 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #' University of Texas at Austin, pp. 115-139.
 #'
 #' Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
-#' Doctoral dissertation, The University of Texas at Austin, pp. 59-64.
+#' Doctoral dissertation, The University of Texas at Austin, pp. 59-65.
 #' Handle 2152/1590 (University of Texas at Austin repository).
 #'
 #' Hong, J. (1998). Advertising media models for Internet reach/frequency
@@ -203,6 +233,12 @@ cbd_binary_grid <- function(R1, correlation_matrix) {
 #'   [calc_canex()] and [calc_csd()] for the canonical expansion that this
 #'   model's first and last steps reuse.
 #' @inheritSection calc_canex Domain of validity
+#' @section Computational limits:
+#' The work of the schedule is estimated from the insertions before anything
+#' is allocated, and a schedule above the budget is refused with an
+#' explanation. The budget is the option `mediaPlanR.max_work`, `1e9`
+#' elementary operations by default (one to two minutes); see the section
+#' "Computational limits" of [mediaPlanR].
 #' @export
 calc_cbd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),
@@ -216,6 +252,12 @@ calc_cbd <- function(vehicles_data, duplications,
   R2 <- input$R2
   order_index <- input$order_index
   order_rule <- input$order_rule
+  check_work_budget(
+    cbd_work_estimate(insertions), "calc_cbd",
+    sprintf(paste0("%d vehicles with %s insertions in all; its (0,1) grid has ",
+                   "%d cells, each convolved with the distributions of the ",
+                   "vehicles"),
+            n, format(sum(insertions), digits = 10), as.integer(2^n)))
 
   correlation_matrix <- diag(1, n)
   for (i in seq_len(n - 1L)) {
@@ -225,7 +267,7 @@ calc_cbd <- function(vehicles_data, duplications,
     }
   }
 
-  # Step 1: (0,1) grid by the second-order canonical expansion.
+  # Step 1: (0,1) grid by the pairwise canonical expansion.
   grid <- cbd_binary_grid(R1, correlation_matrix)
 
   # Step 2: conditional exposure distribution of each vehicle, given its
@@ -267,7 +309,9 @@ calc_cbd <- function(vehicles_data, duplications,
   distribution <- safety$distribution
   contacts <- seq_along(distribution) - 1L
   cumulative <- rev(cumsum(rev(distribution)))
-  reach <- 1 - distribution[1L]
+  # Sum of the positive cells, not 1 - p0: the subtraction loses every digit of
+  # a tiny reach (and returns zero below the double-precision epsilon).
+  reach <- sum(distribution[-1L])
   average_frequency <- sum(contacts * distribution) / reach
 
   vehicle_expansion <- data.frame(
@@ -344,7 +388,7 @@ cbd_vehicle_conditionals <- function(insertions, R1, R2) {
   list(conditional_for_state(0L), conditional_for_state(1L))
 }
 
-# Second-order canonical expansion of the all-zero cell with all the
+# Pairwise canonical expansion of the all-zero cell with all the
 # insertions (Danaher 1991, equation 6), from the vehicles' own exposure
 # marginals and the canonical correlations. Vehicles with exactly no
 # variance contribute no interaction term, as in calc_canex().
@@ -355,21 +399,26 @@ cbd_canonical_zero <- function(marginals, correlation_matrix, tolerance) {
     sum((seq_along(marginals[[i]]) - 1L - means[i])^2 * marginals[[i]])
   }, numeric(1))
   zero_base <- prod(vapply(marginals, function(m) m[1L], numeric(1)))
+  # Mean over standard deviation, one vehicle at a time: sqrt(variance_i *
+  # variance_j) underflows to zero for two small audiences although both
+  # variances are positive, and the pair then became 0 / 0. A pair of zero
+  # correlation contributes nothing.
+  standardized_means <- ifelse(variances > 0, means / sqrt(variances), 0)
   adjustment <- 0
   if (n >= 2L) {
     pairs <- utils::combn(n, 2L)
     for (column in seq_len(ncol(pairs))) {
       i <- pairs[1L, column]; j <- pairs[2L, column]
-      if (variances[i] > 0 && variances[j] > 0) {
-        adjustment <- adjustment + correlation_matrix[i, j] * means[i] *
-          means[j] / sqrt(variances[i] * variances[j])
+      if (variances[i] > 0 && variances[j] > 0 && correlation_matrix[i, j] != 0) {
+        adjustment <- adjustment + correlation_matrix[i, j] *
+          standardized_means[i] * standardized_means[j]
       }
     }
   }
   zero <- zero_base * (1 + adjustment)
   if (!is.finite(zero) || zero < -tolerance || zero > 1 + tolerance) {
     stop(sprintf(
-      paste0("The second-order canonical expansion produced an invalid ",
+      paste0("The truncated canonical expansion produced an invalid ",
              "zero-exposure probability (%.8f)."), zero), call. = FALSE)
   }
   min(1, max(0, zero))

@@ -20,9 +20,6 @@ test_that("the internal validators word their messages clearly", {
 })
 
 test_that("missing or malformed numeric arguments give package errors, never cryptic base R errors", {
-  plan <- media_plan(data.frame(channel = c("A", "B"), audience = c(300, 200),
-                                insertions = c(2, 3), cost_per_insertion = c(10, 5)),
-                     population = 1000)
   vd <- data.frame(insertions = c(2, 2), R1 = c(0.3, 0.2), R2 = c(0.4, 0.3))
   dup <- matrix(c(NA, 0.08, 0.08, NA), 2)
   dup_people <- matrix(c(NA, 1.4e5, 1.4e5, NA), 2)
@@ -51,13 +48,7 @@ test_that("missing or malformed numeric arguments give package errors, never cry
                              max_insertions = 6, tolerance = 1e-6)),
     list("nbd_exposure_distribution", nbd_exposure_distribution, list(mean_contacts = 2.5, size = 1.7, report_max = 10,
                                          tail_tolerance = 1e-6)),
-    list("fit_nbd_exposure", fit_nbd_exposure, list(counts = c(0, 0, 1, 2, 5, 0), conf_level = 0.95)),
-    list("audience_metrics", audience_metrics, list(gross_audience = c(300, 200), target_audience = c(150, 80),
-                                gross_universe = 1000, target_universe = 400)),
-    list("media_plan", media_plan, list(data = plan$data, population = 1000)),
-    list("plan_metrics", plan_metrics, list(plan = plan, reach = 400)),
-    list("optimize_media_plan", optimize_media_plan, list(plan = plan, budget = 40, effective_frequency = 1,
-                                   max_insertions = c(2, 3), max_combinations = 1e5))
+    list("fit_nbd_exposure", fit_nbd_exposure, list(counts = c(0, 0, 1, 2, 5, 0), conf_level = 0.95))
   )
   package_message <- paste0("must|cannot|requires|Missing|supports|incompatible|",
                             "not logically|outside|exceeds|between|at least|not consistent|",
@@ -81,7 +72,6 @@ test_that("missing or malformed numeric arguments give package errors, never cry
     args <- call[[3]]
     for (argument in names(args)) {
       value <- args[[argument]]
-      if (inherits(value, "media_plan")) next
       if (is.data.frame(value)) {
         # A malformed column of a data frame contract, entirely or in one row.
         for (column in names(value)) {

@@ -29,12 +29,12 @@ exposed at least once, at least twice, and so on.
 }
 }
 \description{
-Implements the Sainsbury model, which Aldás Manzano (1998, Section 3.2.2.2)
-reports as developed at the London Press Exchange and formalized by Caffyn
-and Sagovsky (1963) (a secondary citation: the attribution is Aldás
-Manzano's, and the original work was not consulted), to calculate reach and the exposure distribution (and its
-cumulative counterpart) of a set of advertising vehicles, with one or more
-insertions in each of them (argument \code{insertions}). The model assumes
+Implements the unmodified Sainsbury model (random duplication) to calculate reach and the exposure
+distribution (and its cumulative counterpart) of a set of advertising
+vehicles. Aldás Manzano (1998, Section 3.2.2.2) attributes its development
+to the London Press Exchange and its formalization to Caffyn and Sagovsky
+(1963). The function accepts one or more insertions per vehicle (argument
+\code{insertions}). The model assumes
 random duplication \emph{and} random accumulation, homogeneous individual
 exposure probabilities and heterogeneous vehicle exposure probabilities.
 The probability that an individual is exposed to one insertion in vehicle
@@ -52,7 +52,7 @@ a time (a dynamic convolution of the per-insertion Bernoulli distributions).
 The number of calculations grows with the square of the number of insertions
 \eqn{N}, so doubling the insertions roughly quadruples the work. In a test on
 a typical computer, a plan with 1,000 insertions took about 0.01 seconds,
-one with 5,000 about 0.1 seconds and one with 20,000 about 3 seconds; much
+one with 5,000 about 0.2 seconds and one with 20,000 about 3 seconds; much
 larger numbers of opportunities, such as digital impressions counted one by
 one, need another formulation and are outside the scope of this finite
 contract, in which each insertion offers at most one opportunity per
@@ -81,13 +81,18 @@ Section 3.2.2.2 for one insertion per vehicle; Section 3.3.1.2, equations
 3.86-3.87, for several insertions (the multivariable binomial model with
 independent vehicles that Aldás Manzano attributes to Chandon).
 
+Caffyn, J. M., & Sagovsky, M. (1963). Net audiences of British newspapers:
+A comparison of the Agostini and Sainsbury methods. Journal of Advertising
+Research, 3(1), 21-25. \doi{10.1080/00218499.1963.12527134}
+
 Chandon, J.-L. (1976). A comparative study of media exposure models.
 Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
-(Aldás Manzano, 1998, cites Chandon's work as Chandon, 1985.)
+Pages 350-352 describe the random-duplication Sainsbury model; the modified
+Sainsbury formula on pages 375-380 uses observed duplication and is a
+different model.
 }
 \seealso{
 \code{\link[=calc_binomial]{calc_binomial()}} for the homogeneous-vehicle counterpart,
 \code{\link[=calc_beta_binomial]{calc_beta_binomial()}} and \code{\link[=calc_metheringham]{calc_metheringham()}} for models with
-heterogeneous individuals, and \code{\link[=estimate_reach]{estimate_reach()}} to run this model from a
-\code{\link[=media_plan]{media_plan()}} object.
+heterogeneous individuals.
 }

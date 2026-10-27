@@ -59,3 +59,21 @@ test_that("the BBD-to-reach fit validates its arguments and prints", {
   fit <- do.call(fit_bbd_to_reach, bbd_reach_example)
   expect_output(print(fit), "Beta-Binomial fit to an external reach")
 })
+
+test_that("the documented HBBD composition preserves the Hofmans reach and the mean", {
+  data(duplication_example)
+  hofmans <- do.call(calc_hofmans_duplication, duplication_example)
+  audiences <- duplication_example$audiences
+  population <- duplication_example$population
+  hbbd <- fit_bbd_to_reach(
+    insertions = rep(1, length(audiences)), audiences = audiences,
+    reach = hofmans$reach$people, population = population
+  )
+  expect_true(hbbd$parameters$converged)
+  expect_equal(hbbd$reach$fitted, hofmans$reach$people, tolerance = 1e-6)
+  expect_equal(1 - hbbd$distribution$probability[1],
+               hofmans$reach$people / population, tolerance = 1e-9)
+  mean_exposures <- sum(hbbd$distribution$contacts * hbbd$distribution$probability)
+  expect_equal(mean_exposures, sum(audiences) / population, tolerance = 1e-10)
+  expect_equal(sum(hbbd$distribution$probability), 1, tolerance = 1e-12)
+})

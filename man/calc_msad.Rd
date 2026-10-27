@@ -18,7 +18,8 @@ and columns \code{insertions} (planned insertions, a positive integer), \code{R1
 \code{R2}. \code{R1} is the reach after one insertion, a proportion between 0 and 1
 (not a percentage) and strictly between zero and one, and \code{R2} the
 cumulative reach after two insertions (the proportion exposed at least
-once in two insertions), a proportion with \verb{R1 <= R2 <= 2 * R1 - R1^2}. If
+once in two insertions), a proportion with \verb{R1 <= R2 <= 2 * R1 - R1^2}
+(the range of the Beta-Binomial family; see \code{\link[=calc_beta_binomial]{calc_beta_binomial()}}). If
 \code{R2} is outside that range the function stops with an explanatory error.
 \code{R2} may be \code{NA} only when \code{insertions} is one.}
 
@@ -95,6 +96,16 @@ the feasible interval instead of silently altering the target. The
 aggregation order can change the exposure distribution even when the final
 schedule reach is unchanged.
 }
+\section{Computational limits}{
+
+The cells of the largest joint table (the exposure levels of the vehicles
+already combined times those of the vehicle added) are counted from the
+insertions before anything is allocated, and a schedule above the budget
+is refused with an explanation. The budget is the option
+\code{mediaPlanR.max_table_cells}, \code{1e7} cells by default (80 MB for each
+matrix of that size); see the section "Computational limits" of \link{mediaPlanR}.
+}
+
 \section{Domain of validity}{
 
 In plain words. These models take the overlaps between vehicles
@@ -109,13 +120,16 @@ breaks these limits, the function stops with an error naming the pair:
 the data cannot be right and should be reviewed.
 \item The overlaps of three vehicles must also fit together. If they
 cannot, the function stops with an error naming the three vehicles.
-\item The models were built for the usual situation in which vehicles
+\item The studies that evaluated these models mostly used vehicles that
 overlap at least as much as chance alone would produce, that is, at
 least the product of their audiences (two vehicles with audiences of 30\%
-and 20\% overlap by 6\% if people chose vehicles independently). When a
-pair overlaps clearly less than that, the results can differ a lot from
-one model to another, and the function issues a warning that names the
-pair.
+and 20\% overlap by 6\% if people chose vehicles independently). A smaller
+overlap is not impossible and is not necessarily a measurement error: it
+can be valid data. But when a pair overlaps clearly less than that, the
+approximations of the models can differ a lot from one model to another,
+and the function issues a warning that names the pair. Check how the
+data were defined and read the diagnostics; do not replace valid
+observations automatically.
 }
 An error has one of two causes. Either the inputs break a constraint of the
 data (impossible overlaps: correct them), or the inputs are possible but the
@@ -135,20 +149,29 @@ as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
-First, Hong (1998, p. 238) notes that the models he evaluates assume a
-duplication between vehicles not below the random one, the product of the
-audiences, and treats null observed duplications as measurement error. With
-a lower duplication the models can diverge considerably. The functions warn
-(class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
+First, Hong (1998, pp. 238-239) formulates, for the models and the data of
+his study, the hypothesis that the duplication between vehicles is not below
+the random one, the product of the audiences, and treats null observed
+duplications as measurement problems. It is not a condition of the data or
+of the formulas: Danaher's canonical expansion itself admits negative
+correlations (Danaher, 1991, equation 3), and the logical limits of a
+duplication are the Fréchet bounds,
+\eqn{\max(0, p_i + p_j - 1) \le p_{ij} \le \min(p_i, p_j)}. For example,
+two vehicles with one insertion each and audiences of 0.30 and 0.20 can have
+a duplication of 0.03, below the random 0.06, with the valid joint
+distribution (neither, only the second, only the first, both) of
+(0.53, 0.17, 0.27, 0.03), and \code{calc_canex()} reproduces it without negative
+probabilities. With several insertions per vehicle, in contrast, a lower
+duplication can make the approximations diverge considerably. The functions
+warn (class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
 pair is below -0.1. That threshold is a decision of this package: the
 published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
 80 plans) include pairs slightly below the random duplication, with
 canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
 \code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
-under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
-expansion itself admits negative correlations. Hong (1998, pp. 238-239) treats
-a null duplication as a measurement error and replaces it by
-\eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
+under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Hong (1998,
+pp. 238-239) treats a null duplication as a measurement error and replaces
+it by \eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
 and random duplication over the pairs with non-zero observed duplication.
 The package does not implement this imputation: \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} estimate reach from a duplication matrix and
@@ -199,7 +222,8 @@ media planning). Doctoral dissertation, Universidad de Valencia, Spain.
 Section 3.3.2.2, equation 3.106, for the Morgensztern reach formula.
 }
 \seealso{
-\code{\link[=calc_csd]{calc_csd()}} for the canonical alternative and \code{\link[=calc_mbd]{calc_mbd()}} and
-\code{\link[=calc_cbd]{calc_cbd()}} for models that peel vehicles into insertion-level
-distributions.
+\code{\link[=calc_csd]{calc_csd()}} for the canonical alternative, and \code{\link[=calc_cbd]{calc_cbd()}} and
+\code{\link[=calc_mbd]{calc_mbd()}} for multivariate models that expand each vehicle into
+insertion-level distributions instead of aggregating the vehicles
+sequentially.
 }

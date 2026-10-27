@@ -2,7 +2,7 @@ year <- sub("-.*", "", meta$Date)
 
 bibentry(
   bibtype  = "Manual",
-  title    = "{mediaPlanR}: Reliable Cross-Media Reach and Frequency Planning",
+  title    = "{mediaPlanR}: Reach and Exposure-Distribution Models for Media Planning",
   author   = person("Manuel J.", "S\u00e1nchez-Franco",
                     email = "majesus@us.es",
                     comment = c(ORCID = "0000-0002-8042-3550")),
@@ -11,7 +11,7 @@ bibentry(
   url      = "https://github.com/majesus/mediaPlanR",
   textVersion = paste0(
     "S\u00e1nchez-Franco, M. J. (", year, "). ",
-    "mediaPlanR: Reliable Cross-Media Reach and Frequency Planning. ",
+    "mediaPlanR: Reach and Exposure-Distribution Models for Media Planning. ",
     "R package version ", meta$Version, ". ",
     "https://github.com/majesus/mediaPlanR"
   )

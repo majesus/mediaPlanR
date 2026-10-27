@@ -136,20 +136,20 @@ test_that("schedules with extreme audience scales keep valid distributions", {
   }
 })
 
-test_that("estimate_reach() keeps the reach of the direct model for tiny reaches", {
+test_that("Sainsbury and Binomial keep a tiny reach", {
+  # One person in a universe of 1 / p, one insertion: the reach is that person,
+  # that is a proportion p, and the only exposure count is one.
   for (p in c(1e-8, 1e-11, 1e-16, 1e-17)) {
-    plan <- media_plan(
-      data.frame(channel = "A", audience = 1, insertions = 1,
-                 cost_per_insertion = 1),
-      population = 1 / p
-    )
-    direct <- calc_sainsbury(1, 1 / p, 1)
-    fit <- estimate_reach(plan)
-    expect_equal(fit$reach$people, direct$reach$people, tolerance = 1e-12,
-                 info = format(p))
-    expect_equal(fit$average_frequency, 1, tolerance = 1e-12, info = format(p))
-    expect_equal(fit$cumulative$people[2L], fit$reach$people, tolerance = 1e-12,
-                 info = format(p))
+    for (model in list(calc_sainsbury, calc_binomial)) {
+      fit <- model(1, 1 / p, 1)
+      expect_equal(fit$reach$people, 1, tolerance = 1e-12, info = format(p))
+      expect_equal(fit$reach$percent, 100 * p, tolerance = 1e-12,
+                   info = format(p))
+      expect_equal(fit$distribution$people, 1, tolerance = 1e-12,
+                   info = format(p))
+      expect_equal(fit$cumulative$people[1L], fit$reach$people,
+                   tolerance = 1e-12, info = format(p))
+    }
   }
 })
 

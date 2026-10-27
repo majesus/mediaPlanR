@@ -82,6 +82,11 @@ evaluation_validate_distribution <- function(data, value_column, scale,
     stop(sprintf("%s has no schedule column named '%s'.",
                  label, schedule_column), call. = FALSE)
   }
+  if (nrow(data) == 0L) {
+    stop(sprintf(paste0("%s has no rows: it must contain one row for every ",
+                        "exposure level, from 0 to its maximum."), label),
+         call. = FALSE)
+  }
   contacts <- data$contacts
   values <- data[[value_column]]
   if (!is.numeric(contacts) || anyNA(contacts) || any(!is.finite(contacts)) ||
@@ -119,14 +124,28 @@ evaluation_validate_distribution <- function(data, value_column, scale,
   split_rows <- split(seq_len(nrow(data)), schedule)
   for (name in names(split_rows)) {
     rows <- split_rows[[name]]
-    schedule_contacts <- as.integer(sort(contacts[rows]))
-    if (!identical(schedule_contacts,
-                   seq.int(0L, max(schedule_contacts)))) {
-      stop(sprintf(
-        "%s schedule '%s' must explicitly contain every exposure level from 0 to its maximum.",
-        label, name
-      ), call. = FALSE)
+    highest <- max(contacts[rows])
+    # The levels of a schedule are distinct non-negative integers (duplicates
+    # were rejected above), so they are exactly 0, ..., highest when there are
+    # highest + 1 of them. The count is compared in double precision, without
+    # converting the levels to integers or building 0:highest: a level beyond
+    # the integer range is simply an incomplete support.
+    if (length(rows) != highest + 1) {
+      stop(sprintf(paste0(
+        "%s schedule '%s' must explicitly contain every exposure level from ",
+        "0 to its maximum: its largest level is %s, which needs %s rows, and ",
+        "it has %d."),
+        label, name, format(highest, digits = 10),
+        format(highest + 1, digits = 10), length(rows)),
+        call. = FALSE)
     }
+  }
+  if (max(contacts) > .Machine$integer.max - 1) {
+    stop(sprintf(paste0(
+      "%s has an exposure level of %s, beyond the supported range (at most ",
+      "%d exposures)."),
+      label, format(max(contacts), digits = 10),
+      .Machine$integer.max - 1L), call. = FALSE)
   }
 
   probability <- switch(
@@ -183,8 +202,7 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' @param predicted Either a supported model result whose `distribution` is a
 #'   data frame with `contacts` and `probability` or `percent` columns (for
 #'   example the results of [calc_csd()], [calc_msad()], [calc_cbd()],
-#'   [calc_mbd()], [calc_canex()] and also of
-#'   [estimate_reach()]), or a data frame with columns `contacts` and
+#'   [calc_mbd()] and [calc_canex()]), or a data frame with columns `contacts` and
 #'   `predicted`. Data-frame predictions must use the
 #'   same schedule column when `schedule_col` is supplied.
 #' @param observed_scale Required declaration of the `observed` column:
@@ -255,6 +273,18 @@ evaluation_validate_distribution <- function(data, value_column, scale,
 #' \eqn{e_{R,i}} and \eqn{e_{P,i}} across schedules, reported here as
 #' proportions (multiply by 100 for percentages). They are descriptive
 #' predictive-error measures, not inferential tests.
+#'
+#' Kim (2005, p. 118) writes the denominator of \eqn{e_{P,i}} as the sum of the
+#' observed probabilities of one or more exposures, and this function divides by
+#' the observed reach \eqn{R_i^{obs}}, one minus the zero cell. The two are
+#' identical when the observed distribution has total mass one, which is always
+#' the case for counts (they are normalized) and for probability or percent
+#' tables that add up to one. They can differ for a rounded table that is used
+#' without renormalizing (see below): with observed cells 0.500 and 0.496 (mass
+#' 0.996) and predicted cells 0.800 and 0.200, the error is
+#' 0.296 / 0.500 = 0.592 here, whereas dividing by the sum of the observed
+#' positive cells would give 0.296 / 0.496 = 0.597. The function keeps the
+#' definition by the reach, and `input_mass` reports the supplied totals.
 #'
 #' The other elements of `summary` are, averaged over schedules:
 #' \itemize{

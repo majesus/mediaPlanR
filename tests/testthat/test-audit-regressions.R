@@ -28,9 +28,6 @@ test_that("audit F09: large finite counts keep scale or fail explicitly", {
   ordinary <- calc_metheringham(c(0.3, 0.4), c(4, 3), m, 1)
   huge <- calc_metheringham(c(0.3, 0.4) * 1e308, c(4, 3), m * 1e308, 1e308)
   expect_equal(huge$reach$percent, ordinary$reach$percent, tolerance = 1e-12)
-  plan <- media_plan(data.frame(channel = c("A", "B"), audience = 1e308,
-                                insertions = 2, cost_per_insertion = 1), 1e308)
-  expect_error(plan_metrics(plan), "finite|representable")
   expect_error(calc_beta_binomial(0.3, 0.45, 1e308), "insertions.*integer|insertions.*supported")
 })
 

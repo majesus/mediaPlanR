@@ -1,5 +1,20 @@
 #__________________________________________________________#
 
+# Exact distribution of the number of exposures when each opportunity has its
+# own probability (a Poisson-binomial distribution), by convolution. Entry k + 1
+# is the probability of k exposures. Used by calc_sainsbury().
+poisson_binomial_distribution <- function(probabilities) {
+  if (!is.numeric(probabilities) || anyNA(probabilities) ||
+      any(!is.finite(probabilities)) || any(probabilities < 0 | probabilities > 1)) {
+    stop("probabilities must be finite values between zero and one", call. = FALSE)
+  }
+  distribution <- 1
+  for (p in probabilities) {
+    distribution <- c(distribution * (1 - p), 0) + c(0, distribution * p)
+  }
+  distribution / sum(distribution)
+}
+
 # Shared input validation of the plan-level classical models (Sainsbury and
 # Binomial): one audience per vehicle, one insertion count per vehicle.
 validate_vehicle_plan <- function(audiences, population, insertions) {
@@ -15,12 +30,12 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 
 #' Reach and exposure distribution under the Sainsbury model
 #'
-#' Implements the Sainsbury model, which Aldás Manzano (1998, Section 3.2.2.2)
-#' reports as developed at the London Press Exchange and formalized by Caffyn
-#' and Sagovsky (1963) (a secondary citation: the attribution is Aldás
-#' Manzano's, and the original work was not consulted), to calculate reach and the exposure distribution (and its
-#' cumulative counterpart) of a set of advertising vehicles, with one or more
-#' insertions in each of them (argument `insertions`). The model assumes
+#' Implements the unmodified Sainsbury model (random duplication) to calculate reach and the exposure
+#' distribution (and its cumulative counterpart) of a set of advertising
+#' vehicles. Aldás Manzano (1998, Section 3.2.2.2) attributes its development
+#' to the London Press Exchange and its formalization to Caffyn and Sagovsky
+#' (1963). The function accepts one or more insertions per vehicle (argument
+#' `insertions`). The model assumes
 #' random duplication *and* random accumulation, homogeneous individual
 #' exposure probabilities and heterogeneous vehicle exposure probabilities.
 #' The probability that an individual is exposed to one insertion in vehicle
@@ -41,9 +56,15 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 #' 3.86-3.87, for several insertions (the multivariable binomial model with
 #' independent vehicles that Aldás Manzano attributes to Chandon).
 #'
+#' Caffyn, J. M., & Sagovsky, M. (1963). Net audiences of British newspapers:
+#' A comparison of the Agostini and Sainsbury methods. Journal of Advertising
+#' Research, 3(1), 21-25. \doi{10.1080/00218499.1963.12527134}
+#'
 #' Chandon, J.-L. (1976). A comparative study of media exposure models.
 #' Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
-#' (Aldás Manzano, 1998, cites Chandon's work as Chandon, 1985.)
+#' Pages 350-352 describe the random-duplication Sainsbury model; the modified
+#' Sainsbury formula on pages 375-380 uses observed duplication and is a
+#' different model.
 #'
 #' @param audiences Numeric vector with the audience of each vehicle, in people
 #'   per insertion.
@@ -60,7 +81,7 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 #' The number of calculations grows with the square of the number of insertions
 #' \eqn{N}, so doubling the insertions roughly quadruples the work. In a test on
 #' a typical computer, a plan with 1,000 insertions took about 0.01 seconds,
-#' one with 5,000 about 0.1 seconds and one with 20,000 about 3 seconds; much
+#' one with 5,000 about 0.2 seconds and one with 20,000 about 3 seconds; much
 #' larger numbers of opportunities, such as digital impressions counted one by
 #' one, need another formulation and are outside the scope of this finite
 #' contract, in which each insertion offers at most one opportunity per
@@ -91,8 +112,7 @@ validate_vehicle_plan <- function(audiences, population, insertions) {
 #' @seealso
 #' [calc_binomial()] for the homogeneous-vehicle counterpart,
 #' [calc_beta_binomial()] and [calc_metheringham()] for models with
-#' heterogeneous individuals, and [estimate_reach()] to run this model from a
-#' [media_plan()] object.
+#' heterogeneous individuals.
 #' @export
 calc_sainsbury <- function(audiences, population,
                            insertions = rep(1L, length(audiences))) {
@@ -125,7 +145,7 @@ calc_sainsbury <- function(audiences, population,
 
 #' Reach and exposure distribution under the Binomial model
 #'
-#' Implements the Binomial model of Lee and Burkhart (1960), reviewed by
+#' Implements the Binomial model of Lee and Burkart (1960), reviewed by
 #' Chandon, to calculate reach and the exposure distribution (and its
 #' cumulative counterpart) of a media plan with several vehicles and one or
 #' more insertions in each of them (argument `insertions`). The model
@@ -145,12 +165,11 @@ calc_sainsbury <- function(audiences, population,
 #' Section 3.2.2.1 for one insertion per vehicle; Section 3.3.1.1 for several
 #' insertions.
 #'
-#' Lee, A. M., & Burkhart, A. J. (1960). Some optimization problems in
+#' Lee, A. M., & Burkart, A. J. (1960). Some optimization problems in
 #' advertising media planning. Operational Research Quarterly, 11(3), 113-122.
 #'
 #' Chandon, J.-L. (1976). A comparative study of media exposure models.
 #' Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
-#' (Aldás Manzano, 1998, cites Chandon's work as Chandon, 1985.)
 #'
 #' @param audiences Numeric vector with the audience of each vehicle, in people
 #'   per insertion.
@@ -186,7 +205,7 @@ calc_sainsbury <- function(audiences, population,
 #' audiences, not a numerical error. The Binomial reach can even be smaller than
 #' the audience of a single vehicle (here, 75 people against the 90 of the larger
 #' vehicle): it is the reach of the homogenized model, not of the plan, so it is
-#' not a figure that the original schedule can have (see [plan_metrics()]).
+#' not a figure that the original schedule can have.
 #'
 #' @return A list of class `"reach_binomial"` with components:
 #' \itemize{
@@ -211,8 +230,7 @@ calc_sainsbury <- function(audiences, population,
 #' @seealso
 #' [calc_sainsbury()] for heterogeneous vehicles,
 #' [calc_beta_binomial()] and [calc_metheringham()] for models with
-#' heterogeneous individuals, and [estimate_reach()] to run this model from a
-#' [media_plan()] object.
+#' heterogeneous individuals.
 #' @export
 calc_binomial <- function(audiences, population,
                           insertions = rep(1L, length(audiences))) {
@@ -266,7 +284,7 @@ calc_binomial <- function(audiences, population,
 #' distribución de contactos en la planificación de medios publicitarios
 #' impresos (Models for determining reach and exposure distribution in print
 #' media planning). Doctoral dissertation, Universidad de Valencia, Spain.
-#' Section 3.1.2.5, equations 3.22-3.28, with the parameter estimators on
+#' Section 3.1.2.5, equations 3.25-3.28, with the parameter estimators on
 #' page 134.
 #'
 #' @param R1 Reach after the first insertion (the vehicle's audience), as a
@@ -274,8 +292,9 @@ calc_binomial <- function(audiences, population,
 #'   audience is known in people, divide it by the population.
 #' @param R2 Cumulative reach after the second insertion (the proportion of
 #'   the population exposed at least once in two insertions), as a proportion
-#'   (not a percentage), with `R1 <= R2 <= 2 * R1 - R1^2`. If `R2` is outside
-#'   that range the function stops with an explanatory error.
+#'   (not a percentage), with `R1 <= R2 <= 2 * R1 - R1^2`, the range of the
+#'   Beta-Binomial family (see Details). If `R2` is outside that range the
+#'   function stops with an explanatory error.
 #' @param insertions Total number of planned insertions in the vehicle (a
 #'   positive integer).
 #' @param population Population size, in people. It only scales the number of
@@ -298,6 +317,24 @@ calc_binomial <- function(audiences, population,
 #' of the limit, not parameters of a proper Beta distribution, and the quotient
 #' \eqn{\alpha / (\alpha + \beta)} must not be evaluated with them. Both limits
 #' are handled explicitly. \eqn{R_1 = 1} is also degenerate: everyone is exposed.
+#'
+#' The upper bound \eqn{R_2 \le 2 R_1 - R_1^2} is the bound of the
+#' Beta-Binomial family, not a logical limit of two insertions. In a mixture of
+#' independent exposures whose individual probability \eqn{\theta} follows a
+#' Beta distribution, the duplication between two insertions is
+#' \eqn{E[\theta^2] \ge E[\theta]^2 = R_1^2}, so that
+#' \eqn{R_2 = 2 R_1 - E[\theta^2] \le 2 R_1 - R_1^2}: the upper bound
+#' corresponds to independent insertions, and the family excludes negative
+#' dependence between two insertions of the same vehicle. The logical bounds of
+#' the cumulative reach of two insertions with the same audience \eqn{p} are
+#' wider: \eqn{p \le R_2 \le \min(1, 2 p)}. For example, \eqn{p = 0.30} and
+#' \eqn{R_2 = 0.55} are logically possible (the probabilities of being exposed
+#' to both insertions, only the first, only the second and neither can be 0.05,
+#' 0.25, 0.25 and 0.45), but they are outside the family, whose largest
+#' \eqn{R_2} for \eqn{p = 0.30} is 0.51, and the function stops. Data of that
+#' kind should not be replaced by the bound only to make the model run: review
+#' how the exposures were measured (see the section "Notation and units" of
+#' [mediaPlanR]) and whether this model suits the vehicle.
 #'
 #' @return A list of class `"reach_beta_binomial"` with components:
 #' \itemize{
@@ -468,6 +505,10 @@ create_opportunity_matrix <- function(insertions) {
 #' print campaign. Journal of Advertising Research, 4(4), 23-28.
 #' \doi{10.1080/00218499.1964.12519751}
 #'
+#' Chandon, J.-L. (1976). A comparative study of media exposure models.
+#' Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
+#' Pages 485-491 describe the composite vehicle, its estimation and declining reach.
+#'
 #' @param audiences Numeric vector with the audience of each vehicle, in people
 #'   per insertion.
 #' @param insertions Non-negative integer vector with the number of insertions
@@ -508,6 +549,15 @@ create_opportunity_matrix <- function(insertions) {
 #' The exposure distribution therefore ranges from zero to `N` exposures, and
 #' its mean equals the plan's gross number of exposures per person,
 #' \eqn{\sum_{i=1}^{m} n_i A_i / P}.
+#'
+#' When the plan changes, the averaged inputs and hence the Beta-Binomial
+#' parameters are fitted again. Reach estimates across such plans need not
+#' increase when vehicles or insertions are added: this is the declining reach
+#' phenomenon described by Chandon (1976, p. 491). It is a limitation of the
+#' approximation. A decrease must not be interpreted as a real loss of people
+#' reached by adding an advertising opportunity. This differs from increasing
+#' the insertion count while holding the Beta-Binomial parameters fixed, which
+#' produces a non-decreasing reach curve.
 #'
 #' @return A list of class `"reach_metheringham"` with components:
 #' \itemize{

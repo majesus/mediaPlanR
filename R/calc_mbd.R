@@ -233,7 +233,8 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' @param vehicles_data Data frame with columns `insertions`, `R1` and `R2`,
 #'   with the same convention as [calc_csd()] (`R1` and `R2` are proportions
 #'   between 0 and 1, not percentages, `R1` is strictly between zero and one,
-#'   `R1 <= R2 <= 2 * R1 - R1^2`, and `R2` may be `NA` only when `insertions`
+#'   `R1 <= R2 <= 2 * R1 - R1^2`, the range of the Beta-Binomial family (see
+#'   [calc_beta_binomial()]), and `R2` may be `NA` only when `insertions`
 #'   is one; the function stops with an explanatory error if `R2` is outside
 #'   that range). At most 12 vehicles are supported.
 #' @param duplications Symmetric matrix whose element `[i, j]` is the
@@ -264,7 +265,12 @@ mbd_safety_net <- function(distribution, tolerance) {
 #'   distribution, not Cheong's "MBD-ADJ", which corrects the UD before it is
 #'   expanded; see Details) had to be engaged and
 #'   how much probability mass it redistributed (`negative_mass_adjusted`,
-#'   `cells_adjusted`).
+#'   `cells_adjusted`). They also report the mean number of exposures per person
+#'   that the inputs imply (`gross_mean_contacts`, the sum over the vehicles of
+#'   insertions times `R1`), that of the returned distribution
+#'   (`distribution_mean_contacts`) and their difference (`mean_error`), which
+#'   can differ from zero even when no cell was adjusted (see Details, "What the
+#'   result conserves").
 #'
 #' @details
 #' `calc_mbd()` (Cheong, 2007) is a different procedure from
@@ -291,7 +297,9 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' proportionally across the non-negative cells. This is reported in
 #' `diagnostics`; a non-zero value means the result for that schedule relies on
 #' this fallback rather than on a value Cheong verified as internally
-#' consistent without it. The function warns for four or more vehicles, the
+#' consistent without it, and a zero value does not show that the result
+#' conserves the marginals or the mean of the inputs (see "What the result
+#' conserves" below). The function warns for four or more vehicles, the
 #' range where Cheong's own checks are known to be insufficient by themselves.
 #'
 #' This safety net is not Cheong's MBD-ADJ. Cheong (2007, Ch. 4.4) applies the
@@ -313,6 +321,59 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' model was evaluated on schedules of 12 vehicles because the computing time
 #' of the exposure grid becomes prohibitive above 13 vehicles. `calc_mbd()`
 #' stops above 12 vehicles for this reason.
+#'
+#' # What the result conserves
+#'
+#' Each vehicle enters the model with its own parameters (its Beta-Binomial
+#' fitted from `R1` and `R2`), but the distribution that the model returns does
+#' not necessarily reproduce the marginal distribution of each vehicle or the
+#' mean number of exposures of the inputs, and this can happen with no negative
+#' probability at all. The reason is the conditional allocation of the peeling
+#' step, which is part of the published procedure. When a vehicle is expanded,
+#' each row of the joint table is shared between the two expansions
+#' \eqn{BB(\alpha, \beta + 1)} and \eqn{BB(\alpha + 1, \beta)} of that vehicle,
+#' with weights \eqn{a = 1 - b} and \eqn{b = C (\alpha + \beta + 1) - \alpha},
+#' where \eqn{C} is the conditional probability of exposure to the vehicle given
+#' the row, obtained from the joint and marginal masses of the table. Cheong
+#' (2007, pp. 65-66) does not use \eqn{C} as it comes: he bounds it to the
+#' interval
+#' \eqn{\alpha / (\alpha + \beta + 1) \le C \le (\alpha + 1) / (\alpha + \beta + 1)}
+#' that the Beta-Binomial marginal of the vehicle allows. When the value implied
+#' by the observed co-exposures falls outside the interval, replacing it by the
+#' nearest end changes the conditional probability that the masses of the table
+#' represent, and with it the marginals and the mean of the final distribution.
+#' Cheong (2007, p. 90) acknowledges, for a different reason (the imputed
+#' co-exposures of three or more vehicles), that the joint distributions of the
+#' UD do not always add up to the marginals of each vehicle, and leaves the
+#' correction, by iterative proportional fitting, for future research. The
+#' mechanism described here is not the final safety net, which acts only on
+#' negative cells, and it is not the expansion of [calc_cbd()], which expands
+#' the remaining \eqn{n_i - 1} insertions of each vehicle conditionally on its
+#' first exposure.
+#'
+#' For example, two vehicles with two insertions each, `R1 = c(0.30, 0.20)`,
+#' `R2 = c(0.40, 0.30)` and a duplication of 0.15 between one insertion of each
+#' (the example below) are compatible data: a joint distribution of the numbers
+#' of exposures of the two vehicles exists with those audiences, reaches after
+#' two insertions and duplications, and the duplication (0.15) is above the
+#' random one (0.06). The inputs imply \eqn{2 \times 0.30 + 2 \times 0.20 = 1}
+#' exposure per person. The distribution returned by `calc_mbd()` has no
+#' negative cell (`negative_mass_adjusted` is 0) and a mean of 1.0538, a
+#' `mean_error` of +0.0538, because the conditional probability of one of the
+#' expansions is bounded from 0.0714 to 0.125 and that of another from 0.75 to
+#' 0.6667. The result is a reach of 49.59% and an average frequency of 2.125,
+#' whereas the contacts of the input per person reached would be 2.017.
+#'
+#' Therefore, always read `gross_mean_contacts`, `distribution_mean_contacts` and
+#' `mean_error`, whether or not `negative_mass_adjusted` is zero. The
+#' `average_frequency` of the result is the mean of the returned distribution
+#' divided by its reach, and it must not be combined with the contacts or the
+#' gross rating points of the inputs as if the mean had not changed: the
+#' distribution of the example implies about 105.4 rating points, not the 100 of
+#' the inputs, and the identity between rating points, reach and average
+#' frequency requires both quantities to be computed from the same
+#' distribution. With a binomial-limit vehicle the two expansions coincide and
+#' the allocation has no effect on that vehicle.
 #'
 #' # Validation against the published example
 #'
@@ -371,9 +432,7 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' 7-23. doi:10.2753/JOA0091-3367400101
 #'
 #' Waring, E. (1792). On the principles of translating algebraic quantities into
-#' probable relations and annuities. Cambridge. (The work Cheong, 2007, and
-#' Aldás Manzano, 1998, cite for the theorem; not to be confused with Waring's
-#' *Meditationes Algebraicae*, 1770.)
+#' probable relations and annuities, &c. Cambridge.
 #'
 #' @examples
 #' data(mbd_example)
@@ -381,10 +440,25 @@ mbd_safety_net <- function(distribution, tolerance) {
 #' result$reach
 #' result$distribution
 #'
+#' # Compatible data for which the mean of the result differs from the mean of
+#' # the inputs, with no negative probability (see "What the result conserves")
+#' vehicles <- data.frame(insertions = c(2, 2), R1 = c(0.30, 0.20),
+#'                        R2 = c(0.40, 0.30))
+#' duplications <- matrix(c(0, 0.15, 0.15, 0), nrow = 2)
+#' mbd <- calc_mbd(vehicles, duplications, aggregation_order = "given")
+#' mbd$diagnostics[c("negative_mass_adjusted", "gross_mean_contacts",
+#'                   "distribution_mean_contacts", "mean_error")]
+#'
 #' @seealso [calc_csd()] and [calc_msad()] for sequential aggregation models,
 #'   and [calc_cbd()] for the model that uses a canonical-expansion
 #'   between-vehicle step instead of an imputed one.
 #' @inheritSection calc_canex Domain of validity
+#' @section Computational limits:
+#' The work of the schedule is estimated from the insertions before anything
+#' is allocated, and a schedule above the budget is refused with an
+#' explanation. The budget is the option `mediaPlanR.max_work`, `1e9`
+#' elementary operations by default (one to two minutes); see the section
+#' "Computational limits" of [mediaPlanR].
 #' @export
 calc_mbd <- function(vehicles_data, duplications,
                      aggregation_order = c("audience_desc", "given"),
@@ -398,6 +472,10 @@ calc_mbd <- function(vehicles_data, duplications,
   R2 <- input$R2
   order_index <- input$order_index
   order_rule <- input$order_rule
+  check_work_budget(
+    mbd_work_estimate(insertions, order_index), "calc_mbd",
+    sprintf("%d vehicles with %s insertions in all, peeled one at a time",
+            n, format(sum(insertions), digits = 10)))
   vehicle_bbd <- lapply(seq_len(n), function(i) {
     if (insertions[i] >= 2L) calculate_bbd_params(R1[i], R2[i])
     else list(alpha = NA_real_, beta = NA_real_, p = R1[i], type = "single_insertion")
@@ -443,7 +521,9 @@ calc_mbd <- function(vehicles_data, duplications,
   distribution <- safety$distribution
   contacts <- seq_along(distribution) - 1L
   cumulative <- rev(cumsum(rev(distribution)))
-  reach <- 1 - distribution[1L]
+  # Sum of the positive cells, not 1 - p0: the subtraction loses every digit of
+  # a tiny reach (and returns zero below the double-precision epsilon).
+  reach <- sum(distribution[-1L])
   average_frequency <- sum(contacts * distribution) / reach
   steps <- do.call(rbind, steps)
 

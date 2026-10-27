@@ -64,8 +64,10 @@ preserves the insertion-weighted mean exposure probability and reproduces
 a schedule reach supplied by the analyst. The reach can come from an ad hoc
 formula such as \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} or the Morgensztern formula, or
 from any other independently justified estimator. This is the "estimation
-by mean and zeros" step of the Hofmans Beta-Binomial procedure; it is not
-the Morgensztern Sequential Aggregation Distribution (\code{\link[=calc_msad]{calc_msad()}}).
+by mean and zeros" step of the Hofmans Beta-Binomial (HBBD) procedure,
+which starts from the reach of \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} (see the section
+"Hofmans Beta-Binomial (HBBD)" and the example); it is not the Morgensztern
+Sequential Aggregation Distribution (\code{\link[=calc_msad]{calc_msad()}}).
 }
 \details{
 When it is useful: several models (\code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}},
@@ -133,19 +135,53 @@ vehicles beyond the bounds above.
 Aldás Manzano (1998) starts the original iterative procedure from an
 arbitrary initial value of \code{alpha}; root finding needs no starting value.
 }
+\section{Hofmans Beta-Binomial (HBBD)}{
+
+Applied to the reach of \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}}, this function
+completes the Hofmans Beta-Binomial (HBBD) procedure of Leckenby and Boyd,
+described in Aldás Manzano (1998, Section 3.3.1.10) and Kim (2005, pp.
+52-53). It has two steps:
+\enumerate{
+\item the reach of the schedule comes from Hofmans' formula, which needs
+the audience of each vehicle and the audience duplicated between each
+pair of vehicles (\code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}});
+\item a Beta-Binomial with the mean exposure implied by the audiences and
+that reach gives the whole frequency distribution
+(\code{fit_bbd_to_reach()}).
+}
+The package does not wrap the two steps in one function; the example below
+composes them. Three points to keep in mind. (1) Hofmans' duplication
+formula takes one insertion in each vehicle, so \code{insertions} is
+\code{rep(1, m)}. (2) The reach is passed in people, as it comes out of step 1.
+(3) Hofmans' formula is empirical and can return a reach outside the
+logical range of the schedule, with a warning; this function then stops
+instead of fitting an impossible reach. The composition follows the
+published description of the procedure but has not been validated against
+a published numeric example.
+}
+
 \examples{
 data(bbd_reach_example)
 fit <- do.call(fit_bbd_to_reach, bbd_reach_example)
 fit
 
-# From a reach-only formula to an exposure distribution: the reach of
-# Hofmans' duplication model, completed with a Beta-Binomial distribution
+# Hofmans Beta-Binomial (HBBD): from a reach-only formula to an exposure
+# distribution, in two steps (three vehicles, one insertion each)
 data(duplication_example)
+
+# Step 1: reach of the plan from the audiences and the pairwise duplications
 hofmans <- do.call(calc_hofmans_duplication, duplication_example)
-fit_bbd_to_reach(
-  insertions = c(1, 1, 1), audiences = duplication_example$audiences,
-  reach = hofmans$reach$people, population = duplication_example$population
+hofmans$reach$people
+
+# Step 2: Beta-Binomial with that reach and the mean implied by the audiences
+hbbd <- fit_bbd_to_reach(
+  insertions = rep(1, length(duplication_example$audiences)),
+  audiences = duplication_example$audiences,
+  reach = hofmans$reach$people,
+  population = duplication_example$population
 )
+hbbd$parameters$converged  # TRUE: the fitted reach equals the Hofmans reach
+hbbd$distribution          # probability of 0, 1, 2 and 3 contacts
 
 }
 \references{
@@ -155,6 +191,10 @@ impresos (Models for determining reach and exposure distribution in print
 media planning). Doctoral dissertation, Universidad de Valencia, Spain.
 Section 3.3.1.10 (the Hofmans Beta-Binomial method of Leckenby and Boyd,
 pages 208-209) and Section 3.3.2.2 (the Morgensztern reach formula).
+
+Leckenby, J. D., & Boyd, M. M. (1984). An improved beta binomial
+reach/frequency model for magazines. Current Issues and Research in
+Advertising, 7(1), 1-24. \doi{10.1080/01633392.1984.10505351}
 }
 \seealso{
 \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} and \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}, whose reach

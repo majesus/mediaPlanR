@@ -88,7 +88,7 @@ calc_agostini_duplication(
 
 }
 \references{
-Agostini, J. M. (1961). How to estimate unduplicated audiences. Journal of
+Agostini, J.-M. (1961). How to estimate unduplicated audiences. Journal of
 Advertising Research, 1(3), 11-14. \doi{10.1080/00218499.1961.12519620}
 
 Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la

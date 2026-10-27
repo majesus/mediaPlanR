@@ -16,7 +16,8 @@ calc_mbd(
 \item{vehicles_data}{Data frame with columns \code{insertions}, \code{R1} and \code{R2},
 with the same convention as \code{\link[=calc_csd]{calc_csd()}} (\code{R1} and \code{R2} are proportions
 between 0 and 1, not percentages, \code{R1} is strictly between zero and one,
-\verb{R1 <= R2 <= 2 * R1 - R1^2}, and \code{R2} may be \code{NA} only when \code{insertions}
+\verb{R1 <= R2 <= 2 * R1 - R1^2}, the range of the Beta-Binomial family (see
+\code{\link[=calc_beta_binomial]{calc_beta_binomial()}}), and \code{R2} may be \code{NA} only when \code{insertions}
 is one; the function stops with an explanatory error if \code{R2} is outside
 that range). At most 12 vehicles are supported.}
 
@@ -52,7 +53,12 @@ negative-probability safety net (this package's correction of the final
 distribution, not Cheong's "MBD-ADJ", which corrects the UD before it is
 expanded; see Details) had to be engaged and
 how much probability mass it redistributed (\code{negative_mass_adjusted},
-\code{cells_adjusted}).
+\code{cells_adjusted}). They also report the mean number of exposures per person
+that the inputs imply (\code{gross_mean_contacts}, the sum over the vehicles of
+insertions times \code{R1}), that of the returned distribution
+(\code{distribution_mean_contacts}) and their difference (\code{mean_error}), which
+can differ from zero even when no cell was adjusted (see Details, "What the
+result conserves").
 }
 \description{
 Implements Cheong's (2007) Multivariate Beta Binomial Distribution (MBD).
@@ -90,7 +96,9 @@ the final collapsed distribution to zero and redistributes that mass
 proportionally across the non-negative cells. This is reported in
 \code{diagnostics}; a non-zero value means the result for that schedule relies on
 this fallback rather than on a value Cheong verified as internally
-consistent without it. The function warns for four or more vehicles, the
+consistent without it, and a zero value does not show that the result
+conserves the marginals or the mean of the inputs (see "What the result
+conserves" below). The function warns for four or more vehicles, the
 range where Cheong's own checks are known to be insufficient by themselves.
 
 This safety net is not Cheong's MBD-ADJ. Cheong (2007, Ch. 4.4) applies the
@@ -112,6 +120,59 @@ distribution, that this was not investigated systematically, and that the
 model was evaluated on schedules of 12 vehicles because the computing time
 of the exposure grid becomes prohibitive above 13 vehicles. \code{calc_mbd()}
 stops above 12 vehicles for this reason.
+}
+
+\section{What the result conserves}{
+Each vehicle enters the model with its own parameters (its Beta-Binomial
+fitted from \code{R1} and \code{R2}), but the distribution that the model returns does
+not necessarily reproduce the marginal distribution of each vehicle or the
+mean number of exposures of the inputs, and this can happen with no negative
+probability at all. The reason is the conditional allocation of the peeling
+step, which is part of the published procedure. When a vehicle is expanded,
+each row of the joint table is shared between the two expansions
+\eqn{BB(\alpha, \beta + 1)} and \eqn{BB(\alpha + 1, \beta)} of that vehicle,
+with weights \eqn{a = 1 - b} and \eqn{b = C (\alpha + \beta + 1) - \alpha},
+where \eqn{C} is the conditional probability of exposure to the vehicle given
+the row, obtained from the joint and marginal masses of the table. Cheong
+(2007, pp. 65-66) does not use \eqn{C} as it comes: he bounds it to the
+interval
+\eqn{\alpha / (\alpha + \beta + 1) \le C \le (\alpha + 1) / (\alpha + \beta + 1)}
+that the Beta-Binomial marginal of the vehicle allows. When the value implied
+by the observed co-exposures falls outside the interval, replacing it by the
+nearest end changes the conditional probability that the masses of the table
+represent, and with it the marginals and the mean of the final distribution.
+Cheong (2007, p. 90) acknowledges, for a different reason (the imputed
+co-exposures of three or more vehicles), that the joint distributions of the
+UD do not always add up to the marginals of each vehicle, and leaves the
+correction, by iterative proportional fitting, for future research. The
+mechanism described here is not the final safety net, which acts only on
+negative cells, and it is not the expansion of \code{\link[=calc_cbd]{calc_cbd()}}, which expands
+the remaining \eqn{n_i - 1} insertions of each vehicle conditionally on its
+first exposure.
+
+For example, two vehicles with two insertions each, \code{R1 = c(0.30, 0.20)},
+\code{R2 = c(0.40, 0.30)} and a duplication of 0.15 between one insertion of each
+(the example below) are compatible data: a joint distribution of the numbers
+of exposures of the two vehicles exists with those audiences, reaches after
+two insertions and duplications, and the duplication (0.15) is above the
+random one (0.06). The inputs imply \eqn{2 \times 0.30 + 2 \times 0.20 = 1}
+exposure per person. The distribution returned by \code{calc_mbd()} has no
+negative cell (\code{negative_mass_adjusted} is 0) and a mean of 1.0538, a
+\code{mean_error} of +0.0538, because the conditional probability of one of the
+expansions is bounded from 0.0714 to 0.125 and that of another from 0.75 to
+0.6667. The result is a reach of 49.59\% and an average frequency of 2.125,
+whereas the contacts of the input per person reached would be 2.017.
+
+Therefore, always read \code{gross_mean_contacts}, \code{distribution_mean_contacts} and
+\code{mean_error}, whether or not \code{negative_mass_adjusted} is zero. The
+\code{average_frequency} of the result is the mean of the returned distribution
+divided by its reach, and it must not be combined with the contacts or the
+gross rating points of the inputs as if the mean had not changed: the
+distribution of the example implies about 105.4 rating points, not the 100 of
+the inputs, and the identity between rating points, reach and average
+frequency requires both quantities to be computed from the same
+distribution. With a binomial-limit vehicle the two expansions coincide and
+the allocation has no effect on that vehicle.
 }
 
 \section{Validation against the published example}{
@@ -159,6 +220,15 @@ and the Conditional Beta Distribution model (\code{\link[=calc_cbd]{calc_cbd()}}
 than all the MBD versions.
 }
 
+\section{Computational limits}{
+
+The work of the schedule is estimated from the insertions before anything
+is allocated, and a schedule above the budget is refused with an
+explanation. The budget is the option \code{mediaPlanR.max_work}, \code{1e9}
+elementary operations by default (one to two minutes); see the section
+"Computational limits" of \link{mediaPlanR}.
+}
+
 \section{Domain of validity}{
 
 In plain words. These models take the overlaps between vehicles
@@ -173,13 +243,16 @@ breaks these limits, the function stops with an error naming the pair:
 the data cannot be right and should be reviewed.
 \item The overlaps of three vehicles must also fit together. If they
 cannot, the function stops with an error naming the three vehicles.
-\item The models were built for the usual situation in which vehicles
+\item The studies that evaluated these models mostly used vehicles that
 overlap at least as much as chance alone would produce, that is, at
 least the product of their audiences (two vehicles with audiences of 30\%
-and 20\% overlap by 6\% if people chose vehicles independently). When a
-pair overlaps clearly less than that, the results can differ a lot from
-one model to another, and the function issues a warning that names the
-pair.
+and 20\% overlap by 6\% if people chose vehicles independently). A smaller
+overlap is not impossible and is not necessarily a measurement error: it
+can be valid data. But when a pair overlaps clearly less than that, the
+approximations of the models can differ a lot from one model to another,
+and the function issues a warning that names the pair. Check how the
+data were defined and read the diagnostics; do not replace valid
+observations automatically.
 }
 An error has one of two causes. Either the inputs break a constraint of the
 data (impossible overlaps: correct them), or the inputs are possible but the
@@ -199,20 +272,29 @@ as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
-First, Hong (1998, p. 238) notes that the models he evaluates assume a
-duplication between vehicles not below the random one, the product of the
-audiences, and treats null observed duplications as measurement error. With
-a lower duplication the models can diverge considerably. The functions warn
-(class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
+First, Hong (1998, pp. 238-239) formulates, for the models and the data of
+his study, the hypothesis that the duplication between vehicles is not below
+the random one, the product of the audiences, and treats null observed
+duplications as measurement problems. It is not a condition of the data or
+of the formulas: Danaher's canonical expansion itself admits negative
+correlations (Danaher, 1991, equation 3), and the logical limits of a
+duplication are the Fréchet bounds,
+\eqn{\max(0, p_i + p_j - 1) \le p_{ij} \le \min(p_i, p_j)}. For example,
+two vehicles with one insertion each and audiences of 0.30 and 0.20 can have
+a duplication of 0.03, below the random 0.06, with the valid joint
+distribution (neither, only the second, only the first, both) of
+(0.53, 0.17, 0.27, 0.03), and \code{calc_canex()} reproduces it without negative
+probabilities. With several insertions per vehicle, in contrast, a lower
+duplication can make the approximations diverge considerably. The functions
+warn (class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
 pair is below -0.1. That threshold is a decision of this package: the
 published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
 80 plans) include pairs slightly below the random duplication, with
 canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
 \code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
-under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
-expansion itself admits negative correlations. Hong (1998, pp. 238-239) treats
-a null duplication as a measurement error and replaces it by
-\eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
+under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Hong (1998,
+pp. 238-239) treats a null duplication as a measurement error and replaces
+it by \eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
 and random duplication over the pairs with non-zero observed duplication.
 The package does not implement this imputation: \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} estimate reach from a duplication matrix and
@@ -243,6 +325,15 @@ result <- do.call(calc_mbd, mbd_example)
 result$reach
 result$distribution
 
+# Compatible data for which the mean of the result differs from the mean of
+# the inputs, with no negative probability (see "What the result conserves")
+vehicles <- data.frame(insertions = c(2, 2), R1 = c(0.30, 0.20),
+                       R2 = c(0.40, 0.30))
+duplications <- matrix(c(0, 0.15, 0.15, 0), nrow = 2)
+mbd <- calc_mbd(vehicles, duplications, aggregation_order = "given")
+mbd$diagnostics[c("negative_mass_adjusted", "gross_mean_contacts",
+                  "distribution_mean_contacts", "mean_error")]
+
 }
 \references{
 Cheong, Y. (2007). Multivariate Beta Binomial Distribution Model as a Web
@@ -256,9 +347,7 @@ Internet exposure frequency distributions. Journal of Advertising, 40(1),
 7-23. doi:10.2753/JOA0091-3367400101
 
 Waring, E. (1792). On the principles of translating algebraic quantities into
-probable relations and annuities. Cambridge. (The work Cheong, 2007, and
-Aldás Manzano, 1998, cite for the theorem; not to be confused with Waring's
-\emph{Meditationes Algebraicae}, 1770.)
+probable relations and annuities, &c. Cambridge.
 }
 \seealso{
 \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_msad]{calc_msad()}} for sequential aggregation models,

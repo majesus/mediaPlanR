@@ -43,9 +43,16 @@ proportion of the population exposed at least once) of several insertions in
 one vehicle -- the "accumulation" domain in Aldás
 Manzano's (1998) three-way split. It adapts Agostini's duplication formula
 by replacing the number of vehicles with the number of insertions, and it
-needs only the audience after one and two insertions. It is a different
-procedure from \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}}, the same author's separate model
-for several vehicles with one insertion each (they share only the name).
+needs only the audience after one and two insertions. Hofmans (1966) derived
+it, together with \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}}, from the same basis,
+Agostini's formula, relying on the similarity between \eqn{N} insertions in
+one vehicle and one insertion in each of \eqn{N} vehicles (Aldás Manzano,
+1998, p. 118). They are two applications of that basis to different plan
+shapes and different data, not interchangeable procedures: this function
+models the successive insertions of one vehicle, whereas
+\code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} models several vehicles with one insertion each,
+from their own audiences and duplications. In the homogeneous case the two
+coincide (see Details).
 }
 \details{
 Let \eqn{d = 2 R_1 - R_2} be the duplicated reach of two insertions (the
@@ -67,6 +74,19 @@ reproduces \code{R3} exactly.
 The model assumes a constant reach per insertion (\code{R1}) and a constant
 duplication between every pair of insertions.
 
+Relation with \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}}. Take \eqn{N} vehicles with the
+same audience \eqn{p} and the same duplication \eqn{d} between every pair.
+The pairwise coefficient of the duplication model is
+\eqn{k_{ij} = 2 p / (2 p - d)}. With \eqn{p = R_1} and \eqn{d = 2 R_1 - R_2},
+this is \eqn{2 R_1 / R_2 = k}, the constant coefficient above, so that the
+duplication formula and the constant-coefficient formula of this function
+give the same reach. For example, \eqn{p = 0.30}, \eqn{R_2 = 0.45}
+(\eqn{d = 0.15}) and \eqn{N = 4} give a reach of 0.60 with both functions.
+The equivalence holds only in that homogeneous case. The two functions take
+different data (the reach after two insertions of one vehicle, or the
+audiences and the duplications of several vehicles), and only this one has
+the variable coefficient adjusted with \code{R3}.
+
 Valid \code{R1} and \code{R2} do not guarantee a valid curve: the extrapolation can
 decrease, exceed 1 or exceed \eqn{N R_1}. For example, \code{R1 = 0.60}, \code{R2 = 0.84}
 and \code{N = 4} give a cumulative reach of 1.05 at \code{N = 4}. The curve is then
@@ -82,13 +102,22 @@ result$parameters
 calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, insertions = 5,
                          R3 = 0.135)$parameters
 
+# With equal vehicles and equal duplications, the duplication model gives the
+# same reach: four insertions of a vehicle with R1 = 0.30 and R2 = 0.45 (in
+# people, for a population of 1,000,000) ...
+1000000 * calc_hofmans_accumulation(R1 = 0.30, R2 = 0.45,
+                                    insertions = 4)$results$RN[4]
+# ... and four vehicles of 300,000 people with 150,000 shared by each pair
+calc_hofmans_duplication(audiences = rep(300000, 4), population = 1000000,
+                         duplication_matrix = matrix(150000, 4, 4))$reach$people
+
 }
 \references{
 Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
 distribución de contactos en la planificación de medios publicitarios
 impresos (Models for determining reach and exposure distribution in print
 media planning). Doctoral dissertation, Universidad de Valencia, Spain.
-Section 3.1.1.4, equations 3.7-3.12.
+Section 3.1.1.4 (pages 118-121), equations 3.7-3.12.
 
 Hofmans, P. (1966). Measuring the cumulative net coverage of any
 combination of media. Journal of Marketing Research, 3(3), 269-278.
@@ -97,5 +126,5 @@ combination of media. Journal of Marketing Research, 3(3), 269-278.
 \seealso{
 \code{\link[=calc_beta_binomial]{calc_beta_binomial()}} for a stochastic accumulation model that also
 returns the exposure distribution, and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} for the
-same author's model for several vehicles.
+same author's model for several vehicles, derived from the same basis.
 }

@@ -80,6 +80,15 @@ insertions.
 The exposure distribution therefore ranges from zero to \code{N} exposures, and
 its mean equals the plan's gross number of exposures per person,
 \eqn{\sum_{i=1}^{m} n_i A_i / P}.
+
+When the plan changes, the averaged inputs and hence the Beta-Binomial
+parameters are fitted again. Reach estimates across such plans need not
+increase when vehicles or insertions are added: this is the declining reach
+phenomenon described by Chandon (1976, p. 491). It is a limitation of the
+approximation. A decrease must not be interpreted as a real loss of people
+reached by adding an advertising opportunity. This differs from increasing
+the insertion count while holding the Beta-Binomial parameters fixed, which
+produces a non-decreasing reach curve.
 }
 \examples{
 data(metheringham_example)
@@ -109,6 +118,10 @@ Section 3.2.2.9 (one insertion per vehicle).
 Metheringham, R. A. (1964). Measuring the net cumulative coverage of a
 print campaign. Journal of Advertising Research, 4(4), 23-28.
 \doi{10.1080/00218499.1964.12519751}
+
+Chandon, J.-L. (1976). A comparative study of media exposure models.
+Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
+Pages 485-491 describe the composite vehicle, its estimation and declining reach.
 }
 \seealso{
 \code{\link[=calc_beta_binomial]{calc_beta_binomial()}}, called internally, for the univariate model;

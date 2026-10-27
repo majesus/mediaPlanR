@@ -29,7 +29,7 @@ exposed at least once, at least twice, and so on.
 }
 }
 \description{
-Implements the Binomial model of Lee and Burkhart (1960), reviewed by
+Implements the Binomial model of Lee and Burkart (1960), reviewed by
 Chandon, to calculate reach and the exposure distribution (and its
 cumulative counterpart) of a media plan with several vehicles and one or
 more insertions in each of them (argument \code{insertions}). The model
@@ -67,7 +67,7 @@ reach of 91\% and the Binomial 75\%. The difference is the effect of unequal
 audiences, not a numerical error. The Binomial reach can even be smaller than
 the audience of a single vehicle (here, 75 people against the 90 of the larger
 vehicle): it is the reach of the homogenized model, not of the plan, so it is
-not a figure that the original schedule can have (see \code{\link[=plan_metrics]{plan_metrics()}}).
+not a figure that the original schedule can have.
 }
 \examples{
 audiences <- c(300000, 400000, 200000)
@@ -88,16 +88,14 @@ media planning). Doctoral dissertation, Universidad de Valencia, Spain.
 Section 3.2.2.1 for one insertion per vehicle; Section 3.3.1.1 for several
 insertions.
 
-Lee, A. M., & Burkhart, A. J. (1960). Some optimization problems in
+Lee, A. M., & Burkart, A. J. (1960). Some optimization problems in
 advertising media planning. Operational Research Quarterly, 11(3), 113-122.
 
 Chandon, J.-L. (1976). A comparative study of media exposure models.
 Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
-(Aldás Manzano, 1998, cites Chandon's work as Chandon, 1985.)
 }
 \seealso{
 \code{\link[=calc_sainsbury]{calc_sainsbury()}} for heterogeneous vehicles,
 \code{\link[=calc_beta_binomial]{calc_beta_binomial()}} and \code{\link[=calc_metheringham]{calc_metheringham()}} for models with
-heterogeneous individuals, and \code{\link[=estimate_reach]{estimate_reach()}} to run this model from a
-\code{\link[=media_plan]{media_plan()}} object.
+heterogeneous individuals.
 }

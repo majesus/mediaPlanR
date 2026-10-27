@@ -61,25 +61,24 @@ calculate_bbd_params <- function(R1, R2) {
   list(alpha = alpha, beta = beta, p = R1, type = "beta_binomial")
 }
 
-# Mean and variance of a Beta-Binomial(k, alpha, beta).
+# Mean and variance of a Beta-Binomial(k, alpha, beta). With
+# s = alpha + beta and p = alpha / s, the variance is k p (1 - p) (s + k) /
+# (s + 1): the form k alpha beta (s + k) / (s^2 (s + 1)) multiplies three
+# potentially huge quantities and overflows for a large, finite concentration,
+# although the variance itself is a modest number.
 calculate_mean_variance <- function(k, alpha, beta) {
-  mean_val <- k * alpha / (alpha + beta)
-  variance <- k * alpha * beta * (alpha + beta + k) /
-    ((alpha + beta)^2 * (alpha + beta + 1))
-  list(mean = mean_val, variance = variance)
+  concentration <- alpha + beta
+  probability <- alpha / concentration
+  list(mean = k * probability,
+       variance = k * probability * (beta / concentration) *
+         (1 + (k - 1) / (concentration + 1)))
 }
 
-# P(X = x) for a Beta-Binomial(k, alpha, beta), on the log scale for
-# numerical stability.
+# P(X = x) for a Beta-Binomial(k, alpha, beta). It takes the value from the
+# complete probability function (see dbetabinom()), so that every consumer
+# works with one routine whose masses add up to one.
 calculate_marginal_prob <- function(x, k, alpha, beta) {
-  if (x < 0 || x > k) return(0)
-
-  log_num <- lgamma(k + 1) + lgamma(alpha + beta) +
-    lgamma(alpha + x) + lgamma(beta + k - x)
-  log_den <- lgamma(x + 1) + lgamma(k - x + 1) + lgamma(alpha) +
-    lgamma(beta) + lgamma(alpha + beta + k)
-
-  exp(log_num - log_den)
+  dbetabinom(x, size = k, alpha = alpha, beta = beta)
 }
 
 # Correlation between the exposure of two vehicles, from their joint exposure
@@ -97,11 +96,65 @@ calculate_duplication <- function(pij, pi, pj) {
   (pij - pi * pj) / denominator
 }
 
-# Beta-Binomial probability function, on the log scale for numerical
-# stability. alpha and beta must be finite and positive: the binomial and
-# polarized limits are handled by the callers.
+# Probability function of a Beta-Binomial(size, alpha, beta) at the counts `x`.
+# alpha and beta must be finite and positive: the binomial and polarized limits
+# are handled by the callers.
+#
+# The complete function, 0, ..., size, is always normalized, so that its mass
+# is one and its mean is size * alpha / (alpha + beta) up to rounding. Two
+# evaluations are used, each where it is the more accurate (measured against a
+# 400-bit reference over audiences from 1e-6 to 0.98, one to 2,000 insertions
+# and concentrations from 3e-3 to 1e8):
+#  * For a concentration alpha + beta below 10, the log-beta form
+#    lchoose(size, x) + lbeta(x + alpha, size - x + beta) - lbeta(alpha, beta),
+#    whose relative error stays below about 1e-12 there, also in the polarized
+#    range (concentration near zero).
+#  * Otherwise, the recurrence
+#      P(x + 1) / P(x) = (size - x) / (x + 1) * (alpha + x) / (beta + size - 1 - x)
+#    accumulated on the log scale. The log-beta form subtracts quantities of
+#    the order of lgamma(alpha + beta) and loses digits in proportion to the
+#    concentration: near the independence limit (alpha + beta of 1e8 or more)
+#    its masses added up to one only to about 1e-8 and its mean was off by the
+#    same amount. The recurrence keeps both within about 1e-12 at any
+#    concentration, since the ratio of consecutive probabilities is a quotient
+#    of numbers of the same order. When both shape parameters are at least one,
+#    the ratio is evaluated as log(alpha / beta) + log1p(x / alpha) -
+#    log1p((size - 1 - x) / beta), which does not subtract two large
+#    logarithms.
+bbd_distribution <- function(size, alpha, beta) {
+  if (!is.numeric(alpha) || !is.numeric(beta) || length(alpha) != 1L ||
+      length(beta) != 1L || !is.finite(alpha) || !is.finite(beta) ||
+      alpha <= 0 || beta <= 0) {
+    stop("Internal error: the Beta-Binomial probability function needs finite ",
+         "positive shape parameters; the binomial and polarized limits must ",
+         "be handled by the caller.", call. = FALSE)
+  }
+  if (size < 1) return(1)
+  if (alpha + beta < 10) {
+    counts <- 0:size
+    probability <- exp(lchoose(size, counts) +
+                         lbeta(counts + alpha, size - counts + beta) -
+                         lbeta(alpha, beta))
+  } else {
+    steps <- seq_len(size) - 1
+    shape_term <- if (alpha >= 1 && beta >= 1) {
+      log(alpha / beta) + log1p(steps / alpha) - log1p((size - 1 - steps) / beta)
+    } else {
+      log(alpha + steps) - log(beta + size - 1 - steps)
+    }
+    log_probability <- c(0, cumsum(log((size - steps) / (steps + 1)) +
+                                     shape_term))
+    probability <- exp(log_probability - max(log_probability))
+  }
+  probability / sum(probability)
+}
+
 dbetabinom <- function(x, size, alpha, beta) {
-  exp(lchoose(size, x) + lbeta(x + alpha, size - x + beta) - lbeta(alpha, beta))
+  distribution <- bbd_distribution(size, alpha, beta)
+  inside <- is.finite(x) & x >= 0 & x <= size & x == round(x)
+  out <- numeric(length(x))
+  out[inside] <- distribution[x[inside] + 1]
+  out
 }
 
 # Necessary conditions for the joint existence of the exposures to one
@@ -137,8 +190,10 @@ check_triple_feasibility <- function(R1, duplications, tolerance) {
 
 # Canonical correlation below which a pair of vehicles is reported as having a
 # duplication materially under the random one. Package decision: Hong (1998,
-# p. 238) notes that the models assume a duplication not below the random one,
-# R1_i * R1_j, but the published reference data (Kim 2005, Appendix B; Hong
+# p. 238) formulates, for the models and data of his study, the hypothesis that
+# the duplication is not below the random one, R1_i * R1_j (a lower duplication
+# is valid data in the logical sense, bounded only by Frechet), and the
+# published reference data (Kim 2005, Appendix B; Hong
 # 1998, Appendix E; 80 plans) include 12 pairs slightly below it, with
 # canonical correlations down to -0.071. The threshold leaves those cases
 # silent and reports the ones that make the models diverge (for R1 = 0.30, a
@@ -163,9 +218,11 @@ warn_low_duplication <- function(R1, duplications, caller) {
       sprintf(paste0(
         "%s(): the duplication of vehicles %s is well below the random ",
         "duplication (the product of their audiences; canonical correlation ",
-        "under %.2f). The models assume a duplication not below the random ",
-        "one (Hong 1998, p. 238), and their results can diverge considerably ",
-        "outside that domain; see the section 'Domain of validity' of ",
+        "under %.2f). The reference studies of these models mostly used ",
+        "duplications not below the random one (Hong 1998, p. 238), and the ",
+        "approximations can diverge considerably in this range, although a ",
+        "lower duplication can be valid data: check how it was defined and ",
+        "read the diagnostics. See the section 'Domain of validity' of ",
         "?calc_canex."),
         caller, paste(low, collapse = ", "), low_duplication_correlation),
       class = "mediaPlanR_low_duplication", call = NULL))

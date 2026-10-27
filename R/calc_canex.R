@@ -30,10 +30,26 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
                         integer = TRUE, length = m)
   assert_numeric_vector(vehicles_data$R1, "vehicles_data$R1", min = 0,
                         max = 1, min_open = TRUE, length = m, proportion = TRUE)
-  assert_numeric_vector(vehicles_data$R2, "vehicles_data$R2", min = 0,
-                        max = 1, min_open = TRUE, length = m, proportion = TRUE)
-  if (any(vehicles_data$R2 < vehicles_data$R1)) {
-    stop("R2 cannot be smaller than R1 for any vehicle.", call. = FALSE)
+  # R2 is the second insertion of a vehicle: a vehicle with a single insertion
+  # does not use it, so it may be NA (or any value, which is ignored), as in
+  # the sequential models. It is required and validated for every vehicle with
+  # two or more insertions.
+  needs_R2 <- vehicles_data$k >= 2
+  R2 <- vehicles_data$R2
+  if (is.logical(R2) && all(is.na(R2))) R2 <- as.numeric(R2)
+  if (!is.numeric(R2) || length(R2) != m) {
+    stop("vehicles_data$R2 must be a numeric vector with one value per ",
+         "vehicle (NA is allowed only for vehicles with a single insertion).",
+         call. = FALSE)
+  }
+  if (any(needs_R2)) {
+    assert_numeric_vector(
+      R2[needs_R2],
+      "vehicles_data$R2 (of the vehicles with two or more insertions)",
+      min = 0, max = 1, min_open = TRUE, proportion = TRUE)
+    if (any(R2[needs_R2] < vehicles_data$R1[needs_R2])) {
+      stop("R2 cannot be smaller than R1 for any vehicle.", call. = FALSE)
+    }
   }
   assert_symmetric_matrix(duplications, "duplications", m)
   off_diagonal <- duplications[row(duplications) != col(duplications)]
@@ -89,8 +105,8 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' Implements Danaher's (1991) canonical expansion model for the reach and
 #' exposure distribution of a multi-vehicle schedule. Each vehicle's exposure
 #' distribution is a Beta-Binomial, which accounts for the heterogeneity of
-#' individuals, and the observed duplication between vehicles enters through a
-#' second-order correlation term.
+#' individuals, and the observed duplication between vehicles enters through
+#' pairwise correlation terms (see "Order of the expansion").
 #'
 #' @param vehicles_data Data frame with one row per vehicle and columns
 #'   \itemize{
@@ -102,14 +118,14 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'       and 1 (not a percentage), in (0, 1];
 #'     \item `R2`: cumulative reach after the second insertion (the proportion
 #'       exposed at least once in two insertions), a proportion between `R1`
-#'       and the independence limit `2 * R1 - R1^2`. If `R2` is outside that
-#'       range the function stops with an explanatory error. Unlike
-#'       [calc_csd()], [calc_msad()], [calc_cbd()] and [calc_mbd()], which accept
-#'       `NA` for a vehicle with a single insertion because they do not use it,
-#'       this function requires a finite `R2` for every vehicle, including those
-#'       with one insertion: a data frame shared with the sequential models
-#'       needs a valid `R2` here. Do not invent an empirical value; for a single
-#'       insertion, any value inside the admissible range gives the same result.
+#'       and the independence limit `2 * R1 - R1^2` (the range of the
+#'       Beta-Binomial family; see [calc_beta_binomial()]). If `R2` is outside
+#'       that range the function stops with an explanatory error. As in
+#'       [calc_csd()], [calc_msad()], [calc_cbd()] and [calc_mbd()], it may be
+#'       `NA` for a vehicle with a single insertion, whose exposure is a
+#'       Bernoulli variable of probability `R1` and does not use it: a value
+#'       supplied for such a vehicle is ignored, not validated. It is required
+#'       (and validated) for every vehicle with two or more insertions.
 #'   }
 #' @param duplications Symmetric matrix whose element `[i, j]` is the
 #'   proportion of the population that is exposed to both vehicle `i` and
@@ -127,7 +143,7 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'   \item It computes each vehicle's Beta-Binomial parameters from `R1` and
 #'   `R2` by the method of moments.
 #'   \item It turns the duplications into canonical correlations,
-#'   \eqn{r_{ij} = (p_{ij} - p_i p_j) / \sqrt{p_i (1 - p_i) p_j (1 - p_j)}},
+#'   \deqn{r_{ij} = \frac{p_{ij} - p_i p_j}{\sqrt{p_i (1 - p_i) p_j (1 - p_j)}},}
 #'   with \eqn{p_i} the one-insertion reach of vehicle \eqn{i} and \eqn{p_{ij}}
 #'   the duplication of vehicles \eqn{i} and \eqn{j}: the proportion of the
 #'   population exposed to both of them.
@@ -138,7 +154,8 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'   \eqn{m} is the number of vehicles, the double sum runs over every pair of
 #'   vehicles, and \eqn{f_i}, \eqn{\mu_i} and
 #'   \eqn{\sigma_i^2} are the Beta-Binomial probability function, mean and
-#'   variance of vehicle \eqn{i}. Only second-order terms are kept.
+#'   variance of vehicle \eqn{i}. Only the pairwise terms, linear in the
+#'   correlations, are kept (see "Order of the expansion" below).
 #'   \item It sets to zero the negative probabilities that the truncated
 #'   expansion can produce, renormalizes the joint distribution to sum to one,
 #'   and sums it over the total number of exposures.
@@ -148,6 +165,25 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' with the number of vehicles and insertions. The model is therefore intended
 #' for small and medium schedules, and the function stops with an informative
 #' error above 2,000,000 combinations instead of exhausting memory.
+#'
+#' # Order of the expansion
+#'
+#' Danaher (1991, pp. 362-364) speaks of "order" in more than one sense, and
+#' the help pages of this package use the following. The canonical expansion of
+#' the joint probability of two vehicles has one term for each canonical
+#' correlation. The model keeps the first, which is the ordinary correlation
+#' \eqn{r_{ij}} of the two exposures, and omits the canonical correlations of
+#' second and higher order. For three or more vehicles the joint probability is
+#' the product of the marginals times one plus the sum, over the pairs of
+#' vehicles, of the correlation of the pair times the product of their
+#' standardized exposures (step 3). It is linear in the correlations: the
+#' products of correlations (terms of second and higher order in them) and,
+#' with them, any interaction among three or more vehicles are omitted. The
+#' help pages of [calc_csd()] and [calc_cbd()], which use the same expansion for
+#' the all-zero cell and for the (0,1) grid, call it the pairwise (or
+#' truncated) canonical expansion. The sources describe it by what it omits, the
+#' canonical terms "of the second order or higher" (Danaher, 1991; Cheong, 2007,
+#' p. 54), so it is not an expansion that keeps second-order terms.
 #'
 #' # Truncation of negative probabilities
 #'
@@ -197,13 +233,16 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'     the data cannot be right and should be reviewed.
 #'   \item The overlaps of three vehicles must also fit together. If they
 #'     cannot, the function stops with an error naming the three vehicles.
-#'   \item The models were built for the usual situation in which vehicles
+#'   \item The studies that evaluated these models mostly used vehicles that
 #'     overlap at least as much as chance alone would produce, that is, at
 #'     least the product of their audiences (two vehicles with audiences of 30%
-#'     and 20% overlap by 6% if people chose vehicles independently). When a
-#'     pair overlaps clearly less than that, the results can differ a lot from
-#'     one model to another, and the function issues a warning that names the
-#'     pair.
+#'     and 20% overlap by 6% if people chose vehicles independently). A smaller
+#'     overlap is not impossible and is not necessarily a measurement error: it
+#'     can be valid data. But when a pair overlaps clearly less than that, the
+#'     approximations of the models can differ a lot from one model to another,
+#'     and the function issues a warning that names the pair. Check how the
+#'     data were defined and read the diagnostics; do not replace valid
+#'     observations automatically.
 #' }
 #' An error has one of two causes. Either the inputs break a constraint of the
 #' data (impossible overlaps: correct them), or the inputs are possible but the
@@ -223,20 +262,29 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #' and, for every triple of vehicles, against joint feasibility. The published
 #' methods have three limits that follow from this.
 #'
-#' First, Hong (1998, p. 238) notes that the models he evaluates assume a
-#' duplication between vehicles not below the random one, the product of the
-#' audiences, and treats null observed duplications as measurement error. With
-#' a lower duplication the models can diverge considerably. The functions warn
-#' (class `mediaPlanR_low_duplication`) when the canonical correlation of a
+#' First, Hong (1998, pp. 238-239) formulates, for the models and the data of
+#' his study, the hypothesis that the duplication between vehicles is not below
+#' the random one, the product of the audiences, and treats null observed
+#' duplications as measurement problems. It is not a condition of the data or
+#' of the formulas: Danaher's canonical expansion itself admits negative
+#' correlations (Danaher, 1991, equation 3), and the logical limits of a
+#' duplication are the Fréchet bounds,
+#' \eqn{\max(0, p_i + p_j - 1) \le p_{ij} \le \min(p_i, p_j)}. For example,
+#' two vehicles with one insertion each and audiences of 0.30 and 0.20 can have
+#' a duplication of 0.03, below the random 0.06, with the valid joint
+#' distribution (neither, only the second, only the first, both) of
+#' (0.53, 0.17, 0.27, 0.03), and `calc_canex()` reproduces it without negative
+#' probabilities. With several insertions per vehicle, in contrast, a lower
+#' duplication can make the approximations diverge considerably. The functions
+#' warn (class `mediaPlanR_low_duplication`) when the canonical correlation of a
 #' pair is below -0.1. That threshold is a decision of this package: the
 #' published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
 #' 80 plans) include pairs slightly below the random duplication, with
 #' canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, `R1 = 0.30` and
 #' `R2 = 0.45`, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
-#' under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
-#' expansion itself admits negative correlations. Hong (1998, pp. 238-239) treats
-#' a null duplication as a measurement error and replaces it by
-#' \eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
+#' under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Hong (1998,
+#' pp. 238-239) treats a null duplication as a measurement error and replaces
+#' it by \eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
 #' and random duplication over the pairs with non-zero observed duplication.
 #' The package does not implement this imputation: [calc_agostini_duplication()]
 #' and [calc_hofmans_duplication()] estimate reach from a duplication matrix and
@@ -276,7 +324,7 @@ validate_canex_inputs <- function(vehicles_data, duplications, population) {
 #'     exposures per person of the population: the sum over vehicles of
 #'     insertions times `R1`, preserved by the expansion) and `mean_exposures_result`
 #'     (the mean of the returned distribution). They show how much the
-#'     second-order approximation had to be corrected.
+#'     truncated expansion had to be corrected.
 #' }
 #'
 #' @examples
@@ -320,12 +368,21 @@ calc_canex <- function(vehicles_data, duplications, population = 1) {
   min_eigenvalue <- min(eigen(correlations, symmetric = TRUE,
                               only.values = TRUE)$values)
 
+  # A vehicle with a single insertion is a Bernoulli(R1) variable and does not
+  # use R2; the other vehicles take their Beta-Binomial from R1 and R2.
   bbd_params <- lapply(seq_len(m), function(i) {
-    calculate_bbd_params(vehicles_data$R1[i], vehicles_data$R2[i])
+    if (vehicles_data$k[i] == 1L) {
+      list(alpha = NA_real_, beta = NA_real_, p = vehicles_data$R1[i],
+           type = "single_insertion")
+    } else {
+      calculate_bbd_params(vehicles_data$R1[i], vehicles_data$R2[i])
+    }
   })
   mv_params <- lapply(seq_len(m), function(i) {
     params <- bbd_params[[i]]
-    if (params$type == "binomial_limit") {
+    if (params$type == "single_insertion") {
+      list(mean = params$p, variance = params$p * (1 - params$p))
+    } else if (params$type == "binomial_limit") {
       list(mean = vehicles_data$k[i] * params$p,
            variance = vehicles_data$k[i] * params$p * (1 - params$p))
     } else if (params$type == "polarized_limit") {
@@ -338,15 +395,18 @@ calc_canex <- function(vehicles_data, duplications, population = 1) {
 
   precalculated_marginals <- lapply(seq_len(m), function(i) {
     params <- bbd_params[[i]]
-    vapply(0:vehicles_data$k[i], function(x) {
-      if (params$type == "binomial_limit") {
-        stats::dbinom(x, vehicles_data$k[i], params$p)
-      } else if (params$type == "polarized_limit") {
-        if (x == 0) 1 - params$p else if (x == vehicles_data$k[i]) params$p else 0
-      } else {
-        calculate_marginal_prob(x, vehicles_data$k[i], params$alpha, params$beta)
-      }
-    }, numeric(1))
+    k <- vehicles_data$k[i]
+    if (params$type == "single_insertion") {
+      c(1 - params$p, params$p)
+    } else if (params$type == "binomial_limit") {
+      stats::dbinom(0:k, k, params$p)
+    } else if (params$type == "polarized_limit") {
+      out <- numeric(k + 1L)
+      out[c(1L, k + 1L)] <- c(1 - params$p, params$p)
+      out
+    } else {
+      dbetabinom(0:k, k, params$alpha, params$beta)
+    }
   })
 
   var_sqrt_inv <- vapply(mv_params, function(p) {
@@ -364,7 +424,7 @@ calc_canex <- function(vehicles_data, duplications, population = 1) {
   base_prob <- rep(1, nrow(exposure_grid))
   for (i in seq_len(m)) base_prob <- base_prob * marginals_matrix[, i]
 
-  # Duplication adjustment term (second-order canonical interactions)
+  # Duplication adjustment term (pairwise canonical interactions)
   z_scores <- matrix(0, nrow = nrow(exposure_grid), ncol = m)
   for (i in seq_len(m)) {
     z_scores[, i] <- (exposure_grid[, i] - means[i]) * var_sqrt_inv[i]
@@ -385,7 +445,7 @@ calc_canex <- function(vehicles_data, duplications, population = 1) {
   dup_term[!is.finite(dup_term)] <- 0
 
   # Adjusted joint probability, truncated at zero (see Details). The
-  # diagnostics expose how much the second-order approximation had to be
+  # diagnostics expose how much the truncated expansion had to be
   # corrected.
   raw_joint_prob <- base_prob * (1 + dup_term)
   negative_mass <- -sum(pmin(raw_joint_prob, 0))
@@ -406,13 +466,13 @@ calc_canex <- function(vehicles_data, duplications, population = 1) {
     mean_exposures_expected = expected_mean,
     mean_exposures_result = achieved_mean
   )
-  # The second-order expansion preserves the mean number of exposures of every
+  # The truncated expansion preserves the mean number of exposures of every
   # vehicle; truncating negative cells and renormalizing may change it. The warning
   # threshold is a decision of this package, not of Danaher (1991).
   if (negative_mass > canex_negative_mass_threshold) {
     warning(warningCondition(
       sprintf(paste0(
-        "calc_canex(): the second-order expansion produced negative ",
+        "calc_canex(): the truncated canonical expansion produced negative ",
         "probabilities with total mass %.4g, which were truncated at zero; ",
         "the expected mean number of exposures is %.6g and the returned ",
         "mean is %.6g. The ",

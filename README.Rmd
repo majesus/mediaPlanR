@@ -16,14 +16,13 @@ times, from the audience figures a planner already has.**
 It brings together, in one package, the classical reach and
 exposure-distribution models of the media-planning literature (Sainsbury,
 Binomial, Beta-Binomial, Metheringham, Agostini, Hofmans, CANEX, CBD, CSD, MSAD
-and MBD) and the tools around them: a validated plan object, plan metrics, model
-comparison, target-audience metrics, comparison with observed data, and
-budget allocation that states whether the optimum it found was verified.
+and MBD) and the tools around them: the fitting of a Beta-Binomial model to an
+observed reach, a Negative-Binomial approximation for count processes, and the
+comparison of a model with observed data.
 
 The package is written for students and practitioners of media planning. This
-document is meant to be read in order: first the ideas, then a complete plan
-worked from start to finish, then how to choose a model and how to use your own
-data. The outputs shown below were produced by the code next to them.
+document is meant to be read in order: first the ideas, then a plan worked from
+start to finish, then how to choose a model and how to use your own data. The outputs shown below were produced by the code next to them.
 
 ## Installation
 
@@ -108,123 +107,61 @@ vehicles and several insertions, where no simple formula is available.
 
 ## A first plan, from start to finish
 
-`media_plan()` stores a plan in explicit units: audience in people per
-insertion, cost in currency units per insertion and the population in people.
-It rejects inconsistent inputs (for example an audience larger than the
-population) instead of calculating with them. The optional `target_audience`
-column holds the people of your target group in each insertion.
+A plan with several insertions in each of several vehicles needs no duplication
+data to be evaluated under random duplication. Audience is in people per
+insertion and the population is in people; the functions reject inconsistent
+inputs (for example an audience larger than the population) instead of
+calculating with them. Take three vehicles with 3, 4 and 6 insertions:
 
 ```{r}
-plan <- media_plan(
-  data.frame(
-    channel = c("TV", "Radio", "Digital"),
-    audience = c(250000, 150000, 100000),
-    insertions = c(3, 4, 6),
-    cost_per_insertion = c(15000, 3000, 800),
-    target_audience = c(125000, 75000, 60000)
-  ),
-  population = 1000000,
-  target_audience = "target_audience"
-)
-plan
+audiences  <- c(TV = 250000, Radio = 150000, Digital = 100000)
+insertions <- c(3, 4, 6)
+population <- 1000000
+
+sainsbury <- calc_sainsbury(audiences, population, insertions)
+sainsbury
 ```
 
-`plan_metrics()` gives impressions, spend, GRP and cost ratios, channel by
-channel and for the whole plan. Every ratio has an explicit denominator:
+The result is a list. Reach is available in percent and in people, and the
+exposure distribution has one value for each number of exposures from one to
+the total number of insertions. The share of the population that is never
+exposed is 100 minus the reach, so the whole distribution always sums to 100:
 
 ```{r}
-metrics <- plan_metrics(plan)
-metrics$by_channel[, c("channel", "impressions", "spend", "rating_points",
-                       "cpm_impressions")]
-metrics$totals[c("impressions", "spend", "grps")]
+sainsbury$reach$percent
+round(data.frame(contacts = seq_along(sainsbury$distribution$percent),
+                 percent = sainsbury$distribution$percent)[1:5, ], 2)
+100 - sainsbury$reach$percent
 ```
 
-`estimate_reach()` estimates reach and the exposure distribution. Its default
-model is Sainsbury's, which assumes random duplication:
+The `cumulative` element gives the share exposed *at least* N times. The value
+for the effective frequency you choose is the effective reach: with an
+effective frequency of 2, it is the 60.5% shown for two exposures.
 
 ```{r}
-reach <- estimate_reach(plan, model = "sainsbury")
-reach
+round(data.frame(min_contacts = 1:4,
+                 percent = sainsbury$cumulative$percent[1:4],
+                 people = sainsbury$cumulative$people[1:4]), 1)
 ```
 
-The result is a list. Reach is available in probability, percent and people,
-and the exposure distribution includes the zero-exposure cell, so it always sums
-to one:
+The impressions of the plan are the audience times the insertions, added over
+the vehicles, and the average frequency is those impressions divided by the
+people reached:
 
 ```{r}
-reach$reach$percent
-round(reach$distribution[, c("contacts", "percent")], 2)
-sum(reach$distribution$probability)
+impressions <- sum(audiences * insertions)
+impressions
+impressions / sainsbury$reach$people
 ```
 
-The `cumulative` element gives the share exposed *at least* N times. The row for
-the effective frequency you choose is the effective reach: with an effective
-frequency of 2, it is the 60.5% shown for `min_contacts = 2`.
+Sainsbury lets each vehicle keep its own audience; Binomial gives every
+insertion the insertion-weighted average probability. The two models need no
+duplication data, and side by side they show how much the heterogeneity of the
+vehicles matters for this plan:
 
 ```{r}
-reach$cumulative[reach$cumulative$min_contacts %in% 1:4,
-                 c("min_contacts", "percent", "people")]
-```
-
-Passing the estimated reach back to `plan_metrics()` adds the metrics that need
-it, such as the cost of reaching a thousand different people:
-
-```{r}
-plan_metrics(plan, reach = reach$reach$people)$totals[
-  c("reach_percent", "average_frequency", "cost_per_thousand_reached")]
-```
-
-`compare_reach_models()` places the two models that need no duplication data
-side by side. Sainsbury lets each vehicle keep its own audience; Binomial gives
-every insertion the plan's insertion-weighted average probability:
-
-```{r}
-compare_reach_models(plan, c("sainsbury", "binomial"))
-```
-
-### Allocating a budget
-
-`optimize_media_plan()` searches for the number of insertions in each channel
-that maximizes effective reach within a budget (`objective = "max_reach"`) or
-that reaches a required effective reach at the lowest cost
-(`objective = "min_cost"`). Here, effective reach means being exposed at least
-twice, and `max_insertions` caps the insertions of each channel (the search is
-not limited to the insertions of the original plan):
-
-```{r}
-optimized <- optimize_media_plan(
-  plan,
-  budget = 50000,
-  objective = "max_reach",
-  effective_frequency = 2,
-  max_insertions = c(4, 8, 12)
-)
-optimized
-optimized$allocation
-optimized$global_optimum
-```
-
-When the number of possible allocations is manageable, the function evaluates
-all of them and `global_optimum` is `TRUE`: the allocation is the best one for
-the model used. Otherwise it uses a greedy search, labels the result as a
-heuristic and never reports it as a global optimum.
-
-### Target-audience metrics
-
-A channel with a large audience is not necessarily a good channel for your
-target. `audience_metrics()` separates three quantities that are often mixed:
-the share of a channel's audience that belongs to the target (*composition*),
-the share of the target that the channel reaches (*target rating*) and the
-*affinity index*, which compares the target's share of the channel's audience
-with its share of the population (100 means the channel is neutral):
-
-```{r}
-audience_metrics(
-  gross_audience = c(250000, 150000),
-  target_audience = c(125000, 75000),
-  gross_universe = 1000000,
-  target_universe = 400000
-)
+binomial <- calc_binomial(audiences, population, insertions)
+c(sainsbury = sainsbury$reach$percent, binomial = binomial$reach$percent)
 ```
 
 ## Why the choice of model matters
@@ -296,9 +233,8 @@ Some guidance for the common situations:
   and combine them in different ways; they are more demanding and their
   differences are described in `vignette("mediaPlanR-intro")`.
 - **Your exposures are unbounded counts.** The Negative-Binomial functions are
-  scoped to those processes. They are deliberately not offered for finite
-  insertion schedules, and they are not available in `estimate_reach()` or
-  `optimize_media_plan()`.
+  scoped to those processes. They are deliberately not meant for finite
+  insertion schedules, where several insertions fall in the same vehicle.
 
 ## Using your own data
 
@@ -337,8 +273,9 @@ figures are **proportions of the population** (between 0 and 1); only
   whole number), `R1` (reach after one insertion, that is, the vehicle's
   audience) and `R2` (cumulative reach after two insertions). `R2` must satisfy
   `R1 <= R2 <= 2 * R1 - R1^2`, where the upper limit is random accumulation. Use
-  `NA` for vehicles with a single insertion. Extra columns, such as a vehicle
-  name, must be left out.
+  `NA` for vehicles with a single insertion (`calc_canex()` accepts the same data
+  frame and the same `NA`; for it, too, `R2` is needed only for vehicles with two
+  or more insertions). Extra columns, such as a vehicle name, must be left out.
 - `duplications`: a symmetric square matrix with the proportion of the
   population reached by both vehicles with one insertion each. The diagonal is
   ignored. Rows and columns follow the order of `vehicles_data`. A duplication
@@ -456,7 +393,6 @@ Results have a common core, but their shape depends on the family of models:
 
 | Result | Reach | Exposure distribution |
 |---|---|---|
-| `estimate_reach()` | `$reach`: `probability`, `percent`, `people` | `$distribution`: data frame, from 0 exposures |
 | `calc_sainsbury()`, `calc_binomial()`, `calc_beta_binomial()`, `calc_metheringham()` | `$reach`: `percent`, `people` | `$distribution`: list of `percent` and `people`, from 1 exposure; the share with no exposure is 100 minus the reach |
 | `calc_canex()`, `calc_csd()`, `calc_msad()`, `calc_cbd()`, `calc_mbd()` | `$reach`: `probability`, `percent`, `people`; also `$average_frequency` | `$distribution`: data frame, from 0 exposures |
 | `calc_agostini_duplication()`, `calc_hofmans_duplication()` | `$reach` only | not estimated |
@@ -473,8 +409,12 @@ sum(vehicles$insertions * vehicles$R1) / csd$reach$probability
 
 The last two numbers coincide because CSD preserves the plan's mean number of
 exposures per person (the sum of insertions times first-insertion reach). MSAD
-and MBD do too; CBD reproduces it only approximately, and reports the difference
-in `diagnostics$mean_error`.
+does too. CBD, MBD and CANEX do not always: CBD changes it through the
+adjustment of its zero cell, CANEX when it truncates negative probabilities, and
+MBD can depart from it even when no probability is negative.
+Each reports the difference in its diagnostics (`diagnostics$mean_error`, or
+`mean_exposures_expected` and `mean_exposures_result` for CANEX), and the average
+frequency of a result is always computed from the distribution that it returns.
 
 ## Comparing a model with observed data
 
@@ -521,7 +461,10 @@ never infers them from model inputs.
   combination (see `evaluate_exposure_model()`).
 - **Audience is an opportunity to see, not attention.** The models estimate how
   many people are exposed to a vehicle, not how many notice, remember or are
-  persuaded by the message.
+  persuaded by the message. Contacts are opportunities of exposure in the unit
+  of the audience figures (an issue, a spot, the visits to a site in a week);
+  they are advertising impressions in the technical sense (served, rendered or
+  viewable) only if the figures measure that event.
 - **Every model is an approximation.** Each one rests on stated assumptions about
   duplication and about how exposure probabilities vary between people. Where the
   assumption is wrong, so is the estimate, and the help pages state which
@@ -534,7 +477,10 @@ never infers them from model inputs.
   more vehicles, and warns when this is possible.
 - **Size is limited.** The number of exposure combinations grows exponentially
   with vehicles and insertions. CANEX stops with an error on plans that are too
-  large for it, and MBD is limited to 12 vehicles.
+  large for it, and CBD and MBD are limited to 12 vehicles. CSD, MSAD, CBD and
+  MBD also estimate the size of their tables, or their work, from the insertions
+  before computing, and stop with an explanatory error beyond a budget that can
+  be raised with options (section "Computational limits" of `?mediaPlanR`).
 - **Published values are reproduced up to documented differences.** Where the
   package differs from a published table, `vignette("mediaPlanR-intro")` and the
   file `system.file("DATA-PROVENANCE.md", package = "mediaPlanR")` state by how
@@ -545,7 +491,7 @@ never infers them from model inputs.
 - `vignette("mediaPlanR-intro")` develops each model, its assumptions and its
   validation against the sources.
 - Each function has a help page with its arguments, details, references and
-  examples: start with `?media_plan`, `?estimate_reach` and `?calc_csd`.
+  examples: start with `?mediaPlanR`, `?calc_sainsbury` and `?calc_csd`.
 - `citation("mediaPlanR")` gives the reference for the package. When you use a
   specific model, please also cite the original source of that model.
 - Questions, errors and suggestions are welcome in the

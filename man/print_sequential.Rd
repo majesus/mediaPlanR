@@ -7,7 +7,7 @@
 \alias{print.reach_csd}
 \alias{print.reach_mbd}
 \alias{print.reach_msad}
-\title{Print a sequential-aggregation result}
+\title{Print the result of CSD, MSAD, CBD or MBD}
 \usage{
 \method{print}{reach_cbd}(x, full = TRUE, max_rows = 30L, ...)
 

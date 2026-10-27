@@ -20,12 +20,6 @@ for (dataset in list(metheringham_example, duplication_example)) {
 }
 stopifnot(is.finite(do.call(calc_agostini_duplication, duplication_example)$reach$percent))
 stopifnot(all(is.finite(calc_hofmans_accumulation(0.06, 0.103, 5)$results$RN)))
-plan <- media_plan(data.frame(channel = c("A", "B"), audience = c(300, 200),
-                              insertions = c(2, 2), cost_per_insertion = c(10, 5)), 1000)
-stopifnot(plan_metrics(plan)$totals$impressions == 1000,
-          is.finite(estimate_reach(plan)$reach$people))
-stopifnot(optimize_media_plan(plan, budget = 40, max_insertions = c(2, 2),
-                             method = "exact")$global_optimum)
 tiny <- calc_canex(data.frame(k = c(1, 1), R1 = 1e-11, R2 = 1e-11),
                    matrix(c(NA, 1e-11, 1e-11, NA), 2), 1e11)
 stopifnot(abs(tiny$reach$people - 1) < 1e-10,

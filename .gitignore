@@ -3,9 +3,19 @@
 .Rhistory
 .RData
 docs
+tmp/
 
 # Local-only validation tables (see inst/DATA-PROVENANCE.md)
 tests/testthat/fixtures/cbd_published_plans.csv
 tests/testthat/fixtures/kim2005_appB_models.csv
 
 tests/testthat/test-local-published-examples.R
+
+# Build log of tools/build-manual.R
+
+mediaPlanR_manual.build.log
+
+# Local review material and submission build products
+Claude outputs/
+revision_ecuador2026_2026-10-15/
+cran_submission/

@@ -17,14 +17,14 @@ that the same data frame can be used by \code{\link[=calc_csd]{calc_csd()}}, \co
 and 1 (not a percentage), in (0, 1];
 \item \code{R2}: cumulative reach after the second insertion (the proportion
 exposed at least once in two insertions), a proportion between \code{R1}
-and the independence limit \code{2 * R1 - R1^2}. If \code{R2} is outside that
-range the function stops with an explanatory error. Unlike
-\code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}, which accept
-\code{NA} for a vehicle with a single insertion because they do not use it,
-this function requires a finite \code{R2} for every vehicle, including those
-with one insertion: a data frame shared with the sequential models
-needs a valid \code{R2} here. Do not invent an empirical value; for a single
-insertion, any value inside the admissible range gives the same result.
+and the independence limit \code{2 * R1 - R1^2} (the range of the
+Beta-Binomial family; see \code{\link[=calc_beta_binomial]{calc_beta_binomial()}}). If \code{R2} is outside
+that range the function stops with an explanatory error. As in
+\code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}} and \code{\link[=calc_mbd]{calc_mbd()}}, it may be
+\code{NA} for a vehicle with a single insertion, whose exposure is a
+Bernoulli variable of probability \code{R1} and does not use it: a value
+supplied for such a vehicle is ignored, not validated. It is required
+(and validated) for every vehicle with two or more insertions.
 }}
 
 \item{duplications}{Symmetric matrix whose element \verb{[i, j]} is the
@@ -55,15 +55,15 @@ correlation matrix), \code{mean_exposures_expected} (the mean number of
 exposures per person of the population: the sum over vehicles of
 insertions times \code{R1}, preserved by the expansion) and \code{mean_exposures_result}
 (the mean of the returned distribution). They show how much the
-second-order approximation had to be corrected.
+truncated expansion had to be corrected.
 }
 }
 \description{
 Implements Danaher's (1991) canonical expansion model for the reach and
 exposure distribution of a multi-vehicle schedule. Each vehicle's exposure
 distribution is a Beta-Binomial, which accounts for the heterogeneity of
-individuals, and the observed duplication between vehicles enters through a
-second-order correlation term.
+individuals, and the observed duplication between vehicles enters through
+pairwise correlation terms (see "Order of the expansion").
 }
 \details{
 The model follows these steps:
@@ -71,7 +71,7 @@ The model follows these steps:
 \item It computes each vehicle's Beta-Binomial parameters from \code{R1} and
 \code{R2} by the method of moments.
 \item It turns the duplications into canonical correlations,
-\eqn{r_{ij} = (p_{ij} - p_i p_j) / \sqrt{p_i (1 - p_i) p_j (1 - p_j)}},
+\deqn{r_{ij} = \frac{p_{ij} - p_i p_j}{\sqrt{p_i (1 - p_i) p_j (1 - p_j)}},}
 with \eqn{p_i} the one-insertion reach of vehicle \eqn{i} and \eqn{p_{ij}}
 the duplication of vehicles \eqn{i} and \eqn{j}: the proportion of the
 population exposed to both of them.
@@ -82,7 +82,8 @@ probability
 \eqn{m} is the number of vehicles, the double sum runs over every pair of
 vehicles, and \eqn{f_i}, \eqn{\mu_i} and
 \eqn{\sigma_i^2} are the Beta-Binomial probability function, mean and
-variance of vehicle \eqn{i}. Only second-order terms are kept.
+variance of vehicle \eqn{i}. Only the pairwise terms, linear in the
+correlations, are kept (see "Order of the expansion" below).
 \item It sets to zero the negative probabilities that the truncated
 expansion can produce, renormalizes the joint distribution to sum to one,
 and sums it over the total number of exposures.
@@ -93,6 +94,25 @@ with the number of vehicles and insertions. The model is therefore intended
 for small and medium schedules, and the function stops with an informative
 error above 2,000,000 combinations instead of exhausting memory.
 }
+\section{Order of the expansion}{
+Danaher (1991, pp. 362-364) speaks of "order" in more than one sense, and
+the help pages of this package use the following. The canonical expansion of
+the joint probability of two vehicles has one term for each canonical
+correlation. The model keeps the first, which is the ordinary correlation
+\eqn{r_{ij}} of the two exposures, and omits the canonical correlations of
+second and higher order. For three or more vehicles the joint probability is
+the product of the marginals times one plus the sum, over the pairs of
+vehicles, of the correlation of the pair times the product of their
+standardized exposures (step 3). It is linear in the correlations: the
+products of correlations (terms of second and higher order in them) and,
+with them, any interaction among three or more vehicles are omitted. The
+help pages of \code{\link[=calc_csd]{calc_csd()}} and \code{\link[=calc_cbd]{calc_cbd()}}, which use the same expansion for
+the all-zero cell and for the (0,1) grid, call it the pairwise (or
+truncated) canonical expansion. The sources describe it by what it omits, the
+canonical terms "of the second order or higher" (Danaher, 1991; Cheong, 2007,
+p. 54), so it is not an expansion that keeps second-order terms.
+}
+
 \section{Truncation of negative probabilities}{
 Danaher (1991, pp. 363-364) shows that the probabilities of the expansion
 sum to one and reports, in his application, negative probabilities in a
@@ -142,13 +162,16 @@ breaks these limits, the function stops with an error naming the pair:
 the data cannot be right and should be reviewed.
 \item The overlaps of three vehicles must also fit together. If they
 cannot, the function stops with an error naming the three vehicles.
-\item The models were built for the usual situation in which vehicles
+\item The studies that evaluated these models mostly used vehicles that
 overlap at least as much as chance alone would produce, that is, at
 least the product of their audiences (two vehicles with audiences of 30\%
-and 20\% overlap by 6\% if people chose vehicles independently). When a
-pair overlaps clearly less than that, the results can differ a lot from
-one model to another, and the function issues a warning that names the
-pair.
+and 20\% overlap by 6\% if people chose vehicles independently). A smaller
+overlap is not impossible and is not necessarily a measurement error: it
+can be valid data. But when a pair overlaps clearly less than that, the
+approximations of the models can differ a lot from one model to another,
+and the function issues a warning that names the pair. Check how the
+data were defined and read the diagnostics; do not replace valid
+observations automatically.
 }
 An error has one of two causes. Either the inputs break a constraint of the
 data (impossible overlaps: correct them), or the inputs are possible but the
@@ -168,20 +191,29 @@ as given and check them against the Fréchet bounds implied by the audiences
 and, for every triple of vehicles, against joint feasibility. The published
 methods have three limits that follow from this.
 
-First, Hong (1998, p. 238) notes that the models he evaluates assume a
-duplication between vehicles not below the random one, the product of the
-audiences, and treats null observed duplications as measurement error. With
-a lower duplication the models can diverge considerably. The functions warn
-(class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
+First, Hong (1998, pp. 238-239) formulates, for the models and the data of
+his study, the hypothesis that the duplication between vehicles is not below
+the random one, the product of the audiences, and treats null observed
+duplications as measurement problems. It is not a condition of the data or
+of the formulas: Danaher's canonical expansion itself admits negative
+correlations (Danaher, 1991, equation 3), and the logical limits of a
+duplication are the Fréchet bounds,
+\eqn{\max(0, p_i + p_j - 1) \le p_{ij} \le \min(p_i, p_j)}. For example,
+two vehicles with one insertion each and audiences of 0.30 and 0.20 can have
+a duplication of 0.03, below the random 0.06, with the valid joint
+distribution (neither, only the second, only the first, both) of
+(0.53, 0.17, 0.27, 0.03), and \code{calc_canex()} reproduces it without negative
+probabilities. With several insertions per vehicle, in contrast, a lower
+duplication can make the approximations diverge considerably. The functions
+warn (class \code{mediaPlanR_low_duplication}) when the canonical correlation of a
 pair is below -0.1. That threshold is a decision of this package: the
 published reference plans (Kim 2005, Appendix B, and Hong 1998, Appendix E;
 80 plans) include pairs slightly below the random duplication, with
 canonical correlations down to -0.071, and they raise no warning. For two vehicles with two insertions each, \code{R1 = 0.30} and
 \code{R2 = 0.45}, a duplication of zero gives a reach of 0.90 under MSAD, 0.81
-under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Danaher's canonical
-expansion itself admits negative correlations. Hong (1998, pp. 238-239) treats
-a null duplication as a measurement error and replaces it by
-\eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
+under MBD, 0.78 under CSD and CBD, and 0.79 under CANEX. Hong (1998,
+pp. 238-239) treats a null duplication as a measurement error and replaces
+it by \eqn{\hat{p}_{ij} = K' p_i p_j}, where \eqn{K'} is the ratio between observed
 and random duplication over the pairs with non-zero observed duplication.
 The package does not implement this imputation: \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}
 and \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} estimate reach from a duplication matrix and

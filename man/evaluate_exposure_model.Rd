@@ -23,8 +23,7 @@ its maximum. For several schedules, also include the column named by
 \item{predicted}{Either a supported model result whose \code{distribution} is a
 data frame with \code{contacts} and \code{probability} or \code{percent} columns (for
 example the results of \code{\link[=calc_csd]{calc_csd()}}, \code{\link[=calc_msad]{calc_msad()}}, \code{\link[=calc_cbd]{calc_cbd()}},
-\code{\link[=calc_mbd]{calc_mbd()}}, \code{\link[=calc_canex]{calc_canex()}} and also of
-\code{\link[=estimate_reach]{estimate_reach()}}), or a data frame with columns \code{contacts} and
+\code{\link[=calc_mbd]{calc_mbd()}} and \code{\link[=calc_canex]{calc_canex()}}), or a data frame with columns \code{contacts} and
 \code{predicted}. Data-frame predictions must use the
 same schedule column when \code{schedule_col} is supplied.}
 
@@ -107,6 +106,18 @@ percentage error in the exposure distribution, APE) are the means of
 \eqn{e_{R,i}} and \eqn{e_{P,i}} across schedules, reported here as
 proportions (multiply by 100 for percentages). They are descriptive
 predictive-error measures, not inferential tests.
+
+Kim (2005, p. 118) writes the denominator of \eqn{e_{P,i}} as the sum of the
+observed probabilities of one or more exposures, and this function divides by
+the observed reach \eqn{R_i^{obs}}, one minus the zero cell. The two are
+identical when the observed distribution has total mass one, which is always
+the case for counts (they are normalized) and for probability or percent
+tables that add up to one. They can differ for a rounded table that is used
+without renormalizing (see below): with observed cells 0.500 and 0.496 (mass
+0.996) and predicted cells 0.800 and 0.200, the error is
+0.296 / 0.500 = 0.592 here, whereas dividing by the sum of the observed
+positive cells would give 0.296 / 0.496 = 0.597. The function keeps the
+definition by the reach, and \code{input_mass} reports the supplied totals.
 
 The other elements of \code{summary} are, averaged over schedules:
 \itemize{

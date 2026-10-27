@@ -13,8 +13,9 @@ audience is known in people, divide it by the population.}
 
 \item{R2}{Cumulative reach after the second insertion (the proportion of
 the population exposed at least once in two insertions), as a proportion
-(not a percentage), with \verb{R1 <= R2 <= 2 * R1 - R1^2}. If \code{R2} is outside
-that range the function stops with an explanatory error.}
+(not a percentage), with \verb{R1 <= R2 <= 2 * R1 - R1^2}, the range of the
+Beta-Binomial family (see Details). If \code{R2} is outside that range the
+function stops with an explanatory error.}
 
 \item{insertions}{Total number of planned insertions in the vehicle (a
 positive integer).}
@@ -75,6 +76,24 @@ and \code{alpha = beta = Inf} that the function reports for them are indicators
 of the limit, not parameters of a proper Beta distribution, and the quotient
 \eqn{\alpha / (\alpha + \beta)} must not be evaluated with them. Both limits
 are handled explicitly. \eqn{R_1 = 1} is also degenerate: everyone is exposed.
+
+The upper bound \eqn{R_2 \le 2 R_1 - R_1^2} is the bound of the
+Beta-Binomial family, not a logical limit of two insertions. In a mixture of
+independent exposures whose individual probability \eqn{\theta} follows a
+Beta distribution, the duplication between two insertions is
+\eqn{E[\theta^2] \ge E[\theta]^2 = R_1^2}, so that
+\eqn{R_2 = 2 R_1 - E[\theta^2] \le 2 R_1 - R_1^2}: the upper bound
+corresponds to independent insertions, and the family excludes negative
+dependence between two insertions of the same vehicle. The logical bounds of
+the cumulative reach of two insertions with the same audience \eqn{p} are
+wider: \eqn{p \le R_2 \le \min(1, 2 p)}. For example, \eqn{p = 0.30} and
+\eqn{R_2 = 0.55} are logically possible (the probabilities of being exposed
+to both insertions, only the first, only the second and neither can be 0.05,
+0.25, 0.25 and 0.45), but they are outside the family, whose largest
+\eqn{R_2} for \eqn{p = 0.30} is 0.51, and the function stops. Data of that
+kind should not be replaced by the bound only to make the model run: review
+how the exposures were measured (see the section "Notation and units" of
+\link{mediaPlanR}) and whether this model suits the vehicle.
 }
 \examples{
 result <- calc_beta_binomial(R1 = 0.50, R2 = 0.55, insertions = 5,
@@ -89,7 +108,7 @@ Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
 distribución de contactos en la planificación de medios publicitarios
 impresos (Models for determining reach and exposure distribution in print
 media planning). Doctoral dissertation, Universidad de Valencia, Spain.
-Section 3.1.2.5, equations 3.22-3.28, with the parameter estimators on
+Section 3.1.2.5, equations 3.25-3.28, with the parameter estimators on
 page 134.
 }
 \seealso{

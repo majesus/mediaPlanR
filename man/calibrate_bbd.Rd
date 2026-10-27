@@ -43,8 +43,12 @@ exposed twice, three times, and so on; this is the effective reach).
 A \code{bbd_calibration} object: a list with \code{alpha}, \code{beta},
 \code{concentration}, \code{insertions} (the selected \code{n}), \code{R1},
 \code{frequency}, \code{type}, \code{target_reach}, \code{predicted_reach}, \code{error},
-\code{converged}, the full \code{distribution} (\code{contacts}, \code{probability} and
-\code{cumulative_probability}) and the \code{candidates} evaluated for each \code{n}.
+\code{converged}, \code{fit_type} (\code{"beta_binomial"}, \code{"binomial_limit"} or
+\code{"polarized_limit"}), the full \code{distribution} (\code{contacts}, \code{probability}
+and \code{cumulative_probability}) and the \code{candidates} evaluated for each \code{n}
+(the selected one for that \code{n}, with its \code{log_concentration}, which is
+\code{Inf} or \code{-Inf} for a limit, its \code{predicted} probability, its \code{error} and
+its \code{fit_type}).
 }
 \description{
 Searches for a Beta-Binomial exposure distribution whose effective reach is
@@ -54,6 +58,9 @@ one-dimensional search instead of a two-dimensional grid over both shape
 parameters. The search returns the closest candidate within the stated
 bounds; it does not guarantee that the target is reached. Always check
 \code{converged}, \code{predicted_reach} and \code{error} before using \code{alpha} and \code{beta}.
+The concentration is searched in a finite interval, and the two limits of
+the family, the binomial and the polarized ones, are evaluated explicitly
+(see Details).
 }
 \details{
 The effective frequency \code{frequency} is a threshold chosen by the analyst for
@@ -70,7 +77,25 @@ point. It returns the number of insertions with the smallest error, the
 smaller \code{n} in case of ties: the error is the criterion, and neither cost
 nor the minimum number of insertions is prioritized except to break ties.
 When the target cannot be reached, \code{converged} is \code{FALSE} and the closest
-candidate is returned. For example, with \code{R1 = 0.3}, \code{target_reach = 0.99},
+candidate is returned.
+
+The search interval is finite: the natural logarithm of the concentration
+\code{alpha + beta} is searched between -15 and 15, that is, concentrations from
+about 3e-7 to 3.3e6. The two limits of the family that \code{\link[=calc_beta_binomial]{calc_beta_binomial()}}
+also represents, the polarized limit (concentration tending to zero: either
+all of the insertions or none) and the binomial limit (concentration tending
+to infinity: independent insertions), are not points of that interval, so
+they are evaluated explicitly as one more candidate for every \code{n} of at
+least two. A limit is returned only when its error is smaller, by more than
+1e-12, than that of the best candidate of the interval, so that the results
+that the interval already resolves do not change. In that case \code{alpha},
+\code{beta} and \code{concentration} are \code{0} (polarized) or \code{Inf} (binomial), as in
+\code{\link[=calc_beta_binomial]{calc_beta_binomial()}}, where they indicate the limit and are not the
+parameters of a proper Beta distribution, and \code{fit_type} says which one it
+is. A target is outside the family only when it is farther than the limits
+allow (for example, an effective reach above the binomial limit with that
+number of insertions); a target merely beyond the ends of the interval
+receives the nearest of the limit and the interval. For example, with \code{R1 = 0.3}, \code{target_reach = 0.99},
 \code{frequency = 1} and \code{max_insertions = 1} the only candidate has a
 probability of 0.3, so \code{predicted_reach} is 0.3, \code{error} is 0.69 and
 \code{converged} is \code{FALSE}.

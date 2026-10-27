@@ -1,17 +1,20 @@
 Package: mediaPlanR
 Type: Package
-Title: Reliable Cross-Media Reach and Frequency Planning
+Title: Reach and Exposure-Distribution Models for Media Planning
 Version: 2.0.0
-Date: 2026-10-09
+Date: 2026-10-12
 Authors@R: 
     person(given = "Manuel J.", family = "Sánchez-Franco",
            email = "majesus@us.es", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0002-8042-3550"))
-Description: Reproducible tools for cross-media reach and exposure-frequency
-    planning. Provides a validated media-plan data contract; exact reach and
-    exposure distributions under random duplication (Sainsbury and Binomial
-    models); the Beta-Binomial accumulation model and its multi-vehicle
-    version of Metheringham (1964) <doi:10.1080/00218499.1964.12519751>; the
+Author: Manuel J. Sánchez-Franco [aut, cre]
+    (<https://orcid.org/0000-0002-8042-3550>)
+Maintainer: Manuel J. Sánchez-Franco <majesus@us.es>
+Description: Reproducible implementations of reach and exposure-frequency
+    models for media planning. Provides exact reach and exposure distributions
+    under random duplication (Sainsbury and Binomial models); the
+    Beta-Binomial accumulation model and its multi-vehicle version of
+    Metheringham (1964) <doi:10.1080/00218499.1964.12519751>; the
     ad hoc duplication and accumulation formulas of Agostini (1961)
     <doi:10.1080/00218499.1961.12519620> and Hofmans (1966)
     <doi:10.1177/002224376600300307>; and the multivariate exposure
@@ -25,10 +28,10 @@ Description: Reproducible tools for cross-media reach and exposure-frequency
     at Austin) and Cheong, Leckenby and Eakin (2011)
     <doi:10.2753/JOA0091-3367400101> (multivariate Beta-Binomial). The three
     dissertations have no DOI; their complete references are in the help
-    pages. Also includes target-audience metrics, an explicitly
-    scoped Negative-Binomial count approximation, and budget-constrained
-    optimization of effective reach that reports whether a global optimum was
-    verified.
+    pages. Also includes an explicitly scoped Negative-Binomial count
+    approximation, the fitting of the Beta-Binomial model to an observed reach,
+    and the evaluation of predicted exposure distributions against observed
+    ones.
 License: MIT + file LICENSE
 URL: https://github.com/majesus/mediaPlanR
 BugReports: https://github.com/majesus/mediaPlanR/issues

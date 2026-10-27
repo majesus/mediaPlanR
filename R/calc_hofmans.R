@@ -5,16 +5,23 @@
 #' one vehicle -- the "accumulation" domain in Aldás
 #' Manzano's (1998) three-way split. It adapts Agostini's duplication formula
 #' by replacing the number of vehicles with the number of insertions, and it
-#' needs only the audience after one and two insertions. It is a different
-#' procedure from [calc_hofmans_duplication()], the same author's separate model
-#' for several vehicles with one insertion each (they share only the name).
+#' needs only the audience after one and two insertions. Hofmans (1966) derived
+#' it, together with [calc_hofmans_duplication()], from the same basis,
+#' Agostini's formula, relying on the similarity between \eqn{N} insertions in
+#' one vehicle and one insertion in each of \eqn{N} vehicles (Aldás Manzano,
+#' 1998, p. 118). They are two applications of that basis to different plan
+#' shapes and different data, not interchangeable procedures: this function
+#' models the successive insertions of one vehicle, whereas
+#' [calc_hofmans_duplication()] models several vehicles with one insertion each,
+#' from their own audiences and duplications. In the homogeneous case the two
+#' coincide (see Details).
 #'
 #' @references
 #' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
 #' distribución de contactos en la planificación de medios publicitarios
 #' impresos (Models for determining reach and exposure distribution in print
 #' media planning). Doctoral dissertation, Universidad de Valencia, Spain.
-#' Section 3.1.1.4, equations 3.7-3.12.
+#' Section 3.1.1.4 (pages 118-121), equations 3.7-3.12.
 #'
 #' Hofmans, P. (1966). Measuring the cumulative net coverage of any
 #' combination of media. Journal of Marketing Research, 3(3), 269-278.
@@ -55,6 +62,19 @@
 #' The model assumes a constant reach per insertion (`R1`) and a constant
 #' duplication between every pair of insertions.
 #'
+#' Relation with [calc_hofmans_duplication()]. Take \eqn{N} vehicles with the
+#' same audience \eqn{p} and the same duplication \eqn{d} between every pair.
+#' The pairwise coefficient of the duplication model is
+#' \eqn{k_{ij} = 2 p / (2 p - d)}. With \eqn{p = R_1} and \eqn{d = 2 R_1 - R_2},
+#' this is \eqn{2 R_1 / R_2 = k}, the constant coefficient above, so that the
+#' duplication formula and the constant-coefficient formula of this function
+#' give the same reach. For example, \eqn{p = 0.30}, \eqn{R_2 = 0.45}
+#' (\eqn{d = 0.15}) and \eqn{N = 4} give a reach of 0.60 with both functions.
+#' The equivalence holds only in that homogeneous case. The two functions take
+#' different data (the reach after two insertions of one vehicle, or the
+#' audiences and the duplications of several vehicles), and only this one has
+#' the variable coefficient adjusted with `R3`.
+#'
 #' Valid `R1` and `R2` do not guarantee a valid curve: the extrapolation can
 #' decrease, exceed 1 or exceed \eqn{N R_1}. For example, `R1 = 0.60`, `R2 = 0.84`
 #' and `N = 4` give a cumulative reach of 1.05 at `N = 4`. The curve is then
@@ -80,10 +100,19 @@
 #' calc_hofmans_accumulation(R1 = 0.06, R2 = 0.103, insertions = 5,
 #'                          R3 = 0.135)$parameters
 #'
+#' # With equal vehicles and equal duplications, the duplication model gives the
+#' # same reach: four insertions of a vehicle with R1 = 0.30 and R2 = 0.45 (in
+#' # people, for a population of 1,000,000) ...
+#' 1000000 * calc_hofmans_accumulation(R1 = 0.30, R2 = 0.45,
+#'                                     insertions = 4)$results$RN[4]
+#' # ... and four vehicles of 300,000 people with 150,000 shared by each pair
+#' calc_hofmans_duplication(audiences = rep(300000, 4), population = 1000000,
+#'                          duplication_matrix = matrix(150000, 4, 4))$reach$people
+#'
 #' @seealso
 #' [calc_beta_binomial()] for a stochastic accumulation model that also
 #' returns the exposure distribution, and [calc_hofmans_duplication()] for the
-#' same author's model for several vehicles.
+#' same author's model for several vehicles, derived from the same basis.
 #' @export
 calc_hofmans_accumulation <- function(R1, R2, insertions, R3 = NULL,
                                       show_steps = FALSE) {
@@ -190,16 +219,21 @@ print.reach_hofmans_accumulation <- function(x, ...) {
 #' computes a pairwise coefficient directly from each pair's own audiences and
 #' duplication, so no coefficient has to be fitted to external data. Like
 #' Agostini's formula, it estimates total reach only, not the exposure
-#' distribution. It is a different procedure from
-#' [calc_hofmans_accumulation()], the same author's model for one vehicle with
-#' several insertions (they share only the name).
+#' distribution. Hofmans (1966) derived it, together with
+#' [calc_hofmans_accumulation()], from the same basis, Agostini's formula,
+#' relying on the similarity between \eqn{N} insertions in one vehicle and one
+#' insertion in each of \eqn{N} vehicles (Aldás Manzano, 1998, p. 118). The
+#' other model, [calc_hofmans_accumulation()], applies that basis to one
+#' vehicle with several insertions and needs different data; the two are not
+#' interchangeable, although they coincide when the vehicles have the same
+#' audience and the same duplication between every pair (see Details).
 #'
 #' @references
 #' Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
 #' distribución de contactos en la planificación de medios publicitarios
 #' impresos (Models for determining reach and exposure distribution in print
 #' media planning). Doctoral dissertation, Universidad de Valencia, Spain.
-#' Section 3.2.1.2, equations 3.59-3.62.
+#' Section 3.2.1.2 (pages 156-157), equations 3.59-3.62.
 #'
 #' Hofmans, P. (1966). Measuring the cumulative net coverage of any
 #' combination of media. Journal of Marketing Research, 3(3), 269-278.
@@ -231,6 +265,14 @@ print.reach_hofmans_accumulation <- function(x, ...) {
 #' between pairs, so a person present in three vehicles contributes three pairs,
 #' not three people: only the reach \eqn{R_m} counts each person once. Keep the
 #' units (people) of each term before forming any ratio.
+#'
+#' For \eqn{m} vehicles with the same audience \eqn{A} and the same duplication
+#' \eqn{D_0} between every pair, \eqn{k_{ij} = 2 A / (2 A - D_0)} for every pair,
+#' and the formula reduces to the constant-coefficient formula of
+#' [calc_hofmans_accumulation()] with \eqn{R_1 = A / P} and
+#' \eqn{R_2 = (2 A - D_0) / P}, for \eqn{N = m} insertions (see the Details of
+#' that function). Outside that homogeneous case the two functions are not
+#' equivalent.
 #'
 #' The formula is empirical and can return a reach outside its logical range
 #' (below the largest audience, or above the population or the gross

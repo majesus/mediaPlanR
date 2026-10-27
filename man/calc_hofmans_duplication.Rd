@@ -37,9 +37,14 @@ Agostini uses one empirical coefficient for every vehicle pair, Hofmans
 computes a pairwise coefficient directly from each pair's own audiences and
 duplication, so no coefficient has to be fitted to external data. Like
 Agostini's formula, it estimates total reach only, not the exposure
-distribution. It is a different procedure from
-\code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}, the same author's model for one vehicle with
-several insertions (they share only the name).
+distribution. Hofmans (1966) derived it, together with
+\code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}, from the same basis, Agostini's formula,
+relying on the similarity between \eqn{N} insertions in one vehicle and one
+insertion in each of \eqn{N} vehicles (Aldás Manzano, 1998, p. 118). The
+other model, \code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}}, applies that basis to one
+vehicle with several insertions and needs different data; the two are not
+interchangeable, although they coincide when the vehicles have the same
+audience and the same duplication between every pair (see Details).
 }
 \details{
 For two vehicles, reach is exactly \eqn{A_1 + A_2 - A_{12}}. Equating that
@@ -54,6 +59,14 @@ insertion per vehicle), and the duplications \eqn{A_{ij}} are coincidences
 between pairs, so a person present in three vehicles contributes three pairs,
 not three people: only the reach \eqn{R_m} counts each person once. Keep the
 units (people) of each term before forming any ratio.
+
+For \eqn{m} vehicles with the same audience \eqn{A} and the same duplication
+\eqn{D_0} between every pair, \eqn{k_{ij} = 2 A / (2 A - D_0)} for every pair,
+and the formula reduces to the constant-coefficient formula of
+\code{\link[=calc_hofmans_accumulation]{calc_hofmans_accumulation()}} with \eqn{R_1 = A / P} and
+\eqn{R_2 = (2 A - D_0) / P}, for \eqn{N = m} insertions (see the Details of
+that function). Outside that homogeneous case the two functions are not
+equivalent.
 
 The formula is empirical and can return a reach outside its logical range
 (below the largest audience, or above the population or the gross
@@ -75,7 +88,7 @@ Aldás Manzano, J. (1998). Modelos de determinación de la cobertura y la
 distribución de contactos en la planificación de medios publicitarios
 impresos (Models for determining reach and exposure distribution in print
 media planning). Doctoral dissertation, Universidad de Valencia, Spain.
-Section 3.2.1.2, equations 3.59-3.62.
+Section 3.2.1.2 (pages 156-157), equations 3.59-3.62.
 
 Hofmans, P. (1966). Measuring the cumulative net coverage of any
 combination of media. Journal of Marketing Research, 3(3), 269-278.

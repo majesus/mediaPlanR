@@ -107,6 +107,17 @@ nbd_exposure_distribution <- function(mean_contacts, size, report_max = NULL,
     } else {
       stats::qnbinom(0.999, size = size, mu = mean_contacts)
     }
+    # The quantile is a double: converting it before looking at its size gave
+    # NA with a coercion warning beyond the integer range.
+    if (!is.finite(quantile_value) || quantile_value > 1e6) {
+      stop(sprintf(paste0(
+        "report_max must be one positive integer no greater than 1,000,000, ",
+        "and the default table would need more levels (the 0.999 quantile of ",
+        "this process is about %s exposures). Supply report_max: the last row ",
+        "of the table is then an open tail, 'report_max or more', that stands ",
+        "for all the larger counts."),
+        format(quantile_value, digits = 3)), call. = FALSE)
+    }
     report_max <- max(10L, as.integer(ceiling(quantile_value)))
   }
   if (!is.numeric(report_max) || length(report_max) != 1L ||
@@ -122,7 +133,11 @@ nbd_exposure_distribution <- function(mean_contacts, size, report_max = NULL,
         opportunities != round(opportunities)) {
       stop("opportunities must be NULL or one positive integer.", call. = FALSE)
     }
-    opportunities <- as.integer(opportunities)
+    # It is only a threshold for the tail probability: a count beyond the integer
+    # range is kept as a number instead of being turned into NA.
+    if (opportunities <= .Machine$integer.max) {
+      opportunities <- as.integer(opportunities)
+    }
   }
 
   exact <- nbd_probability(0:(report_max - 1L), mean_contacts, size)
@@ -131,7 +146,36 @@ nbd_exposure_distribution <- function(mean_contacts, size, report_max = NULL,
   probability <- probability / sum(probability)
   contacts <- 0:report_max
   cumulative <- rev(cumsum(rev(probability)))
-  reach <- 1 - probability[1L]
+  # P(at least one exposure) = 1 - P(0), computed without the subtraction: for a
+  # very small mean, P(0) rounds to one and 1 - P(0) would lose the whole reach.
+  # -log P(0) = size * log(1 + mean / size). When mean / size is so small that
+  # the quotient underflows (a huge size), the cumulant is its series, mean *
+  # (1 - x / 2 + x^2 / 3), whose error is of order x^3. When it overflows (a
+  # size below the mean by more than a factor of 1e308), log1p(x) =
+  # log(mean) - log(size) + log1p(size / mean).
+  reach <- if (is.infinite(size)) -expm1(-mean_contacts) else {
+    ratio <- mean_contacts / size
+    cumulant <- if (!is.finite(ratio)) {
+      size * (log(mean_contacts) - log(size) + log1p(size / mean_contacts))
+    } else if (ratio < 1e-8) {
+      mean_contacts * (1 - ratio / 2 + ratio^2 / 3)
+    } else {
+      size * log1p(ratio)
+    }
+    -expm1(-cumulant)
+  }
+  # Variance mean + mean^2 / size, without squaring the mean when the result is
+  # representable: mean * (mean / size) does not overflow for mean = size =
+  # 1e200 (variance 2e200), and the logarithmic form covers a quotient that
+  # overflows although the product does not (a mean below one). The variance
+  # is Inf only when it exceeds the largest double.
+  variance <- if (is.infinite(size)) mean_contacts else {
+    excess <- mean_contacts * (mean_contacts / size)
+    if (!is.finite(excess)) {
+      excess <- exp(2 * log(mean_contacts) - log(size))
+    }
+    mean_contacts + excess
+  }
   impossible_mass <- if (is.null(opportunities)) NA_real_ else
     nbd_upper_tail(opportunities, mean_contacts, size)
 
@@ -140,8 +184,7 @@ nbd_exposure_distribution <- function(mean_contacts, size, report_max = NULL,
     mean_contacts = mean_contacts,
     average_frequency = mean_contacts / reach,
     size = size,
-    variance = mean_contacts + if (is.infinite(size)) 0 else
-      mean_contacts^2 / size,
+    variance = variance,
     distribution = data.frame(
       contacts = contacts,
       label = c(as.character(0:(report_max - 1L)),
