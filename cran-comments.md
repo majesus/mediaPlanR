@@ -5,9 +5,9 @@ This package has NOT been submitted to CRAN.
 
 ## Validated source and archive
 
-Source commit: f82f24e514d17c98b20b3c11acc958e95dec67fb.
+Source commit: 29903414a274d0aa79898dbe39d6e81320d858c1.
 Archive: mediaPlanR_2.0.0.tar.gz.
-SHA-256: 2cfa547aeaed16ef3428d748fb59d56e1a9736992be47953d7c90fcd1c37b807.
+SHA-256: f688c9239eb818eb0e32447b5aec70bb722bf534774c00c7ba97f5996747f8e2.
 
 The exact archive above was built and checked on Linux with R 4.6.1 using
 R CMD check --as-cran --run-donttest: 0 ERRORs, 0 WARNINGs, 1 NOTE.
@@ -15,7 +15,7 @@ Examples, tests, vignette rebuilding, PDF manual and HTML manual passed.
 The archive, checksum, check log and check-generated PDF were preserved in
 GitHub Actions and downloaded locally; the downloaded checksum matches.
 
-GitHub Actions: https://github.com/majesus/mediaPlanR/actions/runs/40697111380
+GitHub Actions: https://github.com/majesus/mediaPlanR/actions/runs/40698607806
 All six jobs completed successfully:
 - Windows / R 4.6.1: 0 ERRORs, 0 WARNINGs, 1 NOTE.
 - macOS / R 4.6.1: 0 ERRORs, 0 WARNINGs, 1 NOTE.
