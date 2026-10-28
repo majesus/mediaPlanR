@@ -9,6 +9,15 @@ and exposure-distribution models, the fitting of the Beta-Binomial model to an
 observed reach, a scoped Negative-Binomial approximation and the evaluation of
 predicted distributions against observed ones.
 
+## Correction from the pre-submission review of 2026-10-28
+
+* `fit_bbd_to_reach()` now expands its log-concentration search interval to
+  bracket interior targets near the binomial or polarized limit. Previously,
+  valid targets outside the initial numerical bracket could cause a raw
+  `uniroot()` error. Regression checks include an independent two-insertion
+  identity, probability mass and the mean exposure implied by the inputs.
+  Exact boundary handling and checks against the schedule bounds are retained.
+
 ## Documentation of the Hofmans Beta-Binomial procedure (HBBD)
 
 * The help page of `fit_bbd_to_reach()` and the vignette now name the
