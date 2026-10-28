@@ -773,6 +773,11 @@ never infers them from model inputs.
 - Aldás Manzano, J. (1998). *Modelos de determinación de la cobertura y la
   distribución de contactos en la planificación de medios publicitarios
   impresos*. Doctoral dissertation, Universidad de Valencia.
+- Caffyn, J. M., & Sagovsky, M. (1963). Net audiences of British newspapers:
+  A comparison of the Agostini and Sainsbury methods. *Journal of Advertising
+  Research*, 3(1), 21-25. <https://doi.org/10.1080/00218499.1963.12527134>
+- Chandon, J.-L. (1976). *A comparative study of media exposure models*.
+  Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
 - Cheong, Y. (2007). *Multivariate Beta Binomial Distribution Model as a Web
   Media Exposure Model*. Doctoral dissertation, The University of Texas at
   Austin.
@@ -785,6 +790,14 @@ never infers them from model inputs.
   exposure distributions: A generalization of the "duplication of viewing law".
   *Journal of Marketing Research*, 28(3), 361-367.
   <https://doi.org/10.1177/002224379102800311>
+- Danaher, P. J. (1992). A Markov-chain model for multivariate
+  magazine-exposure distributions. *Journal of Business & Economic Statistics*,
+  10(4), 401-407. <https://doi.org/10.1080/07350015.1992.10509915>
+- Danaher, P. J. (2007). Modeling page views across multiple websites with an
+  application to Internet reach and frequency prediction. *Marketing Science*,
+  26(3), 422-437. <https://doi.org/10.1287/mksc.1060.0226>
+- Ehrenberg, A. S. C. (1959). The pattern of consumer purchases. *Applied
+  Statistics*, 8(1), 26-41. <https://doi.org/10.2307/2985810>
 - Hofmans, P. (1966). Measuring the cumulative net coverage of any combination of
   media. *Journal of Marketing Research*, 3(3), 269-278.
   <https://doi.org/10.1177/002224376600300307>
@@ -794,6 +807,9 @@ never infers them from model inputs.
 - Kim, H. G. (2005). *A Canonical Sequential Aggregation Media Model*. Doctoral
   dissertation, The University of Texas at Austin.
   Handle 2152/1590 (University of Texas at Austin repository).
+- Leckenby, J. D., & Boyd, M. M. (1984). An improved beta binomial
+  reach/frequency model for magazines. *Current Issues and Research in
+  Advertising*, 7(1), 1-24. <https://doi.org/10.1080/01633392.1984.10505351>
 - Leckenby, J. D., & Rice, M. D. (1986). The declining reach phenomenon in
   exposure distribution models. *Journal of Advertising*, 15(3), 13-20.
   <https://doi.org/10.1080/00913367.1986.10673014>
