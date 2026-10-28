@@ -84,11 +84,37 @@ jobs:
         shell: Rscript {0}
         run: testthat::test_local(".", load_package = "source", stop_on_failure = TRUE)
 
+      - name: Build and check the exact CRAN submission archive
+        if: matrix.config.manual == true
+        shell: bash
+        run: |
+          mkdir -p cran_submission/ci
+          cd cran_submission/ci
+          R CMD build ../..
+          R CMD check --as-cran --run-donttest mediaPlanR_2.0.0.tar.gz
+          if grep -Eq '^Status:.*(ERROR|WARNING)' mediaPlanR.Rcheck/00check.log; then
+            exit 1
+          fi
+          sha256sum mediaPlanR_2.0.0.tar.gz > SHA256SUMS
+
+      - name: Preserve the submission archive and its check log
+        if: always() && matrix.config.manual == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: CRAN-submission-${{ github.sha }}
+          path: |
+            cran_submission/ci/mediaPlanR_2.0.0.tar.gz
+            cran_submission/ci/SHA256SUMS
+            cran_submission/ci/mediaPlanR.Rcheck/00check.log
+            cran_submission/ci/mediaPlanR.Rcheck/mediaPlanR-manual.pdf
+
       - name: Publish check logs for NOTE review
         if: always()
         shell: Rscript {0}
         run: |
           logs <- list.files("check", "00check[.]log$", recursive = TRUE, full.names = TRUE)
+          logs <- c(logs, list.files("cran_submission/ci", "00check[.]log$",
+                                    recursive = TRUE, full.names = TRUE))
           summary <- Sys.getenv("GITHUB_STEP_SUMMARY")
           for (log in logs) {
             cat("\n### ", log, "\n\n```text\n", paste(readLines(log, warn = FALSE), collapse = "\n"),
