@@ -48,6 +48,42 @@ test_that("the BBD-to-reach fit handles both theoretical boundary models", {
   )
 })
 
+test_that("interior fits expand the bracket near the binomial limit", {
+  population <- 1e8
+  target <- -expm1(1000 * log1p(-0.001)) * population - 20
+  fit <- fit_bbd_to_reach(1000, 100000, target, population)
+  expect_true(fit$parameters$converged)
+  expect_identical(fit$parameters$fit_type, "beta_binomial")
+  expect_gt(log(fit$parameters$alpha + fit$parameters$beta), 20)
+  expect_lt(abs(fit$reach$difference), 1e-4)
+  expect_equal(sum(fit$distribution$probability), 1, tolerance = 1e-12)
+  expect_equal(sum(fit$distribution$contacts * fit$distribution$probability),
+               1, tolerance = 1e-11)
+  expect_equal(sum(fit$distribution$probability[-1L]) * population,
+               fit$reach$fitted, tolerance = 1e-12)
+
+  # For two insertions the exact reach is p + p(1-p)c/(c+1).
+  # This independent identity checks an interior fit beyond the old upper bound.
+  target <- 0.51 - 1e-12
+  fit <- fit_bbd_to_reach(2, 0.3, target, 1, precision = 1e-14)
+  concentration <- fit$parameters$alpha + fit$parameters$beta
+  expect_true(fit$parameters$converged)
+  expect_identical(fit$parameters$fit_type, "beta_binomial")
+  expect_equal(0.3 + 0.21 / (1 + 1 / concentration), target,
+               tolerance = 1e-14)
+})
+
+test_that("interior fits expand the bracket near the polarized limit", {
+  target <- 0.3 + 2e-15
+  fit <- fit_bbd_to_reach(2, 0.3, target, 1, precision = 1e-16)
+  concentration <- fit$parameters$alpha + fit$parameters$beta
+  expect_identical(fit$parameters$fit_type, "beta_binomial")
+  expect_lt(log(concentration), -30)
+  expect_equal(0.3 + 0.21 * concentration / (1 + concentration), target,
+               tolerance = 1e-16)
+  expect_equal(sum(fit$distribution$probability), 1, tolerance = 1e-14)
+})
+
 test_that("the BBD-to-reach fit validates its arguments and prints", {
   expect_error(fit_bbd_to_reach(c(2, NA), c(1e5, 2e5), 3e5, 1e6), "insertions")
   expect_error(fit_bbd_to_reach(c(2, 2), c(1e5), 3e5, 1e6), "audiences")
