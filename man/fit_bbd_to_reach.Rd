@@ -92,6 +92,10 @@ parameters \eqn{\alpha = c \bar{p}} and \eqn{\beta = c (1 - \bar{p})}, so
 its mean is preserved for every concentration \eqn{c > 0}. The function
 solves, with \code{\link[stats:uniroot]{stats::uniroot()}} on the log scale of \eqn{c}, for the
 concentration whose reach, \eqn{1 - \Pr(K = 0)}, equals the external reach.
+The initial log-concentration interval, \verb{[-30, 20]}, is expanded as needed
+to bracket an interior solution, up to \verb{[-700, 700]}. If double precision
+cannot bracket the target even there, the function stops with an
+explanatory numerical-resolution error.
 
 Two different conditions are checked, in this order. First, the external
 reach must be logically possible for the schedule: at least the largest

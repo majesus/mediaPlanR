@@ -66,6 +66,10 @@
 #' its mean is preserved for every concentration \eqn{c > 0}. The function
 #' solves, with [stats::uniroot()] on the log scale of \eqn{c}, for the
 #' concentration whose reach, \eqn{1 - \Pr(K = 0)}, equals the external reach.
+#' The initial log-concentration interval, `[-30, 20]`, is expanded as needed
+#' to bracket an interior solution, up to `[-700, 700]`. If double precision
+#' cannot bracket the target even there, the function stops with an
+#' explanatory numerical-resolution error.
 #'
 #' Two different conditions are checked, in this order. First, the external
 #' reach must be logically possible for the schedule: at least the largest
@@ -249,9 +253,10 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, population,
                  show(feasible_min), show(feasible_max)), call. = FALSE)
   }
 
-  # Range of log-concentrations searched; beyond exp(20) the Beta-Binomial
-  # probabilities computed from log-beta functions lose their accuracy, and a
-  # target that close to the binomial limit is treated as the limit.
+  # Start with a modest interval, then expand it for interior targets close
+  # to either limit. Coverage uses log1p and the PMF uses a stable recurrence,
+  # so exp(20) is not an accuracy boundary. Keep concentrations finite and
+  # normal throughout the search.
   log_concentration_range <- c(-30, 20)
   history <- data.frame(
     iteration = integer(), alpha = numeric(), beta = numeric(),
@@ -317,10 +322,27 @@ fit_bbd_to_reach <- function(insertions, audiences, reach, population,
     iterations <- 0L
     fit_type <- "binomial_limit"
   } else {
+    lower_value <- objective(log_concentration_range[1L])
+    upper_value <- objective(log_concentration_range[2L])
+    while (lower_value > 0 && log_concentration_range[1L] > -700) {
+      log_concentration_range[1L] <- max(-700, log_concentration_range[1L] - 8)
+      lower_value <- objective(log_concentration_range[1L])
+    }
+    while (upper_value < 0 && log_concentration_range[2L] < 700) {
+      log_concentration_range[2L] <- min(700, log_concentration_range[2L] + 8)
+      upper_value <- objective(log_concentration_range[2L])
+    }
+    if (lower_value > 0 || upper_value < 0) {
+      stop("The target reach cannot be bracketed in double precision, even ",
+           "after expanding the log-concentration interval to its numerical ",
+           "limits. Check reach and precision near the family boundaries.",
+           call. = FALSE)
+    }
     root_tolerance <- max(min(.Machine$double.eps^0.5, precision / population),
                           .Machine$double.eps)
     root <- stats::uniroot(objective, c(log_concentration_range[1L],
                                         log_concentration_range[2L]),
+                           f.lower = lower_value, f.upper = upper_value,
                            tol = root_tolerance, maxiter = max_iter)$root
     iterations <- eval_count
     # The root is approximate. If the target lies on a bound of the schedule,
