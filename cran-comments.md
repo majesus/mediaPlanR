@@ -39,21 +39,28 @@ The help page and NEWS describe the correction.
 
 ## Changes after the validated archive (2026-10-29)
 
-The archive identified above is superseded. The sources changed after it was
-built (documentation and metadata only; no function code was touched), and the
-archive to submit is the one built from source commit
-b6dc4f0 (main) by GitHub Actions run #39:
-https://github.com/majesus/mediaPlanR/actions/runs/40823414107
-The run completed successfully on all its jobs (Linux release, oldrel-1 and
-devel, macOS, Windows, and the R 4.0.5 base-dependency job) and published the
-artifact CRAN-submission-b6dc4f0 together with the per-platform check results.
-Still to do by the maintainer before submission: download that artifact, read
-the check logs (0 ERRORs and 0 WARNINGs are required; list every NOTE), and
-record here the file name and SHA-256 of the archive actually uploaded. Until
-that is done, the numbers of the superseded section below must not be quoted
-for this archive.
+The archive identified in the first section is superseded.
 
-- Date field set to 2026-10-29; set it to the actual submission date.
+Archive to submit: mediaPlanR_2.0.0.tar.gz (246,982 bytes, 111 entries).
+Source commit: b6dc4f028a28b22ede21eb2e6ac5fd5d6e8eeaef (main).
+SHA-256: 2ccaeab1301dfcca7d249b5c5de24039e141aa4e02b4b2181091031915f10900.
+The checksum computed on the downloaded file matches the SHA256SUMS file
+produced by the workflow. DESCRIPTION in the archive has Date 2026-10-29 and
+was packaged on 2026-10-29 05:28:40 UTC.
+
+GitHub Actions run #39: https://github.com/majesus/mediaPlanR/actions/runs/40823414107
+All six jobs completed successfully (Linux release, oldrel-1 and devel, macOS,
+Windows, and the R 4.0.5 base-dependency job). The exact archive above was
+built and checked on Linux with R 4.6.1 using R CMD check --as-cran
+--run-donttest: Status 1 NOTE, 0 ERRORs, 0 WARNINGs. Examples, tests,
+vignette rebuilding, PDF manual and HTML manual passed. The only NOTE is
+"CRAN incoming feasibility: New submission"; the DOI NOTE of the previous
+archive no longer appears, because the unresolvable DOI was removed.
+
+The changes since the first validated archive are documentation and metadata
+only (no function code was touched):
+
+- Date field set to 2026-10-29.
 - The DOI of Leckenby and Boyd (1984) was removed from the help page and the
   README because the resolver returns HTTP 404 and the identifier could not be
   verified; the full bibliographic reference is retained.
