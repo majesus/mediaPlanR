@@ -1,6 +1,6 @@
 ## Submission preparation
 
-mediaPlanR 2.0.0, first CRAN submission. Prepared 2026-10-28.
+mediaPlanR 2.0.0, first CRAN submission. Prepared 2026-10-28, updated 2026-10-29.
 This package has NOT been submitted to CRAN.
 
 ## Validated source and archive
