@@ -39,10 +39,19 @@ The help page and NEWS describe the correction.
 
 ## Changes after the validated archive (2026-10-29)
 
-The archive identified above is superseded: the sources changed after it was
-built, so a new archive must be built, checked (R CMD check --as-cran
---run-donttest) and its checksum recorded before submission. The changes are
-documentation and metadata only; no function code was touched.
+The archive identified above is superseded. The sources changed after it was
+built (documentation and metadata only; no function code was touched), and the
+archive to submit is the one built from source commit
+b6dc4f0 (main) by GitHub Actions run #39:
+https://github.com/majesus/mediaPlanR/actions/runs/40823414107
+The run completed successfully on all its jobs (Linux release, oldrel-1 and
+devel, macOS, Windows, and the R 4.0.5 base-dependency job) and published the
+artifact CRAN-submission-b6dc4f0 together with the per-platform check results.
+Still to do by the maintainer before submission: download that artifact, read
+the check logs (0 ERRORs and 0 WARNINGs are required; list every NOTE), and
+record here the file name and SHA-256 of the archive actually uploaded. Until
+that is done, the numbers of the superseded section below must not be quoted
+for this archive.
 
 - Date field set to 2026-10-29; set it to the actual submission date.
 - The DOI of Leckenby and Boyd (1984) was removed from the help page and the
