@@ -110,6 +110,17 @@ impresos (Models for determining reach and exposure distribution in print
 media planning). Doctoral dissertation, Universidad de Valencia, Spain.
 Section 3.1.2.5, equations 3.25-3.28, with the parameter estimators on
 page 134.
+
+Metheringham, R. A. (1964). Measuring the net cumulative coverage of a print
+campaign. Journal of Advertising Research, 4(4), 23-28.
+\doi{10.1080/00218499.1964.12519751}
+
+Chandon, J.-L. (1976). A comparative study of media exposure models.
+Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
+
+Leckenby, J. D., & Boyd, M. M. (1984). An improved beta binomial
+reach/frequency model for magazines. Current Issues and Research in
+Advertising, 7(1), 1-24.
 }
 \seealso{
 \code{\link[=calc_sainsbury]{calc_sainsbury()}}, \code{\link[=calc_binomial]{calc_binomial()}} and \code{\link[=calc_metheringham]{calc_metheringham()}} for plans

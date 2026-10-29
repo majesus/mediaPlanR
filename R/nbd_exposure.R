@@ -262,6 +262,14 @@ nbd_exposure_distribution <- function(mean_contacts, size, report_max = NULL,
 #' fit <- fit_nbd_exposure(counts)
 #' fit$estimates
 #'
+#' @references
+#' Danaher, P. J. (2007). Modeling Page Views Across Multiple Websites with an
+#' Application to Internet Reach and Frequency Prediction. Marketing Science,
+#' 26(3), 422-437. \doi{10.1287/mksc.1060.0226}
+#'
+#' Ehrenberg, A. S. C. (1959). The Pattern of Consumer Purchases. Applied
+#' Statistics, 8(1), 26-41. \doi{10.2307/2985810}
+#'
 #' @export
 fit_nbd_exposure <- function(counts, report_max = NULL, conf_level = 0.95) {
   if (!is.numeric(counts) || length(counts) < 2L || anyNA(counts) ||

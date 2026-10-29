@@ -92,6 +92,14 @@
 #' unreachable$converged
 #' unreachable$error
 #'
+#' @references
+#' Metheringham, R. A. (1964). Measuring the net cumulative coverage of a print
+#' campaign. Journal of Advertising Research, 4(4), 23-28.
+#' \doi{10.1080/00218499.1964.12519751}
+#'
+#' Chandon, J.-L. (1976). A comparative study of media exposure models.
+#' Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
+#'
 #' @seealso [calc_beta_binomial()] for the model itself and [fit_bbd_to_reach()]
 #'   to fit a Beta-Binomial to a whole schedule's reach.
 #' @export

@@ -344,7 +344,7 @@ Handle 2152/3215 (University of Texas at Austin repository).
 Cheong, Y., Leckenby, J. D., & Eakin, T. (2011). Evaluating the
 multivariate beta binomial distribution for estimating magazine and
 Internet exposure frequency distributions. Journal of Advertising, 40(1),
-7-23. doi:10.2753/JOA0091-3367400101
+7-23. \doi{10.2753/JOA0091-3367400101}
 
 Waring, E. (1792). On the principles of translating algebraic quantities into
 probable relations and annuities, &c. Cambridge.

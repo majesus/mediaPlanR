@@ -287,6 +287,17 @@ calc_binomial <- function(audiences, population,
 #' Section 3.1.2.5, equations 3.25-3.28, with the parameter estimators on
 #' page 134.
 #'
+#' Metheringham, R. A. (1964). Measuring the net cumulative coverage of a print
+#' campaign. Journal of Advertising Research, 4(4), 23-28.
+#' \doi{10.1080/00218499.1964.12519751}
+#'
+#' Chandon, J.-L. (1976). A comparative study of media exposure models.
+#' Unpublished doctoral dissertation, Northwestern University, Evanston, IL.
+#'
+#' Leckenby, J. D., & Boyd, M. M. (1984). An improved beta binomial
+#' reach/frequency model for magazines. Current Issues and Research in
+#' Advertising, 7(1), 1-24.
+#'
 #' @param R1 Reach after the first insertion (the vehicle's audience), as a
 #'   proportion of the population, a number in (0, 1] (not a percentage). If the
 #'   audience is known in people, divide it by the population.

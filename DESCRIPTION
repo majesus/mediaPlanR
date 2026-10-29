@@ -2,7 +2,7 @@ Package: mediaPlanR
 Type: Package
 Title: Reach and Exposure-Distribution Models for Media Planning
 Version: 2.0.0
-Date: 2026-10-12
+Date: 2026-10-29
 Authors@R: 
     person(given = "Manuel J.", family = "Sánchez-Franco",
            email = "majesus@us.es", role = c("aut", "cre"),

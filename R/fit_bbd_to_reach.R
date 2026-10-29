@@ -32,7 +32,7 @@
 #'
 #' Leckenby, J. D., & Boyd, M. M. (1984). An improved beta binomial
 #' reach/frequency model for magazines. Current Issues and Research in
-#' Advertising, 7(1), 1-24. \doi{10.1080/01633392.1984.10505351}
+#' Advertising, 7(1), 1-24.
 #'
 #' @param insertions Numeric vector with the number of insertions of each
 #'   vehicle (positive integers).

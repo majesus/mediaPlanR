@@ -198,7 +198,7 @@ pages 208-209) and Section 3.3.2.2 (the Morgensztern reach formula).
 
 Leckenby, J. D., & Boyd, M. M. (1984). An improved beta binomial
 reach/frequency model for magazines. Current Issues and Research in
-Advertising, 7(1), 1-24. \doi{10.1080/01633392.1984.10505351}
+Advertising, 7(1), 1-24.
 }
 \seealso{
 \code{\link[=calc_hofmans_duplication]{calc_hofmans_duplication()}} and \code{\link[=calc_agostini_duplication]{calc_agostini_duplication()}}, whose reach

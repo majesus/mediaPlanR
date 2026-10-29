@@ -37,7 +37,26 @@ interior targets near either family limit. Regression tests include an
 independent two-insertion reach identity, mass and expected exposures.
 The help page and NEWS describe the correction.
 
-## Incoming NOTE
+## Changes after the validated archive (2026-10-29)
+
+The archive identified above is superseded: the sources changed after it was
+built, so a new archive must be built, checked (R CMD check --as-cran
+--run-donttest) and its checksum recorded before submission. The changes are
+documentation and metadata only; no function code was touched.
+
+- Date field set to 2026-10-29; set it to the actual submission date.
+- The DOI of Leckenby and Boyd (1984) was removed from the help page and the
+  README because the resolver returns HTTP 404 and the identifier could not be
+  verified; the full bibliographic reference is retained.
+- The DOI of Cheong, Leckenby and Eakin (2011) in calc_mbd() now uses \doi{}.
+- References added to the help pages where the original source was missing:
+  Metheringham (1964), Chandon (1976) and Leckenby and Boyd (1984) for
+  calc_beta_binomial(); Danaher (1992) for calc_csd(); Morgensztern (1970), as
+  listed by Kim (2005), for calc_msad(); Danaher (2007) and Ehrenberg (1959)
+  for fit_nbd_exposure(); Metheringham (1964) and Chandon (1976) for
+  calibrate_bbd().
+
+## Incoming NOTE (before these changes)
 
 Every incoming check reports a new submission and HTTP 404 for
 10.1080/01633392.1984.10505351 in fit_bbd_to_reach.Rd.

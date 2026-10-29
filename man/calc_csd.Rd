@@ -211,6 +211,10 @@ exposure distributions: A generalization of the duplication of viewing law.
 Journal of Marketing Research, 28(3), 361-367.
 \doi{10.1177/002224379102800311}
 
+Danaher, P. J. (1992). A Markov-chain model for multivariate
+magazine-exposure distributions. Journal of Business & Economic Statistics,
+10(4), 401-407. \doi{10.1080/07350015.1992.10509915}
+
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 Doctoral dissertation, The University of Texas at Austin, pp. 78-97.
 Handle 2152/1590 (University of Texas at Austin repository).

@@ -207,6 +207,11 @@ Leckenby, J. D., & Rice, M. D. (1986). The declining reach phenomenon in
 exposure distribution models. Journal of Advertising, 15(3), 13-20.
 \doi{10.1080/00913367.1986.10673014}
 
+Morgensztern, A. (1970). Fréquentation de la presse, généralisation, effet
+publicitaire. Étude No. 19, Institut de Recherches et d'Études Publicitaires
+(IREP), Paris. Listed and attributed to the reach formula by Kim (2005); the
+original study was not consulted for this package.
+
 Kim, H. G. (2005). A Canonical Sequential Aggregation Media Model.
 Doctoral dissertation, The University of Texas at Austin, pp. 65-71. Handle
 2152/1590 (University of Texas at Austin repository). Kim
